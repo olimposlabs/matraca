@@ -16,7 +16,9 @@ Acompanhe os gates e evidências no [registro SPI](docs/EXECUCAO_SPI.md).
 
 ## Funcionalidades locais disponíveis
 
-Identidade independente por organização, login por link e logout, cadastro de parceiros no backoffice, configuração de preferências, edição de marca com preview, publicação e restauração, upload de logo validado. Escolas, cursos, avaliações, carteiras e cobrança continuam nas fases seguintes do plano.
+Identidade independente por organização, login por link e logout, cadastro de parceiros no backoffice, preferências, marca com preview, publicação e restauração, upload de logo validado. A gestão escolar inclui escolas, pessoas, aprovação de professores, certificações, turmas, matrículas simultâneas, grupos hierárquicos, transferência e histórico. Cursos, avaliações, carteiras e cobrança continuam nas fases seguintes do plano.
+
+O parceiro tem uma escola, três professores aprovados, seis alunos, uma turma atual, uma turma encerrada e grupos de estado, cidade, unidade e turma. Administradores e gestores usam `/admin/education`; professores usam `/teacher` e alunos consultam vínculos em `/app/classes`.
 
 ## Contas de demonstração e login
 
