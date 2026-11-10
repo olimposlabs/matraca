@@ -17,8 +17,9 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | --- | --- | --- |
 | 01 | CI verde, aguardando revisão Codex | PR #1, head 6dfb11e |
 | 02 | Implementação e validação locais concluídas, integração pendente | Branch codex/spi-02-identity |
-| 03 | Código integrado, testes locais aprovados, E2E final em andamento | Branch codex/spi-03-portals-branding |
-| 04–14 | Pendentes | Dependências e aceite no plano aprovado |
+| 03 | Código e E2E local aprovados, PR em preparação | Branch codex/spi-03-portals-branding |
+| 04 | Preparação paralela em checkout separado | /tmp/matraca-phase04, branch codex/spi-04-schools |
+| 05–14 | Pendentes | Dependências e aceite no plano aprovado |
 
 ## Fase 01
 
@@ -69,3 +70,7 @@ Escopo compreende provisionamento de parceiro, domínio local, administrador, ge
 A suíte integrada tem 91 testes aprovados, incluindo 31 de organizações/branding e servidor do build. Lint, tipos e build passaram. O servidor compilado foi iniciado em porta local separada e entregou SPA e bundle com HTTP200. Instalação limpa usa defaults completos de branding no seed. A API valida contraste, rejeita referências de logo de outro tenant e impede a suspensão do próprio backoffice.
 
 A inspeção de navegador do fluxo completo ainda está em andamento neste registro. Os gates remotos permanecem pendentes.
+
+- E2E final da fase 03 aprovado. Criação de parceiro e login do novo administrador, preview sem publicação antecipada, upload staged, publicação, portal com marca, preferências, restauração e conflito409 foram exercitados pela interface.
+- Não houve erro JavaScript nem overflow entre320 e1440px. A organização temporária e seus registros/arquivos foram removidos por IDs exatos. Personas e branding do seed permaneceram inalterados.
+- Preparação da fase 04 iniciada em checkout separado a partir de3ba089e, conforme autorização de paralelismo. A fase03 continua com gate remoto aberto.
