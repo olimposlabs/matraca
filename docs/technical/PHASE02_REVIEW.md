@@ -28,6 +28,8 @@ Execução com Node `24.22.2`, Vitest `4.1.12` e PostgreSQL 17 local:
 
 A rodada completa dos dois arquivos passou: **29 testes, sem skips**, sendo 28 de identidade e um da fronteira de arquivos do Vite. Lint dos dois arquivos, `tsc --noEmit` e `git diff --check` também passaram. O teste de Vite usa um marcador sintético, abre uma porta local efêmera e remove somente seu próprio subdiretório em `.data`. Não lê nem expõe tokens reais da mailbox.
 
+O teste de fronteira também usa `cacheDir` exclusivo dentro desse subdiretório. A primeira versão compartilhou o cache de dependências com o Vite interativo, causando respostas `504` no frontend ativo; o cache foi isolado e a regressão foi repetida com sucesso. Executar o teste não deve reconfigurar o cache da aplicação usada pelo navegador.
+
 ## Achado corrigido durante a revisão
 
 A configuração inicial do Vite permitia carregar `.data/mailbox` pela raiz de desenvolvimento: `isFileLoadingAllowed` retornou `true` para um caminho sintético nessa árvore. Permissões Unix de arquivo não impedem o servidor web, executado pelo mesmo usuário, de servir esse conteúdo.
