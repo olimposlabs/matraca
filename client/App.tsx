@@ -22,14 +22,18 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { AuthProvider, AuthenticatedArea, LoginPage, sessionHome, useAuth } from './auth';
+import { apiJson } from './api';
 
 const waveformHeights = [18, 30, 23, 42, 57, 36, 25, 48, 68, 52, 31, 44, 60, 79, 65, 43, 29, 46, 63, 48, 34, 54, 72, 49, 31, 45, 58, 35, 25, 39, 22, 14];
 
 export function Brand() {
+  const { org } = useAuth();
+  const partner = org?.kind === 'partner';
   return (
-    <Link className="brand" to="/" aria-label="Matraca, página inicial">
+    <Link className={`brand${partner ? ' tenant-brand' : ''}`} to="/" aria-label={`${partner ? org.name : 'Matraca'}, página inicial`}>
       <span className="brand-mark" aria-hidden="true"><AudioLines size={25} strokeWidth={2.4} /></span>
-      <span>matraca<span className="brand-period">.</span></span>
+      <span className="brand-name">{partner ? org.name : <>matraca<span className="brand-period">.</span></>}</span>
     </Link>
   );
 }
@@ -37,6 +41,7 @@ export function Brand() {
 function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const { org, user } = useAuth();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -57,9 +62,10 @@ function SiteHeader() {
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
         <nav id="main-navigation" className={`main-navigation${menuOpen ? ' is-open' : ''}`} aria-label="Navegação principal">
-          <a href="/#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
-          <a href="/#para-escolas" onClick={() => setMenuOpen(false)}>Para escolas</a>
-          <Link className="header-login" to="/login">Entrar <ArrowRight size={16} aria-hidden="true" /></Link>
+          {(!org || org.kind === 'matraca') && <><a href="/#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a><a href="/#para-escolas" onClick={() => setMenuOpen(false)}>Para escolas</a></>}
+          {org?.kind === 'partner' && <span className="tenant-header-note">Seu espaço de aprendizagem</span>}
+          {org?.kind === 'backoffice' && <span className="tenant-header-note">Operação Matraca</span>}
+          <Link className="header-login" to={user ? sessionHome(org) : '/login'}>{user ? 'Meu espaço' : 'Entrar'} <ArrowRight size={16} aria-hidden="true" /></Link>
         </nav>
       </div>
     </header>
@@ -167,10 +173,7 @@ function StatusPage() {
 
     async function checkHealth() {
       try {
-        const response = await fetch('/api/health', { signal: controller.signal, cache: 'no-store' });
-        if (!response.ok) throw new Error('A consulta ao ambiente não pôde ser concluída.');
-
-        const data = await response.json();
+        const data = await apiJson<HealthPayload>('/api/health', { signal: controller.signal });
         if (data?.status !== 'ok' || data?.database !== 'ok' || typeof data?.service !== 'string' || typeof data?.mode !== 'string' || typeof data?.version !== 'string') {
           throw new Error('O ambiente ainda não confirmou que todos os serviços estão disponíveis.');
         }
@@ -219,25 +222,18 @@ function StatusPage() {
   );
 }
 
-function ConstructionPage({ management = false }: { management?: boolean }) {
-  return (
-    <section className="construction-page container">
-      <div className="construction-art" aria-hidden="true"><span /><AudioLines size={56} strokeWidth={1.3} /><span /></div>
-      <span className="construction-label">Em construção</span>
-      <h1>{management ? 'Uma nova forma de acompanhar cada voz.' : 'Sua jornada está sendo preparada.'}</h1>
-      <p>{management ? 'A área de gestão de cursos, escolas e alunos faz parte das próximas etapas do piloto Matraca.' : 'Estamos construindo o acesso à área do aluno e às práticas de oratória. Esta etapa apresenta a base do portal.'}</p>
-      <div className="construction-actions"><Link className="button button-primary" to="/">Voltar ao início <ArrowRight size={17} aria-hidden="true" /></Link><Link className="button button-text" to="/status">Consultar o ambiente</Link></div>
-    </section>
-  );
-}
-
 function NotFoundPage() {
   return (
     <section className="construction-page container"><span className="construction-label">Página não encontrada</span><h1>Vamos retomar o caminho.</h1><p>Este endereço não corresponde a uma página do Matraca.</p><Link className="button button-primary" to="/">Voltar ao início <ArrowRight size={17} aria-hidden="true" /></Link></section>
   );
 }
 
-export default function App() {
+function HomeEntry() {
+  const { org } = useAuth();
+  return org?.kind === 'matraca' ? <HomePage /> : <LoginPage />;
+}
+
+function AppShell() {
   const location = useLocation();
 
   useEffect(() => {
@@ -257,8 +253,12 @@ export default function App() {
     <div className="app-shell">
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
-      <main id="conteudo"><Routes><Route path="/" element={<HomePage />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<ConstructionPage />} /><Route path="/app" element={<ConstructionPage />} /><Route path="/admin" element={<ConstructionPage management />} /><Route path="/backoffice" element={<ConstructionPage management />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<AuthenticatedArea area="admin" />} /><Route path="/backoffice" element={<AuthenticatedArea area="backoffice" />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
       <SiteFooter />
     </div>
   );
+}
+
+export default function App() {
+  return <AuthProvider><AppShell /></AuthProvider>;
 }
