@@ -4,8 +4,12 @@ import { configuration, localHostname } from './config.js';
 import { createDatabase } from './db.js';
 import { LocalStorage } from './storage.js';
 import { registerIdentity } from './auth.js';
+import { registerOrganizations } from './organizations.js';
+import staticFiles from '@fastify/static';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-export async function createApp(options: { databaseUrl?: string; storageRoot?: string } = {}) {
+export async function createApp(options: { databaseUrl?: string; storageRoot?: string; clientRoot?: string } = {}) {
   const config = configuration(options);
   const db = createDatabase(config.databaseUrl);
   const storage = new LocalStorage(config.storageRoot);
@@ -41,6 +45,17 @@ export async function createApp(options: { databaseUrl?: string; storageRoot?: s
     } catch { return reply.code(503).send({ status: 'unavailable', service: 'matraca', database: 'unavailable', mode: 'local' }); }
   });
   await registerIdentity(app);
+  await registerOrganizations(app);
+  const clientRoot = resolve(options.clientRoot ?? 'dist/client');
+  if (existsSync(resolve(clientRoot, 'index.html'))) {
+    await app.register(staticFiles, { root: clientRoot, wildcard: false });
+    app.setNotFoundHandler((request, reply) => {
+      if (request.method === 'GET' && !request.url.startsWith('/api/') && request.headers.accept?.includes('text/html')) {
+        return reply.type('text/html').sendFile('index.html');
+      }
+      return reply.code(404).send({ error: 'Página ou recurso não encontrado.' });
+    });
+  }
   return app;
 }
 

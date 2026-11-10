@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router';
+import { Link, Navigate, NavLink, useLocation, useSearchParams } from 'react-router';
 import { ArrowRight, AudioLines, BookOpen, Building2, Check, ChevronRight, CircleCheck, LockKeyhole, LogOut, Mail, RefreshCw, ShieldCheck, Sparkles, UserRound, Users } from 'lucide-react';
 import { ApiError, apiJson } from './api';
 
@@ -30,6 +30,7 @@ type AuthState = {
 
 type AuthContextValue = AuthState & {
   reload: () => void;
+  refreshOrganization: () => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -43,6 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading', org: null, user: null, error: null });
   const [attempt, setAttempt] = useState(0);
   const reload = useCallback(() => setAttempt(value => value + 1), []);
+  const refreshOrganization = useCallback(async () => {
+    const { org } = await apiJson<{ org: Organization }>('/api/context');
+    setState(current => current.org?.id === org.id ? { ...current, org } : current);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState(current => ({ ...current, user: null }));
   }, []);
 
-  return <AuthContext.Provider value={{ ...state, reload, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...state, reload, refreshOrganization, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
@@ -196,7 +201,7 @@ const roleNames: Record<string, string> = {
   operator: 'Operação Matraca',
 };
 
-function LogoutButton() {
+export function LogoutButton() {
   const { logout } = useAuth();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -216,7 +221,14 @@ function LogoutButton() {
   return <div className="logout-control"><button className="button button-secondary" type="button" disabled={pending} onClick={() => void signOut()}><LogOut size={16} aria-hidden="true" />{pending ? 'Saindo…' : 'Sair da conta'}</button>{error && <p className="form-error" role="alert">{error}</p>}</div>;
 }
 
-export function AuthenticatedArea({ area = 'student' }: { area?: 'student' | 'admin' | 'backoffice' }) {
+export function WorkspaceNavigation() {
+  const { user, org } = useAuth();
+  const location = useLocation();
+  if (!user || !/^\/(app|admin|backoffice)(\/|$)/.test(location.pathname)) return null;
+  return <div className="workspace-nav-wrap"><nav className="workspace-nav container" aria-label="Navegação do seu espaço">{org?.kind !== 'backoffice' && <NavLink to="/app"><UserRound size={16} aria-hidden="true" />Visão geral</NavLink>}{user.roles.some(role => role === 'org_admin' || role === 'school') && <NavLink to="/admin"><Building2 size={16} aria-hidden="true" />Gestão da organização</NavLink>}{org?.kind === 'backoffice' && user.roles.includes('operator') && <NavLink to="/backoffice"><Building2 size={16} aria-hidden="true" />Organizações</NavLink>}</nav></div>;
+}
+
+export function AuthenticatedArea({ area = 'student', children }: { area?: 'student' | 'admin' | 'backoffice'; children?: ReactNode }) {
   const { status, org, user } = useAuth();
   if (status !== 'ready' || !org) return <AccessState />;
   if (!user) return <Navigate to="/login" replace />;
@@ -229,6 +241,8 @@ export function AuthenticatedArea({ area = 'student' }: { area?: 'student' | 'ad
   if (!allowed) return (
     <section className="access-state container"><span className="access-state-icon"><LockKeyhole size={27} aria-hidden="true" /></span><span className="eyebrow">ACESSO RESTRITO</span><h1>Esta área tem outro perfil de acesso.</h1><p>Sua conta está conectada a {org.name}, mas não tem permissão para acessar esta área.</p><div className="access-state-actions">{(org.kind !== 'backoffice' || canOperate) && <Link className="button button-primary" to={sessionHome(org)}>Ir para meu espaço <ArrowRight size={17} aria-hidden="true" /></Link>}<LogoutButton /></div></section>
   );
+
+  if (children) return children;
 
   const management = area !== 'student';
   const heading = area === 'backoffice' ? 'Um espaço para cuidar de cada jornada.' : area === 'admin' ? 'Acompanhe quem aprende com você.' : 'Sua voz já tem um lugar aqui.';

@@ -22,18 +22,21 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { AuthProvider, AuthenticatedArea, LoginPage, sessionHome, useAuth } from './auth';
+import { AuthProvider, AuthenticatedArea, LoginPage, WorkspaceNavigation, sessionHome, useAuth } from './auth';
 import { apiJson } from './api';
+import { OrganizationsPage, OrganizationSettingsPage, brandDisplayName, organizationTheme } from './organizations';
 
 const waveformHeights = [18, 30, 23, 42, 57, 36, 25, 48, 68, 52, 31, 44, 60, 79, 65, 43, 29, 46, 63, 48, 34, 54, 72, 49, 31, 45, 58, 35, 25, 39, 22, 14];
 
 export function Brand() {
   const { org } = useAuth();
-  const partner = org?.kind === 'partner';
+  const name = brandDisplayName(org);
+  const nativeWordmark = (!org || org.kind === 'matraca') && name === 'Matraca';
+  const logo = typeof org?.branding.logoKey === 'string' && org.branding.logoKey;
   return (
-    <Link className={`brand${partner ? ' tenant-brand' : ''}`} to="/" aria-label={`${partner ? org.name : 'Matraca'}, página inicial`}>
-      <span className="brand-mark" aria-hidden="true"><AudioLines size={25} strokeWidth={2.4} /></span>
-      <span className="brand-name">{partner ? org.name : <>matraca<span className="brand-period">.</span></>}</span>
+    <Link className={`brand${!nativeWordmark ? ' tenant-brand' : ''}`} to="/" aria-label={`${name}, página inicial`}>
+      {logo ? <img className="brand-logo" src={`/api/branding/logo?v=${Number(org?.branding._revision) || 0}`} alt="" /> : <span className="brand-mark" aria-hidden="true"><AudioLines size={25} strokeWidth={2.4} /></span>}
+      <span className="brand-name">{nativeWordmark ? <>matraca<span className="brand-period">.</span></> : name}</span>
     </Link>
   );
 }
@@ -235,6 +238,7 @@ function HomeEntry() {
 
 function AppShell() {
   const location = useLocation();
+  const { org } = useAuth();
 
   useEffect(() => {
     const titles: Record<string, string> = {
@@ -250,10 +254,11 @@ function AppShell() {
   }, [location.pathname, location.hash]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={organizationTheme(org)}>
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
-      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<AuthenticatedArea area="admin" />} /><Route path="/backoffice" element={<AuthenticatedArea area="backoffice" />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <WorkspaceNavigation />
+      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<OrganizationSettingsPage />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
       <SiteFooter />
     </div>
   );

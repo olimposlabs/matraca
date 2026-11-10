@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createDatabase } from '../server/db.js';
 import { configuration } from '../server/config.js';
+import { DEFAULT_BRANDING } from '../server/organizations.js';
 
 export function seedId(value: string): string {
   const hex = createHash('sha256').update(`matraca-demo:${value}`).digest('hex');
@@ -20,9 +21,12 @@ try {
     if (!identityReady) return;
     for (const org of organizations) {
       const candidateId = seedId(org.slug);
-      await client.query("INSERT INTO orgs (id,slug,name,kind,status,settings,branding) VALUES ($1,$2,$3,$4,'active',$5,$6) ON CONFLICT (slug) DO NOTHING", [candidateId,org.slug,org.name,org.kind,{ coursesEnabled:true, strictJourney:false },{ primary:'#c95032',background:'#faf8f2',creditSingular:'crédito',creditPlural:'créditos' }]);
+      await client.query("INSERT INTO orgs (id,slug,name,kind,status,settings,branding) VALUES ($1,$2,$3,$4,'active',$5,$6) ON CONFLICT (slug) DO NOTHING", [candidateId,org.slug,org.name,org.kind,{ coursesEnabled:true, strictJourney:false },{ ...DEFAULT_BRANDING, displayName: org.name, _revision: 0 }]);
       const orgId = (await client.query('SELECT id FROM orgs WHERE slug=$1',[org.slug])).rows[0].id;
       for (const hostname of org.hosts) await client.query('INSERT INTO domains (hostname,org_id) VALUES ($1,$2) ON CONFLICT (hostname) DO NOTHING',[hostname,orgId]);
+      if ((await client.query("SELECT to_regclass('org_branding_history') IS NOT NULL AS ready")).rows[0].ready) {
+        await client.query("INSERT INTO org_branding_history (org_id,revision,branding) SELECT id,COALESCE((branding->>'_revision')::int,0),branding FROM orgs WHERE id=$1 ON CONFLICT DO NOTHING", [orgId]);
+      }
       const people = org.kind==='backoffice' ? [{name:'Operador Matraca',email:'operador@matraca.test',roles:['operator']}] : [
         ...students.map((name,index)=>({name,email:index===0?'ana@exemplo.test':`aluno${index+1}@${org.slug}.test`,roles:['student']})),
         ...(org.kind==='partner' ? [
