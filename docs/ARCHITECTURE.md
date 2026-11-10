@@ -1,14 +1,26 @@
 # Arquitetura
 
-Na criação destas diretrizes, a árvore de trabalho não tinha código de aplicação, manifestos ou configuração de infraestrutura. Registre aqui decisões aprovadas e atualize o estado implementado conforme código e configuração efetiva.
+## Decisão vigente
 
-| Tema | Estado inicial |
+O fundador aprovou o plano em 10 de novembro de 2026 e definiu AWS como destino posterior. O desenvolvimento atual é local, sem deploy. A proposta anterior de Cloudflare foi substituída por uma base independente de seu runtime.
+
+| Componente | Implementação em curso |
 | --- | --- |
-| Contexto do produto e escopo da primeira versão | Piloto e proposta pedagógica descritos no [plano de ensino](PLANO_DE_ENSINO.md). Escopo da implementação **A definir** |
-| Stack, componentes e responsabilidades | Diretriz serverless aprovada pelo fundador. Provedores, tecnologias e componentes **A definir** |
-| Fluxos, contratos, dependências e integrações | Jornadas de aprendizagem e administração em descoberta. Contratos técnicos e integrações **A definir** |
-| Dados, persistência e modelo de acesso e isolamento | Isolamento funcional por organização e login independente por domínio ou subdomínio solicitados pelo fundador. Um mesmo e-mail pode participar de organizações diferentes. Modelo de dados e implementação **A definir** |
+| Interface | React, React Router e Vite, estilos por variáveis CSS |
+| API | Node 24 LTS, TypeScript e Fastify |
+| Dados | PostgreSQL 17 local em Docker, acesso pg e migrações SQL versionadas |
+| Objetos | Filesystem privado em .data/objects com streaming e leitura por faixas |
+| Processamento | Jobs duráveis no banco. Worker de avaliação será implementado na fase 08 |
+| Avaliação | Provedor sintético a implementar, separado das regras de crédito e persistência |
+| E-mail e pagamento | Adaptadores locais nas fases correspondentes |
+| Testes | Vitest, Playwright e verificações de tipos, lint e build |
 
-Ao registrar uma decisão, inclua contexto, decisão, justificativa, impactos e referência à aprovação ou à implementação, conforme o estado. Mantenha os procedimentos de ambiente em [Operações](OPERATIONS.md).
+A mudança evita acoplar o piloto a uma nuvem diferente da escolhida pelo fundador. Os adaptadores AWS, políticas de acesso, filas, armazenamento e banco produtivo exigirão projeto e validação próprios. Não há conta ou recurso AWS criado nesta execução.
 
-O [plano de execução do piloto](PLANO_DE_EXECUCAO_PILOTO.md) propõe arquitetura, stack, fronteiras de simulação e padrões de negócio. Essas propostas aguardam aprovação e não representam código já implementado.
+## Fronteiras
+
+Entradas HTTP ficam em server/app.ts e módulos registrados pela API. Configuração local, acesso transacional ao banco e armazenamento privado possuem módulos próprios. A autorização verificará organização resolvida pelo domínio, identidade, papel e escopo do recurso. O mesmo e-mail em organizações diferentes terá identidades e sessões independentes.
+
+O arquivo de mídia é real, e sua duração será verificada antes de qualquer reserva de créditos. O mock de IA substituirá somente a resposta externa. Regras de negócio, ledger, pedidos e resultados continuarão persistidos de verdade.
+
+Consulte o [plano aprovado](PLANO_DE_EXECUCAO_PILOTO.md), o [registro SPI](EXECUCAO_SPI.md) e as [operações](OPERATIONS.md) para separar o que está previsto do que já foi validado.

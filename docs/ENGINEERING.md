@@ -1,6 +1,6 @@
 # Engenharia
 
-Estas diretrizes se aplicam à medida que o Matraca ganhar código. A stack e os padrões específicos de linguagem estão **A definir**.
+Estas diretrizes se aplicam à medida que o Matraca ganhar código. O piloto usa TypeScript estrito, React, Node/Fastify e PostgreSQL local. Regras de negócio devem permanecer independentes dos adaptadores externos. Consulte Arquitetura para o estado implementado.
 
 ## Mudanças e responsabilidades
 

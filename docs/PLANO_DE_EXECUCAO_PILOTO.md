@@ -1,6 +1,6 @@
 # Plano de execução do piloto Matraca
 
-Proposta de 10 de novembro de 2026, aguardando aprovação do fundador. Este documento define o trabalho a executar. Não declara funcionalidades implementadas, testes aprovados ou publicação realizada.
+Plano aprovado pelo fundador em 10 de novembro de 2026. Execução SPI autorizada, incluindo desenvolvimento local, commits, PRs, revisão Codex e merges sem deploy. Este documento define o trabalho a executar. Não declara funcionalidades implementadas, testes aprovados ou publicação realizada.
 
 ## Resultado esperado
 
@@ -8,7 +8,7 @@ Entregar o piloto completo e executável localmente, com portal público, área 
 
 O fundador fará seus testes somente após a implementação, os testes automatizados, a inspeção das telas e a correção das falhas encontradas. A aprovação deste plano autoriza executar todas as fases sem aprovações intermediárias de decisões rotineiras. Mudanças que alterem materialmente o escopo aprovado ou operações externas não abrangidas por ele serão explicitadas.
 
-Fontes de requisitos são o [plano de ensino](PLANO_DE_ENSINO.md), as regras de [créditos e cobrança](CREDITOS_E_COBRANCA.md) e as decisões do fundador. Os padrões abaixo preenchem pendências para permitir execução autônoma. Tornam-se decisões do piloto após a aprovação deste plano.
+Fontes de requisitos são o [plano de ensino](PLANO_DE_ENSINO.md), as regras de [créditos e cobrança](CREDITOS_E_COBRANCA.md) e as decisões do fundador. Os padrões abaixo preenchem pendências para permitir execução autônoma. Foram aprovados com o plano, sujeitos às alterações explícitas posteriores do fundador.
 
 ## Fronteira entre aplicação e simulação
 
@@ -61,25 +61,19 @@ O término deste plano é um piloto local pronto para uso. A publicação em `ma
 
 A contagem financeira será independente de atividade recente. Um aluno ativo aceito conta mesmo sem enviar vídeos naquele mês. Entradas depois do corte passam a integrar o próximo snapshot. Um usuário com vários papéis que também seja aluno elegível conta uma vez.
 
-## Arquitetura proposta
+## Arquitetura de execução local
 
-Aplicação TypeScript com React Router 8, React, Cloudflare Workers e plugin Vite, banco D1 com migrações SQL/Drizzle, objetos privados em R2 e processamento por Queues. A escolha busca execução serverless e desenvolvimento local com os mesmos contratos de serviços. As versões compatíveis serão verificadas e fixadas no bootstrap. A documentação atual oferece [integração React Router](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/) e [bindings locais](https://developers.cloudflare.com/workers/local-development/bindings-per-env/).
+Na autorização, o fundador definiu AWS como destino futuro e pediu toda a execução local, sem deploy. Isso substitui a proposta inicial de Cloudflare. O piloto usa React 19, React Router 8 e Vite, API Node.js/TypeScript com Fastify, PostgreSQL 17 em Docker, armazenamento privado em diretório local e jobs duráveis no banco. A infraestrutura AWS, seus adaptadores e o pipeline de deploy serão definidos posteriormente. O código local não é apresentado como pronto para deploy sem essa etapa.
 
-O desenvolvimento usará emulação local persistente, sem bindings remotos. O [plugin Vite](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) permite configurar persistência. Um Worker reunirá entrada web, consumidor de fila e eventos agendados. A divisão interna separará domínio, persistência, provedores e interface. Não será necessário criar um conjunto de microsserviços para o piloto.
+O domínio separa identidade, autorização, cursos, carteira, cobrança e avaliação dos provedores externos. PostgreSQL permite transações e concorrência reais durante os testes locais. Mídia usa leitura por faixas, sem carregar arquivos inteiros na memória. IA, entrega de e-mail e pagamento seguem adaptadores simulados. Não haverá SDK de nuvem obrigatório para iniciar o piloto.
 
-As identidades terão unicidade por organização e e-mail normalizado. O host será resolvido por cadastro permitido. Tokens de acesso e sessões terão vínculo com organização, finalidade e expiração. Tokens serão aleatórios, armazenados como hash e consumidos atomicamente. Cookies serão host-only, HttpOnly, SameSite e Secure em HTTPS. Toda operação verificará escopo no servidor. O transporte de e-mail poderá ser trocado depois sem mudar a identidade do usuário.
+Versões são fixadas no lockfile. Node 24 LTS é o runtime de referência. Testes usam Vitest e Playwright. Fontes técnicas são [Fastify](https://fastify.dev/docs/latest/Guides/Getting-Started/), [transações PostgreSQL](https://www.postgresql.org/docs/17/tutorial-transactions.html), [Node](https://nodejs.org/en/about/previous-releases) e [Mediabunny](https://mediabunny.dev/guide/reading-media-files).
 
-Carteira, reservas, concessões, pedidos, eventos de pagamento, resultados e fechamento usarão operações atômicas, restrições e chaves de idempotência. O banco guardará jobs e outbox recuperáveis. A [fila admite entrega repetida](https://developers.cloudflare.com/queues/reference/delivery-guarantees/), portanto o consumidor não poderá presumir execução única.
-
-Arquivos serão enviados e lidos por streaming ou partes. O parser de mídia proposto é o pacote base Mediabunny, com leitura por faixas do armazenamento e duração calculada a partir das trilhas. A compatibilidade será demonstrada na primeira fase, antes de construir o pipeline. Não presumir compatibilidade de extensões FFmpeg nativas com Workers. Referências são [leitura de mídia](https://mediabunny.dev/guide/reading-media-files), [R2](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/) e [limites do runtime](https://developers.cloudflare.com/workers/platform/limits/).
-
-Testes usarão Vitest, a [integração oficial para Workers](https://developers.cloudflare.com/workers/testing/vitest-integration/) e Playwright. Agendamentos terão o mesmo handler em produção e em simulação local com relógio controlado. [Cron local](https://developers.cloudflare.com/workers/configuration/cron-triggers/) exige invocação explícita, portanto o teste não dependerá de esperar a virada do mês.
-
-Serverless reduz infraestrutura ociosa, mas não garante custo fixo produtivo zero. O custo externo será validado posteriormente com medições e condições do provedor. O piloto local não consumirá APIs pagas. A decisão de hospedagem produtiva deverá considerar [preços do runtime](https://developers.cloudflare.com/workers/platform/pricing/), mídia e avaliações reais.
+A revisão também tornou explícitos dois requisitos já solicitados. Avaliação livre funciona sem curso, com objetivo próprio, critérios e histórico da organização. Cursos podem ser ligados ou desligados por organização, mantendo avaliações livres, carteira e histórico operantes.
 
 ## Modo de execução
 
-Todas as fases começam pendentes. Cada fase terá implementação, validação dos critérios, correção das falhas e atualização documental. Uma fase dependente só será considerada concluída depois de passar pelos requisitos anteriores.
+A fase 01 está em execução. O estado corrente está no registro EXECUCAO_SPI.md. Cada fase terá implementação, validação dos critérios, correção das falhas e atualização documental. Uma fase dependente só será considerada concluída depois de passar pelos requisitos anteriores.
 
 Trabalhos independentes poderão ocorrer em paralelo, com contratos e responsabilidade por arquivos definidos. Créditos e autorização terão revisão específica antes de sua integração às telas. A execução manterá um registro curto com fase, passo, resultado dos testes, problemas resolvidos e próximos itens. Retomadas usarão esse registro, sem presumir conclusão pela passagem do tempo.
 
@@ -91,7 +85,7 @@ Comandos previstos são `npm run dev`, `npm run db:migrate`, `npm run db:seed`, 
 
 1. Conferir Git, preservar documentos existentes e registrar o estado inicial. Estabelecer a branch de integração aprovada e a branch de trabalho.
 2. Criar projeto, manifesto, lockfile, versão de runtime suportada, lint, tipos, testes, build e configuração local. Evitar leitura de arquivos de credenciais existentes.
-3. Preparar Worker, D1, R2 e Queue locais, migrações e estado persistente. Desabilitar chamadas e bindings remotos.
+3. Preparar API Node, PostgreSQL local, armazenamento privado e jobs persistidos, com migrações. Manter serviços externos em modo simulado.
 4. Provar roteamento por hosts locais para Matraca, parceiro e backoffice. Usar nomes sob `.localhost` ou resolução local controlada pelo processo de desenvolvimento.
 5. Provar gravação e interpretação de MP4, WebM e áudio, incluindo WebM de MediaRecorder sem campo de duração. Validar duração de cinco minutos, arquivos truncados e timestamps deslocados. Resolver incompatibilidades do parser antes de avançar.
 6. Demonstrar armazenamento, recuperação de arquivo e dados após reinício. Criar base dos scripts de seed e restauração local.
@@ -161,7 +155,7 @@ Comandos previstos são `npm run dev`, `npm run db:migrate`, `npm run db:seed`, 
 4. Importar integralmente o plano autoral existente, com 12 módulos, 36 aulas e 12 revisões, incluindo os exercícios e referências.
 5. Permitir copiar a base Matraca, personalizar a cópia e criar curso independente. Publicação na base não sobrescreverá cursos dos parceiros.
 6. Configurar concessão de créditos na aquisição ou por progresso, critérios de conclusão e sequência obrigatória ou adaptada.
-7. Atribuir cursos publicados a turmas ou alunos e definir a disponibilidade no catálogo direto.
+7. Atribuir cursos publicados a turmas ou alunos e definir a disponibilidade no catálogo direto. Permitir desligar o módulo de cursos por organização, preservando a avaliação livre.
 
 **Aceite** todo o curso está navegável e editável conforme permissão. É possível publicar curso próprio e atividade de acompanhamento. Nova versão preserva interpretação do histórico antigo.
 
@@ -172,10 +166,10 @@ Comandos previstos são `npm run dev`, `npm run db:migrate`, `npm run db:seed`, 
 1. Implementar gravação de áudio/vídeo, escolha de dispositivo quando suportada, cronômetro, preview, descarte e regravação.
 2. Implementar seleção de arquivo e upload com progresso, cancelamento, validação de formato e tamanho e tratamento de interrupção.
 3. Persistir arquivos privados, metadados verificados e associação com organização, aluno e atividade. Rejeitar mídia inválida antes de reservar créditos.
-4. Implementar player com busca temporal e leitura por faixas autorizada. Evitar carregar vídeo inteiro na memória do Worker.
+4. Implementar player com busca temporal e leitura por faixas autorizada. Evitar carregar vídeo inteiro na memória do servidor.
 5. Oferecer cenários de conversa individual, reunião executiva e plateia grande, com ambientação visual e descrição do desafio durante a gravação.
 6. Configurar atividades curtas de 30 segundos e revisões de até cinco minutos. Exibir limite e estimativa de créditos antes do envio.
-7. Testar permissões recusadas, falta de câmera/microfone, arquivo truncado, áudio puro, captura real automatizada e reinício do ambiente.
+7. Testar permissões recusadas, falta de câmera/microfone, arquivo truncado, áudio puro, captura real automatizada e reinício do ambiente. Permitir envio livre sem curso, com objetivo escolhido pelo aluno.
 
 **Aceite** upload e gravação geram arquivos reais reproduzíveis e durações confiáveis. A reprodução e o download obedecem ao mesmo escopo de acesso da avaliação.
 
@@ -184,7 +178,7 @@ Comandos previstos são `npm run dev`, `npm run db:migrate`, `npm run db:seed`, 
 **Dependência** fases 05, 06 e 07.
 
 1. Definir contrato do provedor com critérios, notas, justificativas, evidências temporais, recomendações e informações de uso.
-2. Construir contexto com objetivo da atividade, versão da rubrica, perfil, metas e histórico pertinente do aluno naquela organização.
+2. Construir contexto com objetivo da atividade ou avaliação livre, versão da rubrica, perfil, metas e histórico pertinente do aluno naquela organização.
 3. Criar estados de pedido, reserva, fila, processamento, sucesso, falha e cancelamento. Persistir job e outbox para recuperação.
 4. Implementar mock determinístico com sucesso, demora, falha transitória, falha definitiva, timeout e resposta inválida, selecionáveis no modo de demonstração.
 5. Validar respostas, manter timestamps dentro da duração e marcar ausência de critérios não observáveis em áudio.
@@ -203,7 +197,7 @@ Comandos previstos são `npm run dev`, `npm run db:migrate`, `npm run db:seed`, 
 4. Construir relatório detalhado com critérios e pesos, notas, pontos fortes, dificuldades, recomendações, plano de prática e origem da avaliação.
 5. Integrar evidências ao player, comparação entre tentativas e evolução por dimensão. Mudanças de rubrica deverão ficar visíveis para evitar comparações enganosas.
 6. Implementar histórico, metas, próximos passos e versão imprimível do relatório. Restringir exportação ao mesmo escopo do acesso normal.
-7. Garantir que o aluno avulso possa concluir a jornada por autoavaliação e prática, sem professor obrigatório.
+7. Garantir que o aluno avulso possa concluir a jornada por autoavaliação e prática, sem professor obrigatório. Disponibilizar avaliação livre com créditos extras também quando cursos estiverem desligados.
 
 **Aceite** aluno entra, estuda, recebe saldo, grava, recebe feedback, identifica prioridades e avança, tanto no percurso obrigatório quanto no adaptado.
 
@@ -300,7 +294,7 @@ Comandos previstos são `npm run dev`, `npm run db:migrate`, `npm run db:seed`, 
 | J17 | Fechamento de novembro apresenta consumo de novembro e licenças de dezembro, com alunos contados uma vez |
 | J18 | Alteração de preço e curso preserva contratos, rubricas e resultados históricos |
 | J19 | Reinício mantém todos os dados e a reprodução dos arquivos. Reset atua apenas sobre o ambiente local selecionado |
-| J20 | Aluno direto conclui o curso completo sem depender de professor ou serviço externo real |
+| J20 | Aluno direto conclui o curso completo sem depender de professor ou serviço externo real. Avaliação livre funciona com cursos ligados ou desligados |
 
 ## Casos de cálculo e integridade
 
@@ -317,10 +311,10 @@ Migrações serão versionadas. Antes de mudanças que afetem estado local exist
 
 Os contratos de domínio deverão permitir substituir os adaptadores externos sem reescrever carteira, cursos ou faturamento. O mock não comprova qualidade de feedback de um modelo real, custo por minuto de IA, entrega de e-mail, liquidação bancária nem funcionamento de DNS público. Essas validações serão registradas como pendências externas específicas.
 
-O emulador de filas não reproduz todas as características de concorrência produtiva. Os testes concorrentes do domínio são obrigatórios e a integração em nuvem terá validação própria. Câmera em um celular físico depende do navegador, permissões e contexto seguro, portanto o guia distinguirá o que foi automatizado do que exige dispositivo real.
+O worker local de jobs não reproduz toda a infraestrutura de fila produtiva futura. Os testes concorrentes do domínio são obrigatórios e a integração AWS terá validação própria. Câmera em um celular físico depende do navegador, permissões e contexto seguro, portanto o guia distinguirá o que foi automatizado do que exige dispositivo real.
 
 ## Condição de conclusão
 
 O plano termina quando as 14 fases e as 20 jornadas estão verificadas, os dados persistem após reinício, as regras financeiras e de isolamento passam nos testes e o fundador recebe um piloto navegável com guia de uso. Qualquer item obrigatório ainda falho mantém o trabalho em andamento.
 
-O plano não depende de uma nova rodada de aprovação ao final de cada fase. A implementação começa após a aprovação desta proposta, incluindo seus padrões de execução. Publicação externa e ativação de serviços reais ficam fora dessa aprovação local.
+O plano não depende de uma nova rodada de aprovação ao final de cada fase. A implementação foi autorizada, incluindo seus padrões de execução e o ajuste para AWS futura. Publicação externa e ativação de serviços reais ficam fora dessa aprovação local.

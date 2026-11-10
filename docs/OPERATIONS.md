@@ -1,14 +1,16 @@
 # Operações
 
-O remoto é o repositório `olimposlabs/matraca` no GitHub. Na criação destas diretrizes, o remoto não tinha referências publicadas e a árvore de trabalho não tinha configuração de CI/CD.
+O remoto é olimposlabs/matraca no GitHub. Integração usa main e trabalho usa branches codex/. O fundador autorizou PR, revisão Codex e merge. Não existe deploy nesta execução. AWS e o pipeline de deploy serão configurados posteriormente.
 
-| Tema | Estado inicial |
-| --- | --- |
-| Branch de integração, fluxo de PR e checks obrigatórios | **A definir** |
-| Ambientes, contas, regiões e configuração de execução | **A definir** |
-| CI/CD, filtros por caminho e deploys aplicáveis | **A definir** |
-| Observabilidade, rollback e resposta a incidentes | **A definir** |
-| Disponibilidade de Codex Review para o repositório | **Não confirmado** |
+## Ambiente local
+
+Node 24 LTS é a referência. `npm ci` instala versões fixadas. `npm run dev` prepara PostgreSQL via Docker Compose, migra e confere o seed antes de iniciar API e Vite. Uma DATABASE_URL explícita permite usar um banco de teste local já iniciado, como no CI. Não registrar seu valor nos logs.
+
+O volume matraca-postgres persiste entre reinícios. Os arquivos locais ficam em .data/objects. Não executar down com remoção de volumes para resolver problemas comuns. Migrações usam transação, lock e checksum para detectar alteração indevida de migração já aplicada.
+
+`npm run db:start`, `npm run db:migrate` e `npm run db:seed` permitem executar as etapas separadamente. Credenciais do compose são exclusivamente sintéticas e restritas ao PostgreSQL publicado no loopback local. O modo de execução rejeita APP_MODE diferente de local até existir configuração produtiva explícita.
+
+CI executa verificações locais equivalentes, com banco de serviço e sem segredos de nuvem. Não há job de deploy. Disponibilidade de Codex Review e resultado dos checks devem ser verificados por PR.
 
 ## Preflight operacional
 
