@@ -29,7 +29,7 @@ if (workerMode === '--worker-hold' || workerMode === '--worker-once') {
         return new Promise(() => {}); // The parent kills this process after the real claim commits.
       },
     } : new MockEvaluationProvider();
-    const processed = await runEvaluationJob(db, provider, workerMode === '--worker-hold' ? 120_000 : 8000);
+    const processed = await runEvaluationJob(db, provider, { timeoutMs: workerMode === '--worker-hold' ? 120_000 : 8000 });
     process.send?.({ type: 'done', processed });
   } finally { await db.close(); process.disconnect?.(); }
 } else {
@@ -133,7 +133,7 @@ async function checkRecovery() {
     // J15: real timeout path, with an 80 ms test deadline instead of the production 8 s deadline.
     const timeoutId = await requestEvaluation(timeoutContext.request, 'Prática com prazo excedido', 'timeout');
     for (let attempt = 1; attempt <= 3; attempt++) {
-      assert.equal(await runEvaluationJob(db, provider, 80), true);
+      assert.equal(await runEvaluationJob(db, provider, { timeoutMs: 80 }), true);
       const state = (await call(timeoutContext.request, 'GET', `/api/evaluations/${timeoutId}`)).evaluation;
       assert.equal(state.attempts, attempt);
       if (attempt < 3) {

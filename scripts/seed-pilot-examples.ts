@@ -138,7 +138,7 @@ async function finishEvaluation(id: string) {
     );
     if (job.status === 'completed') return { id, ...job };
     if (job.status !== 'queued' && job.status !== 'processing') break;
-    if (!await runEvaluationJob(app.db, provider)) await delay(250);
+    if (!await runEvaluationJob(app.db, provider, { requestId: id })) await delay(250);
   }
   throw new Error('A avaliação sintética não foi concluída. Consulte os jobs no backoffice.');
 }
