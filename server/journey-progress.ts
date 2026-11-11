@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg';
 import type { CourseDocument, CourseUnit } from './course-model.js';
 import { grantCreditsInTransaction } from './wallet.js';
+import { awardLearningEvent } from './gamification-core.js';
 
 export class JourneyError extends Error {
   constructor(readonly statusCode: 400 | 403 | 404 | 409, message: string) {
@@ -113,7 +114,7 @@ export async function courseProgress(client: PoolClient, target: JourneyTarget, 
 }
 
 async function learningEvent(client: PoolClient, enrollment: Enrollment, kind: 'lesson' | 'review' | 'course', subject: string) {
-  await client.query(
+  const inserted = await client.query<{ id: string }>(
     `WITH RECURSIVE related_groups(id,parent_id) AS (
        SELECT g.id,g.parent_id FROM education_groups g
        JOIN group_memberships m ON m.group_id=g.id AND m.org_id=g.org_id
@@ -124,9 +125,12 @@ async function learningEvent(client: PoolClient, enrollment: Enrollment, kind: '
      )
      INSERT INTO learning_events(enrollment_id,org_id,student_id,kind,subject_id,group_ids)
      SELECT $1,$2,$3,$4,$5,COALESCE(array_agg(id ORDER BY id),'{}') FROM related_groups
-     ON CONFLICT(enrollment_id,kind,subject_id) DO NOTHING`,
+     ON CONFLICT(enrollment_id,kind,subject_id) DO NOTHING RETURNING id`,
     [enrollment.id, enrollment.org_id, enrollment.student_id, kind, subject],
   );
+  if (inserted.rows[0]) await awardLearningEvent(client, {
+    id: inserted.rows[0].id, orgId: enrollment.org_id, studentId: enrollment.student_id, kind,
+  });
 }
 
 async function completeUnit(client: PoolClient, enrollment: Enrollment, unit: CourseUnit, evaluationId: string | null) {

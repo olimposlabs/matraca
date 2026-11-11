@@ -14,6 +14,7 @@ import { registerRecordings } from './recordings.js';
 import { registerEvaluations } from './evaluation/routes.js';
 import { registerJourney } from './journey.js';
 import { registerMentoring } from './mentoring.js';
+import { registerGamification } from './gamification.js';
 import staticFiles from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -64,6 +65,7 @@ export async function createApp(options: { databaseUrl?: string; storageRoot?: s
   await registerEvaluations(app);
   await registerJourney(app);
   await registerMentoring(app);
+  await registerGamification(app);
   const clientRoot = resolve(options.clientRoot ?? 'dist/client');
   if (existsSync(resolve(clientRoot, 'index.html'))) {
     await app.register(staticFiles, { root: clientRoot, wildcard: false });
