@@ -142,6 +142,21 @@ try {
   await expect(admin.locator('.shop-order-row').first()).toContainText('Lia de teste');
   await admin.getByRole('button', { name: 'Catálogo', exact: true }).click();
   const packCard = admin.locator('.shop-offer').filter({ has: admin.getByRole('heading', { name: 'Dez conversas', exact: true }) });
+  await packCard.getByRole('button', { name: 'Editar', exact: true }).click();
+  const reprice = admin.getByRole('dialog');
+  await reprice.getByLabel('Preço da faixa 2', { exact: true }).fill('1,20');
+  await reprice.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
+  await expect(packCard.locator('.shop-price')).toContainText('12,00');
+  await packCard.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await admin.getByRole('button', { name: 'Confirmar publicação', exact: true }).click();
+  await expect(packCard.locator('.shop-status')).toHaveText('Publicado');
+  await page.getByRole('button', { name: 'Cursos e pacotes', exact: true }).click();
+  await expect(page.locator('.shop-offer').filter({ hasText: 'Dez conversas' }).locator('.shop-price')).toContainText('12,00');
+  await page.getByRole('button', { name: 'Meus pedidos', exact: true }).click();
+  const previousPurchase = page.locator('.shop-order-row').filter({ hasText: 'Dez conversas' }).filter({ has: page.locator('.shop-status.paid') });
+  await expect(previousPurchase).toContainText('9,00');
+  await previousPurchase.click();
+  await expect(page.getByRole('region', { name: 'Pedido Dez conversas', exact: true })).toContainText('9,00');
   await packCard.getByRole('button', { name: 'Arquivar', exact: true }).click();
   await admin.getByRole('button', { name: 'Confirmar arquivo', exact: true }).click();
   await expect(packCard.locator('.shop-status')).toHaveText('Arquivado');
@@ -150,7 +165,7 @@ try {
   await page.goto(`${studentBase}/backoffice/commerce`);
   await expect(page.getByRole('heading', { name: 'Esta área tem outro perfil de acesso.' })).toBeVisible();
   assert.deepEqual(errors, []);
-  process.stdout.write('F12 comércio UI: catálogo/tiers, prévia, publicação/arquivo, curso com créditos derivados, pagamento pendente/aprovado/recusado/cancelado, resposta perdida e replay, carteira/matrícula, pedidos centrais e mobile passaram.\n');
+  process.stdout.write('F12 comércio UI: catálogo/tiers, prévia, publicação/arquivo, curso com créditos derivados, pagamento pendente/aprovado/recusado/cancelado, resposta perdida e replay, carteira/matrícula, preço histórico após republicação, pedidos centrais e mobile passaram.\n');
 } finally {
   await browser?.close(); await app?.close(); await db.close();
   try { await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); } finally { await control.close(); }
