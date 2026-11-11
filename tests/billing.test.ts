@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
-import { allocateBilledUsage, closeBillingPeriod, registerBilling } from '../server/billing.js';
+import { allocateBilledUsage, closeBillingPeriod } from '../server/billing.js';
 import { nextMonth } from '../server/billing-preview.js';
 
 interface Actor { orgId: string; userId: string; host: string; cookie: string }
@@ -25,8 +25,8 @@ describe('faturamento com histórico de corte, vigência e conciliação', () =>
     const url = new URL(base); url.searchParams.set('options', `-c search_path=${schema}`); db = createDatabase(url.toString());
     const directory = new URL('../server/migrations/', import.meta.url);
     for (const name of (await readdir(directory)).filter(name => name.endsWith('.sql')).sort()) await db.query(await readFile(new URL(name, directory), 'utf8'));
-    root = await mkdtemp(join(tmpdir(), 'matraca-billing-')); app = await createApp({ databaseUrl: url.toString(), storageRoot: join(root, 'objects') });
-    if (!app.hasRoute({ method: 'GET', url: '/api/billing/contracts' })) await registerBilling(app, { now: () => financialNow });
+    root = await mkdtemp(join(tmpdir(), 'matraca-billing-'));
+    app = await createApp({ databaseUrl: url.toString(), storageRoot: join(root, 'objects'), billingNow: () => financialNow });
   });
   afterAll(async () => {
     await app?.close(); await db?.close();
@@ -205,6 +205,7 @@ describe('faturamento com histórico de corte, vigência e conciliação', () =>
     const adjustmentMonth = `${parts.find(part => part.type === 'year')!.value}-${parts.find(part => part.type === 'month')!.value}`;
     financialNow = new Date(`${nextMonth(adjustmentMonth)}-02T12:00:00Z`);
     const nextInvoice = await post(f.operator, `${central(f.admin)}/close`, { month: adjustmentMonth });
+    expect(nextInvoice.statusCode, nextInvoice.body).toBe(201);
     expect(nextInvoice.json().invoice.totalCents).toBe(-50_000);
     expect((await get(f.operator, `${central(f.admin)}/invoices/${first.id}`)).json().invoice.totalCents).toBe(100_000);
   });
