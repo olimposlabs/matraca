@@ -34,7 +34,7 @@ npm run pilot:sandbox -- start --name revisao --port 5174 --examples
 O sandbox cria um schema, uma pasta de mídia, uma mailbox e um build separados. Os endereços aparecem no terminal. Use o host do sandbox ao solicitar o link e a pasta dele na consulta.
 
 ```sh
-npm run inbox -- --email ana@exemplo.test --host revisao.matraca.localhost --root .data/sandboxes/revisao/mailbox
+STORAGE_ROOT=.data/sandboxes/revisao/objects npm run inbox -- --email ana@exemplo.test --host revisao.matraca.localhost
 ```
 
 Encerre a execução com Ctrl+C para liberar o lock. O comando abaixo apaga apenas o sandbox com o nome confirmado. Reiniciar com o mesmo nome retoma os dados existentes.

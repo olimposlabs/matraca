@@ -1,0 +1,77 @@
+# Aceite do piloto — matriz J01–J20
+
+Esta matriz registra evidências observadas em 11/11/2026 e os passos necessários para reproduzir cada jornada do [plano aprovado](../PLANO_DE_EXECUCAO_PILOTO.md). Ela não declara concluído o gate da F14. A baseline deste documento é `d20af91`, com ajustes de interface ainda locais; F11, F12 e F13 têm evidências em worktrees separados e integração final em andamento. O SHA exato dos processos já iniciados nas portas 3010 e 3013 não foi registrado: **Não confirmado**. Uma execução histórica não substitui a regressão do build integrado final quando o comportamento afetado mudou.
+
+**UI observada** significa interação com a interface e API/banco reais, com serviços externos simulados. **Parcial** indica que somente parte da jornada ou sua camada de API foi executada. **Pendente** significa que o resultado necessário ainda não está disponível. Dados sintéticos preparados diretamente no banco são identificados como fixtures; não representam funcionalidades que o usuário final precise executar manualmente.
+
+## Preparação e registro da reprodução
+
+1. Use PostgreSQL local e um sandbox exclusivo, com seed novo. Não execute os scripts históricos de `/tmp` contra a demonstração: alguns possuem portas e caminhos fixos e esperam uma persona sem progresso. Registre branch, SHA, alterações locais, porta, nome do schema e caminho de armazenamento antes de começar.
+2. O comando em implementação na F14 é `npm run pilot:sandbox -- start --name aceite_f14 --port 3014`. Ele imprime os três hosts e a caixa de e-mail local. Seu próprio aceite de reinício/reset está pendente em J19; não se confunde com evidência de execução já concluída.
+3. Abra sessões independentes para Matraca direto, parceiro e backoffice. Para obter acesso, solicite o link pela tela e consulte somente a mensagem local correspondente. Não coloque tokens, cookies ou links de login em logs, screenshots ou documentos.
+4. Use arquivos sintéticos. Uma gravação curta serve às aulas; J03 exige uma revisão de 300 segundos verificados no servidor. O gerador histórico `/tmp/matraca-f14-media.mjs` usa FFmpeg; `/tmp/matraca-f14-review-probe.json` registrou `durationMicroseconds=300000000`, vídeo sem áudio e 1.439.551 bytes. Critérios que exigem áudio continuam indisponíveis nesse arquivo.
+5. Anote resultado, valores antes/depois, IDs de fixtures sem segredos, erros de página e screenshots. Depois de corrigir um achado, repita a jornada afetada. Diferencie simulação de provedor de mock da API: o primeiro faz parte do piloto; o segundo não valida integração real.
+
+## Matriz
+
+| ID | Reprodução pela interface e resultado esperado | Evidência verificada | Cobertura e lacuna |
+| --- | --- | --- | --- |
+| J01 | Visitante abre o portal direto, cria conta, escolhe curso, revisa preço, aprova pagamento simulado e abre a jornada com matrícula/créditos corretos. | F02 registrou cadastro direto e acesso real em `EXECUCAO_SPI.md`. E12 executou compra de curso com sete créditos e matrícula na versão ofertada. | **Parcial.** Cadastro e compra têm evidências separadas. O roteiro comercial parte de identidade/curso sintéticos preparados no banco; falta uma execução única de visitante→cadastro→compra→jornada. |
+| J02 | Aluno abre uma aula, marca checklist, conclui estudo, confere concessão, envia mídia, solicita avaliação e lê o relatório. | E09 e E14: estudo, upload, worker e saldo reais; E14 repetiu o fluxo em 48 unidades. | **UI observada.** Créditos conferidos após cada unidade. Reexecutar se a integração alterar estudo, avaliação ou carteira. |
+| J03 | Aluno abre uma revisão, conclui estudo, envia vídeo de 300s, solicita avaliação e clica evidência no player. | E14: vídeo de `300000000` µs, consumo de 5 créditos, duração de 300s no player e reprodução deslocada pela evidência. | **UI observada.** Arquivo sintético válido, sem áudio; não avalia qualidade pedagógica real da IA. |
+| J04 | Aluno envia áudio, abre relatório e verifica critérios visuais sem nota e sem evidência inventada. | E09: WAV sintético, relatório e evolução com presença visual não comparável. Script versionado `scripts/check-evaluations-ui.ts` também cobre áudio/player. | **UI observada.** Nulo não aparece como zero nem como melhora de desempenho. |
+| J05 | Um aluno faz diagnóstico e recebe prioridades; outro aluno de parceiro com jornada estrita encontra etapas bloqueadas. | E09: diagnóstico, prioridades, recomendação, pré-requisito e imposição de sequência pelo parceiro. | **Parcial.** Os dois modos foram exercitados na mesma persona com alteração auditada da preferência. Falta registrar duas personas distintas no build final. |
+| J06 | Backoffice cria parceiro, host, administrador e contrato; administrador publica marca e copia curso base. | F03 registrada em `EXECUCAO_SPI.md`: criação/login/branding/upload/restore/409; E06: cópia integral e independente do plano. | **Parcial.** Contrato comercial e encadeamento de todas as etapas no parceiro recém-criado aguardam F12. |
+| J07 | Org cria escola, aprova professor e delega gestor; escola cria turma e matricula o mesmo aluno em mais de uma turma. | E04: escola/aluno/turma, matrícula, vínculo profissional, atribuição docente e leitura do aluno. Testes `education.test.ts` cobrem vínculos e escopo. | **Parcial.** O script histórico não prova pela UI aprovação de professor, delegação inicial e duas matrículas para a mesma pessoa na mesma execução. |
+| J08 | Professor abre evidência, registra mentoria/revisão, combina ação; aluno responde e faz nova tentativa; professor acompanha. | E10: mentoria com autoria, revisão humana com trecho/player, resposta do aluno e acompanhamento escolar. | **Parcial.** A nova avaliação posterior à mentoria e seu acompanhamento pelo professor ainda não constam do resultado E10. |
+| J09 | Org transfere aluno; aluno mantém turma encerrada no histórico; professor anterior perde acesso e destino passa a acompanhar. | E04 e registro SPI F04: transferência pela UI, histórico preservado, professor passou de HTTP200 para403 e gestor do destino recebeu200. | **UI observada na F04.** Regressão final ainda deve incluir as fronteiras novas de mentoria e faturamento se afetadas. |
+| J10 | Mesmo e-mail entra em dois hosts no mesmo navegador; duas abas mantêm sessões, vídeos, saldo e progresso separados; logout de uma não encerra a outra. | Registro SPI F02: mesmo e-mail/contexto de navegador e logout independente. E09 parceiro e E14 direto têm progresso/carteiras próprios. | **Parcial.** A combinação simultânea com vídeos, progresso e saldo após as fases posteriores ainda precisa de evidência única. |
+| J11 | Usuário tenta consultar recurso de outra organização e de escola fora do seu escopo; servidor nega sem devolver dados. | E06: anexo403 antes da matrícula e atribuição escolar404 fora do escopo. E04: revogação após transferência. Suítes de identidade, educação, mídia e avaliações exercitam referências cruzadas. | **Parcial.** Negativas reais verificadas nas fronteiras citadas; incluir comércio, faturas e ranking na regressão integrada final. |
+| J12 | Aluno compra pacote; repete callback idêntico e recebe somente uma concessão. | E12: pacote comprado pela UI; resposta da aprovação perdida após commit; retry com o mesmo evento retornou replay e manteve uma concessão. | **UI observada na F12.** Pedido e saldo persistidos; outras simulações recusadas/canceladas não concederam créditos. |
+| J13 | Escola autorizada concede extras; revogar permissão bloqueia concessão; somente consumo concluído entra na fatura central. | E05: concessão escolar, limite e restrições reais; política restaurada. F12 cobre consumo líquido e exclusão de concessões/reservas na apuração. | **Parcial.** Falta evidência integrada UI de concessão escolar seguida de fechamento da fatura correspondente. |
+| J14 | Preparar um crédito disponível, disparar dois pedidos concorrentes e conferir que só um reserva. | `tests/wallet.test.ts`: caso “somente um pedido concorrente reserva o último crédito”, com banco isolado; execução anterior registrada na F05. | **Parcial — domínio/banco.** Ainda não foi registrado o disparo concorrente por duas sessões de navegador no build final. |
+| J15 | Simular falha transitória/definitiva/timeout e reiniciar worker após reserva; conferir consumo único ou liberação. | F08 UI executou falha definitiva, cancelamento e retry transitório. `evaluations.test.ts` cobre limite de timeout, rollback e recuperação de lease. E13 retomou tarefa real, com consumo único. | **Parcial.** Timeout pela tela e reinício de processo após reserva precisam de evidência operacional final; recuperação de lease em teste não é o mesmo que reiniciar o app. |
+| J16 | Org cria campanha com prêmios3/2/1, encerra e repete fechamento; carteiras não recebem novamente. | E11: campanha/fechamento pela UI e três lançamentos; repetição HTTP não criou lançamentos adicionais. | **UI observada no head anterior.** Houve correção posterior de concorrência; o integrador informou que repetirá o script no head corrente. Resultado novo pendente. |
+| J17 | Fechar novembro; demonstrativo mostra consumo de novembro, licenças de dezembro e cada aluno uma vez, com professor/convite tratado pela regra. | F12: testes de faturamento executados com exemplo de R$1.440, cortes, aceite e elegibilidade histórica. | **Parcial — API.** `check-billing-ui.ts` com apuração real ainda em preparação. O smoke visual disponível usou fixtures HTTP. |
+| J18 | Alterar preço e publicar curso novo; abrir pedido/fatura/matrícula/avaliação antigos e comparar snapshot e rubrica. | E06: matrícula e conteúdo v1 preservados após publicação v2. E09/E14: versão e rubrica da atividade preservadas. F12: testes de preço/contrato/snapshot. | **Parcial.** Falta o encadeamento comercial completo pela UI com preço, curso, relatório e contrato antigos. |
+| J19 | Registrar contas, mídia, curso, saldo, compra e fatura; encerrar/reiniciar app; abrir tudo novamente; resetar somente um sandbox nomeado. | Recarga de página preservou dados em E04–E14. Implementação `scripts/sandbox.ts` em andamento. | **Pendente.** Recarga não comprova reinício. Não há ainda resultado consolidado de reinício, reprodução da mídia e isolamento do reset. |
+| J20 | Aluno direto percorre o curso autoral inteiro sem professor; depois faz prática livre com cursos ligados e desligados. | E14: 12 módulos,36 aulas,12 revisões;192 itens;48 avaliações;48/48 e100%; duas práticas livres; mesma versão1; preferência restaurada. | **UI observada.** Saldo: inicial1 + estudo96 + conclusão20 − avaliações52 − livres2 =63; reservado0. Zero erros de página, desktop/mobile sem overflow. |
+
+## Catálogo das evidências
+
+Os caminhos `/tmp` e `.data` abaixo são artefatos locais, ignorados pelo Git. Sua existência e, quando disponível, `ok:true` foram conferidos na preparação desta matriz. Os scripts versionados podem ser executados novamente em um checkout com suas rotas integradas; os scripts históricos de `/tmp` exigem adaptação explícita de seus hosts, mailbox e caminhos para um sandbox novo.
+
+| Ref. | Artefato e escopo |
+| --- | --- |
+| E04 | `/tmp/matraca-f04-browser.mjs`; screenshots `/tmp/matraca-f04-education-desktop.png` e `matraca-f04-student-mobile.png`; execução real e limpeza por IDs documentadas em [Execução SPI](../EXECUCAO_SPI.md). Não há JSON de resultado final dessa rodada; o arquivo `cleanup.json` não é prova de sucesso. |
+| E05 | `/tmp/matraca-f05-e2e-results.json`,7 fluxos,`ok:true`,erros vazios; scripts `matraca-f05-e2e.mjs` e `matraca-f05-e2e-continuation.mjs`. Dados de demonstração foram restaurados por movimentos auditáveis, sem apagar ledger. |
+| E06 | `/tmp/matraca-f06-e2e-results.json`,13 fluxos,`ok:true`; scripts `matraca-f06-e2e.mjs` e `matraca-f06-school-e2e.mjs`; schema isolado e porta3006. |
+| E07 | `scripts/check-recordings-ui.ts` e `docs/technical/PHASE07_UI_VALIDATION.md` no worktree F07: API/banco reais isolados, Chromium com dispositivos sintéticos, upload, captura e reprodução reais. Não valida câmera física/Safari/Firefox. |
+| E08 | `scripts/check-evaluations-ui.ts`; execução registrada na F08 em `EXECUCAO_SPI.md`; screenshots `.data/phase08-report-desktop.png`/`phase08-report-mobile.png`. API, worker, saldo e mídia reais; provedor simulado. |
+| E09 | `/tmp/matraca-f09-e2e-results.json`,9 fluxos,`ok:true`,erros vazios; scripts `matraca-f09-e2e.mjs`, `matraca-f09-e2e-continue.mjs` e `matraca-f09-e2e-continue2.mjs`; porta3009/schema`e2e09_jiuums`. As continuações corrigiram espera/seletores do harness, sem substituir chamadas do produto por mocks. |
+| E10 | `/tmp/matraca-f10-e2e-results.json`,4 fluxos,`ok:true`,erros vazios; `/tmp/matraca-f10-e2e.mjs`. Não registra a nova avaliação posterior à ação de mentoria. |
+| E11 | `/tmp/matraca-phase11/scripts/check-gamification-ui.ts` e `docs/technical/PHASE11_UI_VALIDATION.md`: dados iniciais sintéticos inseridos no banco, depois UI/API reais; screenshots `.data/phase11-*.png`. A aprovação registrada antecede a última correção de concorrência. |
+| E12 | Worktree F12: `tests/pricing.test.ts`41 casos, `tests/billing.test.ts`15 e `tests/commerce.test.ts`22, execução reportada pelo responsável. `/tmp/matraca-f12-billing-smoke.mjs` e screenshots correspondentes são smoke com API mockada, não E2E real. Comércio real executado duas vezes por `scripts/check-commerce-ui.ts` na porta3012: catálogo, tiers, estados de pagamento, retry e matrícula; registro `docs/technical/PHASE12_COMMERCE_UI_VALIDATION.md`. Faturamento real ainda aguarda resultado. |
+| E13 | `/tmp/matraca-f13-e2e-results.json`,8 fluxos,`ok:true`,erros vazios; `/tmp/matraca-f13-e2e.mjs`; schema`e2e13_jyew3f`,porta3013. Tarefa futura e reserva órfã foram fixtures de banco autorizadas; retomada/liberação foram feitas pela UI. Política original restaurada com nova revisão. |
+| E14 | `/tmp/matraca-f14-course-results.json`,48 unidades e50 avaliações,`ok:true`; `/tmp/matraca-f14-course-e2e.mjs`; schema isolado`e2e09_jiuums`,porta3010,org direta; sem alterações na demonstração. Seis screenshots `matraca-f14-{review-300s-report,complete-course,complete-journey}-{desktop,mobile}.png`. |
+
+## Comandos de apoio
+
+Execute a partir do checkout que contenha as rotas correspondentes, com as portas reservadas pelos scripts livres:
+
+```sh
+npm run typecheck
+npm run lint
+npm run build
+npm exec tsx -- scripts/check-recordings-ui.ts
+npm exec tsx -- scripts/check-evaluations-ui.ts
+npm exec vitest -- run tests/wallet.test.ts tests/evaluations.test.ts tests/education.test.ts tests/identity.test.ts
+```
+
+Após integrar F11/F12, os scripts e testes dessas fases devem ser executados no mesmo head da entrega. A presença de um arquivo de teste ou de um comando nesta lista não significa que ele passou no head final.
+
+## Ajustes editoriais da F14
+
+O leitor e a prévia agora distinguem créditos na aquisição de recompensas por estudo, respeitando o nome configurado. Preferências deixam de anunciar cursos/diagnóstico/ranking como recursos futuros. Os radios de escolha da jornada usam17×17px, sem herdar a largura e altura mínima dos campos de texto.
+
+Tipos, lint dos arquivos alterados e build passaram. `/tmp/matraca-f14-editorial-check.mjs` verificou renderização dos dois modos de crédito e aplicou o CSS novo ao DOM autenticado do harness3010: radios17×17px, labels flex e tela móvel sem overflow. Essa verificação de CSS não equivale a servir o bundle F14 completo. Screenshots locais: `/tmp/matraca-f14-radio-css-{desktop,mobile}.png`.
