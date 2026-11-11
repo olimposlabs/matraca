@@ -100,6 +100,11 @@ try {
   const errors: string[] = [];
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
   const directPage = await context.newPage(), partnerPage = await context.newPage(), officePage = await context.newPage();
+  await directPage.goto(direct);
+  await directPage.keyboard.press('Tab');
+  await expect(directPage.getByRole('link', { name: 'Ir para o conteúdo' })).toBeFocused();
+  await directPage.keyboard.press('Enter');
+  await expect(directPage.locator('main#conteudo')).toBeFocused();
   await login(directPage, direct, 'aluno2@matraca.test');
   await login(partnerPage, partner, 'aluno2@parceiro.test');
   await login(officePage, office, 'operador@matraca.test');

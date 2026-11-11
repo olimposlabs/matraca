@@ -307,7 +307,7 @@ function AppShell() {
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
       <WorkspaceNavigation />
-      <main id="conteudo">
+      <main id="conteudo" tabIndex={-1}>
         <Suspense fallback={<p className="container" role="status">Carregando página…</p>}>
           <Routes>
             <Route path="/" element={<HomeEntry />} />
