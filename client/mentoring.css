@@ -1,0 +1,85 @@
+.mentoring-page { padding-block: 44px 80px; }
+.mentoring-page h1 { max-width: 780px; }
+.mentoring-panel, .mentoring-workspace { border: 1px solid var(--color-line, #d9ddd5); border-radius: 24px; background: var(--color-surface, #fff); overflow: hidden; }
+.mentoring-panel-heading, .mentoring-student-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px; }
+.mentoring-student-heading { align-items: flex-start; border-bottom: 1px solid var(--color-line, #d9ddd5); }
+.mentoring-panel h2, .mentoring-workspace h2 { margin: 0 0 8px; font-size: 25px; }
+.mentoring-student-heading p { margin: 0; color: var(--color-muted, #59665f); overflow-wrap: anywhere; }
+.mentoring-search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--color-line, #d9ddd5); border-radius: 12px; padding: 10px 13px; max-width: 320px; }
+.mentoring-search input { border: 0; background: transparent; width: 100%; min-width: 0; color: inherit; font: inherit; }
+.mentoring-roster article { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; padding: 24px 28px; border-top: 1px solid var(--color-line, #d9ddd5); }
+.mentoring-roster h3 { margin: 0 0 4px; font-size: 19px; }
+.mentoring-roster p { margin: 0 0 8px; color: var(--color-muted, #59665f); overflow-wrap: anywhere; }
+.mentoring-roster small { color: var(--color-muted, #59665f); line-height: 1.6; }
+.mentoring-student-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 14px; background: var(--color-background, #faf8f2); color: var(--color-primary, #b8442b); }
+.mentoring-tabs { display: flex; gap: 7px; flex-wrap: wrap; padding: 18px 24px; border-bottom: 1px solid var(--color-line, #d9ddd5); }
+.mentoring-tabs button { font: inherit; font-size: 14px; border: 1px solid transparent; background: transparent; color: var(--color-muted, #59665f); padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+.mentoring-tabs button[aria-pressed=true] { color: var(--color-ink, #1f2925); border-color: var(--color-line, #d9ddd5); background: var(--color-background, #faf8f2); font-weight: 650; }
+.mentoring-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 24px; }
+.mentoring-card { padding: 24px; border: 1px solid var(--color-line, #d9ddd5); border-radius: 17px; min-width: 0; }
+.mentoring-card h3 { margin: 17px 0 10px; font-size: 20px; line-height: 1.35; overflow-wrap: anywhere; }
+.mentoring-card h4 { font-size: 13px; margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+.mentoring-card p, .mentoring-card li { line-height: 1.6; overflow-wrap: anywhere; }
+.mentoring-card ul { padding-left: 20px; }
+.mentoring-card-heading { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.mentoring-kind { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 650; color: var(--color-muted, #59665f); }
+.mentoring-badge { font-size: 12px; padding: 5px 9px; border-radius: 99px; background: var(--color-background, #faf8f2); color: var(--color-ink, #1f2925); border: 1px solid var(--color-line, #d9ddd5); }
+.mentoring-badge.completed { background: #edf6ef; color: #285c3c; }
+.mentoring-card small { display: flex; align-items: center; gap: 6px; color: var(--color-muted, #59665f); line-height: 1.5; }
+.mentoring-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+.mentoring-student-heading .mentoring-actions { margin-top: 0; }
+.mentoring-pagination { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 20px 24px; border-top: 1px solid var(--color-line, #d9ddd5); color: var(--color-muted, #59665f); font-size: 13px; }
+.mentoring-pagination > div { display: flex; gap: 8px; }
+.mentoring-state, .mentoring-empty { padding: 46px 24px; text-align: center; color: var(--color-muted, #59665f); line-height: 1.7; }
+.mentoring-state .button { margin: 8px auto; }
+.mentoring-notice { display: flex; align-items: center; gap: 10px; margin: 18px 24px 0; padding: 13px; border-radius: 10px; background: #edf6ef; color: #285c3c; }
+.mentoring-back { margin-bottom: 16px; }
+.mentoring-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+.mentoring-dialog { width: min(820px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--color-line, #d9ddd5); border-radius: 22px; background: var(--color-surface, #fff); color: var(--color-ink, #1f2925); overflow: auto; box-shadow: 0 24px 100px #18231c30; }
+.mentoring-dialog::backdrop { background: #17231dc0; }
+.mentoring-dialog > header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 24px; border-bottom: 1px solid var(--color-line, #d9ddd5); background: var(--color-surface, #fff); }
+.mentoring-dialog > header h2 { margin: 0; font-size: 23px; overflow-wrap: anywhere; }
+.mentoring-form { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.mentoring-form label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 600; min-width: 0; }
+.mentoring-form input, .mentoring-form textarea, .mentoring-form select { width: 100%; min-width: 0; border: 1px solid var(--color-line, #d9ddd5); border-radius: 10px; padding: 11px 12px; background: var(--color-surface, #fff); color: inherit; font: inherit; font-weight: 400; }
+.mentoring-form textarea { resize: vertical; }
+.mentoring-form small { color: var(--color-muted, #59665f); font-weight: 400; line-height: 1.5; }
+.mentoring-form p { margin: 0; line-height: 1.6; }
+.mentoring-form > .button { align-self: flex-start; }
+.mentoring-form-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.mentoring-observation { border: 1px solid var(--color-line, #d9ddd5); padding: 18px; margin: 0; border-radius: 13px; min-width: 0; display: grid; gap: 16px; }
+.mentoring-observation legend { font-size: 13px; padding-inline: 6px; font-weight: 650; }
+.mentoring-observation .mentoring-actions { margin: 0; }
+.mentoring-media { padding: 24px; background: var(--color-background, #faf8f2); }
+.mentoring-media h3 { margin: 0 0 18px; }
+.mentoring-media video { display: block; width: 100%; max-height: 360px; background: #111; border-radius: 12px; }
+.mentoring-media audio { width: 100%; }
+.mentoring-media small { display: block; margin-top: 12px; color: var(--color-muted, #59665f); }
+.mentoring-ai { margin: 20px 24px 0; border: 1px solid var(--color-line, #d9ddd5); border-radius: 12px; padding: 16px; }
+.mentoring-ai summary { cursor: pointer; font-weight: 650; }
+.mentoring-ai p { line-height: 1.6; }
+.mentoring-timeline { list-style: none; padding: 24px; margin: 0; }
+.mentoring-timeline li { border-left: 2px solid var(--color-line, #d9ddd5); padding: 0 0 28px 20px; }
+.mentoring-timeline li > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.mentoring-timeline h3 { margin: 16px 0 8px; }
+.mentoring-timeline small { color: var(--color-muted, #59665f); }
+.mentoring-timeline blockquote { margin: 16px 0 0; padding: 15px; background: var(--color-background, #faf8f2); border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mentoring-conflict { border: 1px solid #d8a377; background: #fff8ef; padding: 16px; border-radius: 12px; }
+.mentoring-conflict p { margin-bottom: 12px; }
+.mentoring-page button:focus-visible, .mentoring-dialog button:focus-visible, .mentoring-form input:focus-visible, .mentoring-form textarea:focus-visible, .mentoring-form select:focus-visible { outline: 3px solid var(--color-primary, #b8442b); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .mentoring-page { padding-block: 25px 50px; }
+  .mentoring-panel-heading, .mentoring-student-heading { flex-direction: column; align-items: stretch; padding: 20px; }
+  .mentoring-search { max-width: none; }
+  .mentoring-roster article { grid-template-columns: auto minmax(0, 1fr); padding: 20px; }
+  .mentoring-roster article > button { grid-column: 2; justify-self: start; }
+  .mentoring-cards { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .mentoring-card { padding: 19px; }
+  .mentoring-pagination { flex-direction: column; align-items: stretch; }
+  .mentoring-pagination > div { justify-content: space-between; }
+  .mentoring-form-columns { grid-template-columns: minmax(0, 1fr); }
+  .mentoring-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); border-radius: 16px; }
+  .mentoring-dialog > header, .mentoring-form, .mentoring-media { padding: 18px; }
+  .mentoring-dialog > header h2 { font-size: 20px; }
+  .mentoring-actions .button { white-space: normal; }
+}
