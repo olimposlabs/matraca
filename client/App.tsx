@@ -30,6 +30,7 @@ import { WalletPage } from './wallet';
 import { RecordingsPage } from './recordings';
 import { EvaluationAction, EvaluationsPage } from './evaluations';
 import { CoursesManagementPage, StudentCoursesPage } from './courses';
+import { JourneyPage, EvolutionPage } from './journey';
 
 const waveformHeights = [18, 30, 23, 42, 57, 36, 25, 48, 68, 52, 31, 44, 60, 79, 65, 43, 29, 46, 63, 48, 34, 54, 72, 49, 31, 45, 58, 35, 25, 39, 22, 14];
 
@@ -241,6 +242,11 @@ function HomeEntry() {
   return org?.kind === 'matraca' ? <HomePage /> : <LoginPage />;
 }
 
+function MemberEntry() {
+  const { user } = useAuth();
+  return user?.roles.includes('student') ? <Navigate to="/app/journey" replace /> : <AuthenticatedArea />;
+}
+
 function AdminEntry() {
   const { user } = useAuth();
   return user?.roles.includes('school') && !user.roles.includes('org_admin') ? <Navigate to="/admin/education" replace /> : <OrganizationSettingsPage />;
@@ -256,6 +262,8 @@ function AppShell() {
       '/status': 'Status do ambiente — Matraca',
       '/login': 'Acesso ao piloto — Matraca',
       '/app': 'Área do aluno — Matraca',
+      '/app/journey': 'Minha jornada — Matraca',
+      '/app/evolution': 'Minha evolução — Matraca',
       '/admin': 'Gestão — Matraca',
       '/backoffice': 'Backoffice — Matraca',
       '/admin/education': 'Pessoas e turmas — Matraca',
@@ -279,7 +287,7 @@ function AppShell() {
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
       <WorkspaceNavigation />
-      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/courses" element={<StudentCoursesPage />} /><Route path="/app/courses/:courseId" element={<StudentCoursesPage />} /><Route path="/admin/courses" element={<CoursesManagementPage />} /><Route path="/backoffice/courses" element={<CoursesManagementPage central />} /><Route path="/app/recordings" element={<AuthenticatedArea area="learner"><RecordingsPage renderActions={recording => <EvaluationAction key={recording.id} recording={recording} />} /></AuthenticatedArea>} /><Route path="/app/evaluations" element={<EvaluationsPage />} /><Route path="/app/evaluations/:evaluationId" element={<EvaluationsPage />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<MemberEntry />} /><Route path="/app/journey" element={<JourneyPage />} /><Route path="/app/evolution" element={<EvolutionPage />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/courses" element={<StudentCoursesPage />} /><Route path="/app/courses/:courseId" element={<StudentCoursesPage />} /><Route path="/admin/courses" element={<CoursesManagementPage />} /><Route path="/backoffice/courses" element={<CoursesManagementPage central />} /><Route path="/app/recordings" element={<AuthenticatedArea area="learner"><RecordingsPage renderActions={recording => <EvaluationAction key={recording.id} recording={recording} />} /></AuthenticatedArea>} /><Route path="/app/evaluations" element={<EvaluationsPage />} /><Route path="/app/evaluations/:evaluationId" element={<EvaluationsPage />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
       <SiteFooter />
     </div>
   );

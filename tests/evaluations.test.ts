@@ -5,12 +5,12 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
+import { emptyCourse, validatePublication, type CourseDocument, type CourseUnit } from '../server/course-model.js';
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
 import { getWallet, grantCredits } from '../server/wallet.js';
-import { emptyCourse, type CourseDocument } from '../server/course-model.js';
 
 interface Student {
   orgId: string;
@@ -82,7 +82,7 @@ describe('fila, relatórios e reserva atômica', () => {
     return id;
   }
 
-  function call(actor: Student, method: 'GET' | 'POST', url: string, body?: object) {
+  function call(actor: Student, method: 'GET' | 'POST' | 'PUT', url: string, body?: object) {
     return app.inject({
       method, url,
       headers: { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' },
@@ -136,22 +136,31 @@ describe('fila, relatórios e reserva atômica', () => {
   it('preserva cenário e enunciado da versão publicada junto do objetivo pessoal', async () => {
     const actor = await student(2);
     const courseId = randomUUID(), versionId = randomUUID(), enrollmentId = randomUUID();
-    const document: CourseDocument = { ...emptyCourse('Curso sintético'), modules: [{ id: 'module-1', title: 'Clareza', introductionMarkdown: '', units: [{
+    const document: CourseDocument = { ...emptyCourse('Curso sintético'), journey: 'adaptive', modules: [{ id: 'module-1', title: 'Clareza', introductionMarkdown: '', units: [{
       id: 'lesson-1', title: 'Proposta em três partes', chapter: '', kind: 'lesson', mode: 'content', bodyMarkdown: 'Conteúdo de teste.',
       instructionMarkdown: 'Apresente contexto, proposta e próximo passo para uma reunião executiva.', checklist: [], references: [], assetIds: [], prerequisites: [],
       studyCreditGrant: 1, requiresEvaluation: true,
       activity: { maximumSeconds: 30, acceptedMedia: ['audio'], scenario: 'executive', criteria: [{ id: 'clarity', title: 'Clareza', enabled: true, weight: 1, modality: 'audio', descriptors: ['Inicial', 'Parcial', 'Consistente', 'Adaptado'] }] },
     }] }] };
+    const activity = document.modules[0].units[0];
+    document.modules[0].units.unshift({ ...activity, id: 'intro', title: 'Introdução' });
     await db.query("INSERT INTO courses(id,org_id,title,status,draft) VALUES($1,$2,$3,'published',$4)", [courseId, actor.orgId, document.title, document]);
     await db.query('INSERT INTO course_versions(id,org_id,course_id,version,document) VALUES($1,$2,$3,1,$4)', [versionId, actor.orgId, courseId, document]);
     await db.query("INSERT INTO course_enrollments(id,org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,$5,'demo','test')", [enrollmentId, actor.orgId, courseId, versionId, actor.userId]);
     const media = await recording(actor);
     await db.query("UPDATE recordings SET purpose='course',enrollment_id=$2,version_id=$3,unit_id='lesson-1',scenario='executive',objective='Quero falar com mais calma.' WHERE id=$1", [media, enrollmentId, versionId]);
+    const study = await call(actor, 'PUT', `/api/journey/courses/${enrollmentId}/study`, { unitId: 'lesson-1', checked: [], completeStudy: true });
+    expect(study.statusCode, study.body).toBe(200);
+    await db.query('UPDATE orgs SET settings=$2 WHERE id=$1', [actor.orgId, { strictJourney: true }]);
+    const blocked = await call(actor, 'POST', '/api/evaluations', { recordingId: media, clientKey: randomUUID() });
+    expect(blocked.statusCode, blocked.body).toBe(409);
+    expect((await getWallet(db, actor)).reserved).toBe(0);
+    await db.query('UPDATE orgs SET settings=$2 WHERE id=$1', [actor.orgId, { strictJourney: false }]);
     const order = await submit(actor, media);
     const snapshot = (await db.query('SELECT context FROM evaluation_requests WHERE id=$1', [order.id])).rows[0].context;
     expect(snapshot).toMatchObject({
       objective: 'Quero falar com mais calma.', audienceScenario: 'executive',
-      activity: { title: 'Proposta em três partes', instructionMarkdown: document.modules[0].units[0].instructionMarkdown },
+      activity: { title: 'Proposta em três partes', instructionMarkdown: activity.instructionMarkdown },
       rubricVersion: `${versionId}:lesson-1:v1`,
     });
     await db.query('UPDATE courses SET draft=$2 WHERE id=$1', [courseId, { ...document, title: 'Rascunho posterior' }]);
@@ -300,4 +309,92 @@ describe('fila, relatórios e reserva atômica', () => {
       expect(await getWallet(db, actor)).toMatchObject({ balance: 1, reserved: 0 });
     } finally { await blocker.query('ROLLBACK'); blocker.release(); await pending?.catch(() => {}); }
   });
+  it('salva perfil e jornada sem sobrescrever outros dados do aluno', async () => {
+    const actor = await student(1);
+    await db.query("UPDATE users SET profile=profile||$2::jsonb WHERE id=$1", [actor.userId, { language: "pt-BR" }]);
+    const updated = await call(actor, 'PUT', '/api/journey/profile', {
+      profession: 'Docente', experience: 'beginner', goals: ['Explicar uma ideia', 'Explicar uma ideia'], mode: 'diagnostic',
+    });
+    expect(updated.statusCode, updated.body).toBe(200);
+    const journey = await call(actor, 'GET', '/api/journey');
+    expect(journey.json()).toMatchObject({
+      profile: { profession: 'Docente', experience: 'beginner', goals: ['Explicar uma ideia'], mode: 'diagnostic' },
+      diagnostic: { enabled: true, evaluationId: null, priorities: [] },
+    });
+    expect((await db.query('SELECT profile FROM users WHERE id=$1', [actor.userId])).rows[0].profile.language).toBe('pt-BR');
+    const diagnostic = await submit(actor, await recording(actor, 20_000_000, 'diagnostic'));
+    await runEvaluationJob(db, provider);
+    const adapted = await call(actor, 'GET', '/api/journey');
+    expect(adapted.statusCode, adapted.body).toBe(200);
+    expect(adapted.json().diagnostic).toMatchObject({ evaluationId: diagnostic.id, status: 'completed' });
+    expect(adapted.json().diagnostic.priorities).toHaveLength(2);
+  });
+
+  it('libera estudo e crédito uma vez, mantém sequência e conclui por avaliação válida', async () => {
+    const actor = await student(0, { strictJourney: true });
+    const courseId = randomUUID();
+    const versionId = randomUUID();
+    const enrollmentId = randomUUID();
+    const recordingId = randomUUID();
+    const typeId = randomUUID();
+    const groupId = randomUUID();
+    const lesson: CourseUnit = {
+      id: 'lesson', title: 'Clareza', kind: 'lesson', chapter: '', mode: 'content',
+      bodyMarkdown: 'Exercício de clareza.', instructionMarkdown: 'Explique a ideia.', checklist: ['Defini a ideia'],
+      references: [], assetIds: [], prerequisites: [], studyCreditGrant: 1, requiresEvaluation: true,
+      activity: { maximumSeconds: 30, acceptedMedia: ['audio'], scenario: 'one_on_one', criteria: [{
+        id: 'clarity', title: 'Clareza', enabled: true, weight: 1, modality: 'audio',
+        descriptors: ['Inicial', 'Em prática', 'Consistente', 'Avançada'],
+      }] },
+    };
+    const review: CourseUnit = { ...lesson, id: 'review', title: 'Revisão', kind: 'review', checklist: [], studyCreditGrant: 5, requiresEvaluation: false };
+    const document = { ...emptyCourse('Curso sintético'), journey: 'adaptive' as const, modules: [{ id: 'module', title: 'Oratória', introductionMarkdown: '', units: [lesson, review] }] };
+    const forward = structuredClone(document);
+    forward.modules[0].units[0].prerequisites = ['review'];
+    expect(validatePublication(forward)).toContain('O pré-requisito de Clareza deve vir antes na ordem do curso.');
+    await db.query("INSERT INTO courses(id,org_id,title,status,draft) VALUES($1,$2,'Curso sintético','published',$3)", [courseId, actor.orgId, document]);
+    await db.query('INSERT INTO course_versions(id,org_id,course_id,version,document) VALUES($1,$2,$3,1,$4)', [versionId, actor.orgId, courseId, document]);
+    await db.query("INSERT INTO course_enrollments(id,org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,$5,'demo','fixture')",
+      [enrollmentId, actor.orgId, courseId, versionId, actor.userId]);
+    await db.query(`INSERT INTO recordings(id,org_id,student_id,object_key,filename,mime_type,byte_length,duration_us,has_audio,has_video,
+      container,probe,objective,purpose,enrollment_id,version_id,unit_id,scenario,maximum_seconds,source)
+      VALUES ($1,$2,$3,$4,'voz.wav','audio/wav',100,30000000,true,false,'wav','{}','Explique a ideia','course',$5,$6,'lesson','one_on_one',30,'upload')`,
+      [recordingId, actor.orgId, actor.userId, `recordings/${recordingId}`, enrollmentId, versionId]);
+    await db.query("INSERT INTO group_types(id,org_id,name) VALUES($1,$2,'Turma')", [typeId, actor.orgId]);
+    await db.query("INSERT INTO education_groups(id,org_id,type_id,name) VALUES($1,$2,$3,'Grupo inicial')", [groupId, actor.orgId, typeId]);
+    await db.query('INSERT INTO group_memberships(org_id,group_id,user_id) VALUES($1,$2,$3)', [actor.orgId, groupId, actor.userId]);
+
+    const path = `/api/journey/courses/${enrollmentId}/study`;
+    expect((await call(actor, 'POST', '/api/evaluations', { recordingId, clientKey: randomUUID() })).statusCode).toBe(409);
+    expect((await call(actor, 'PUT', path, { unitId: 'review', checked: [], completeStudy: true })).statusCode).toBe(409);
+    expect((await call(actor, 'PUT', path, { unitId: 'lesson', checked: [], completeStudy: true })).statusCode).toBe(409);
+    const checked = { unitId: 'lesson', checked: [0], completeStudy: true };
+    const studies = await Promise.all([call(actor, 'PUT', path, checked), call(actor, 'PUT', path, checked)]);
+    expect(studies.map(result => result.statusCode)).toEqual([200, 200]);
+    expect(await getWallet(db, actor)).toMatchObject({ balance: 1, reserved: 0 });
+
+    const failed = await submit(actor, recordingId, 'permanent');
+    await runEvaluationJob(db, provider);
+    expect((await read(actor, failed.id)).status).toBe('failed');
+    const progress = await call(actor, 'GET', `/api/journey/courses/${enrollmentId}`);
+    expect(progress.json().progress.completedUnits).toBe(0);
+    expect(await getWallet(db, actor)).toMatchObject({ balance: 1, reserved: 0 });
+
+    const success = await submit(actor, recordingId);
+    await runEvaluationJob(db, provider);
+    expect(await read(actor, success.id)).toMatchObject({ status: 'completed' });
+    expect(await getWallet(db, actor)).toMatchObject({ balance: 0, reserved: 0 });
+    await db.query('UPDATE group_memberships SET ended_at=clock_timestamp() WHERE user_id=$1', [actor.userId]);
+    const completed = await call(actor, 'PUT', path, { unitId: 'review', checked: [], completeStudy: true });
+    expect(completed.statusCode, completed.body).toBe(200);
+    expect(completed.json().progress).toMatchObject({ status: 'completed', completedUnits: 2, totalUnits: 2 });
+    expect(await getWallet(db, actor)).toMatchObject({ balance: 25, reserved: 0 });
+    await call(actor, 'PUT', path, { unitId: 'review', checked: [], completeStudy: true });
+    expect(await getWallet(db, actor)).toMatchObject({ balance: 25, reserved: 0 });
+    const events = await db.query('SELECT kind,group_ids FROM learning_events WHERE enrollment_id=$1 ORDER BY occurred_at', [enrollmentId]);
+    expect(events.rows).toEqual([{ kind: 'lesson', group_ids: [groupId] }, { kind: 'review', group_ids: [] }, { kind: 'course', group_ids: [] }]);
+    const evolution = await call(actor, 'GET', '/api/journey/evolution');
+    expect(evolution.json().attempts).toMatchObject([{ id: success.id, rubricVersion: `${versionId}:lesson:v1`, scores: [{ criterionId: 'clarity' }] }]);
+  });
+
 });

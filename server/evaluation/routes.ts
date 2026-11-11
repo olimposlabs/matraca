@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { requireIdentity, type AuthIdentity } from '../auth.js';
 import type { CourseDocument } from '../course-model.js';
 import { assertStudentScope } from '../permissions.js';
+import { requireStudyForEvaluation } from '../journey-progress.js';
 import { reserveCreditsInTransaction } from '../wallet.js';
 import { evaluationScenarios, type EvaluationContext, type EvaluationCriterion } from './provider.js';
 import { cancelEvaluationInTransaction } from './worker.js';
@@ -97,6 +98,7 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
     const version = current.rows[0];
     const unit = version?.document.modules.flatMap(module => module.units).find(item => item.id === recording.unit_id);
     if (!unit) throw new EvaluationError(403, 'A atividade não está disponível na sua matrícula.');
+    await requireStudyForEvaluation(client, { orgId: actor.org.id, studentId: actor.user.id, enrollmentId: recording.enrollment_id! }, unit.id, actor.org.settings.strictJourney === true);
     criteria = unit.activity.criteria.filter(criterion => criterion.enabled && criterion.weight > 0);
     activity = { title: unit.title, instructionMarkdown: unit.instructionMarkdown };
     rubricVersion = `${recording.version_id}:${unit.id}:v${version.version}`;
@@ -213,7 +215,8 @@ export async function registerEvaluations(app: FastifyInstance) {
     return app.db.transaction(async client => {
       await client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
       const result = await client.query<{ studentId: string; errorCode: string | null }>(
-        `SELECT ${summary},r.context->'criteria' AS criteria,er.report
+        `SELECT ${summary},r.context->'criteria' AS criteria,r.context->'activity' AS activity,
+           r.context->>'audienceScenario' AS "audienceScenario",er.report
          ${joined} WHERE r.id=$1 AND r.org_id=$2`,
         [params.data.id, actor.org.id],
       );

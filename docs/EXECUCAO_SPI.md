@@ -22,9 +22,10 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | 05 | Integrada com revisão independente e CI verde | PR #5, head 8e45b2b, merge 2ef0f0e |
 | 06 | Integrada com revisão independente e CI verde | PR #6, head c579a54, merge 89c8867 |
 | 07 | Integrada com revisão independente e CI verde | PR #7, head 0aeae0a, merge 2c39dd5 |
-| 08 | Avaliação simulada validada, PR em preparação | 215 testes e jornada Chromium |
-| 09–12 | Desenvolvimento paralelo | Worktrees locais por fase |
-| 13–14 | Pendentes | Dependências e aceite no plano aprovado |
+| 08 | Integrada com revisão independente e CI verde | PR #8, head 7f4c6c1, merge 0b23ff5 |
+| 09 | Jornada e evolução validadas, PR em preparação | 217 testes e nove fluxos de navegador |
+| 10–13 | Desenvolvimento paralelo | Worktrees locais por fase |
+| 14 | Pendente | Dependências e aceite no plano aprovado |
 
 Em 11 de novembro de 2026, o fundador autorizou o mecanismo de revisão independente com CI verde após a ausência de resposta do Codex Review no GitHub. As fases 01–04 foram integradas por PR na ordem, com o commit revisado fixado no merge e a mesma árvore validada pela CI. O ambiente local permaneceu em execução. AWS e deploy continuam para uma etapa futura.
 
@@ -135,3 +136,12 @@ Avaliações de gravações reais usam provedor simulado. A mesma transação re
 A revisão independente verificou transações, escopo, revogações durante espera, recuperação de lease e contexto. Passaram 215 testes integrados, tipos, lint, build e E2E com áudio real, relatório, player, saldo, cancelamento, falha definitiva e retry transitório. A migração 008 mantém os vínculos de mídia, resultado e consumo por organização e aluno. Consulte [os contratos](technical/EVALUATIONS.md) e [a revisão](technical/PHASE08_BACKEND_REVIEW.md).
 
 Rollback preserva gravações, jobs, resultados e lançamentos. Suspenda o worker antes de reverter o código. Sem deploy.
+
+
+## Fase 09
+
+O portal do aluno abre a jornada com perfil, escolha de entrada, diagnóstico e cursos atribuídos. Sugestões adaptativas respeitam pré-requisitos e sequência obrigatória. O checklist salvo concede créditos de estudo uma vez. Avaliação válida conclui a atividade junto ao débito. A evolução separa rubricas, modalidades sem evidência e novas tentativas.
+
+A revisão verificou locks e atomicidade. Um curso publicado agora só aceita pré-requisitos anteriores; versões antigas mantêm os requisitos em ordem topológica. Ativar sequência obrigatória após estudo adaptativo passa a bloquear a avaliação ainda incompleta até concluir as unidades anteriores. A migração 009 vincula progresso à versão e registra grupos por evento.
+
+Passaram 217 testes integrados, tipos, lint, build e nove fluxos Playwright em schema isolado, com perfil, diagnóstico, áudio real, checklist, grants, revisão, nova tentativa, conclusão e comparação por rubrica. Consulte [a jornada](technical/JOURNEY.md). Rollback preserva histórico, progresso e lançamentos. Sem deploy.
