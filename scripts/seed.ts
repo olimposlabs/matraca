@@ -4,6 +4,7 @@ import { configuration } from '../server/config.js';
 import { DEFAULT_BRANDING } from '../server/organizations.js';
 import { seedEducation } from './seed-education.js';
 import { seedWallet } from './seed-wallet.js';
+import { seedCourses } from './seed-courses.js';
 
 export function seedId(value: string): string {
   const hex = createHash('sha256').update(`matraca-demo:${value}`).digest('hex');
@@ -41,6 +42,7 @@ try {
     }
     await seedEducation(client,seedId);
     await seedWallet(client,seedId);
+    await seedCourses(client,seedId);
   });
   process.stdout.write('Seed local conferido, sem sobrescrever dados existentes.\n');
 } finally { await db.close(); }
