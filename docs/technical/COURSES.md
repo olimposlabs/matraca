@@ -1,14 +1,15 @@
-# Cursos e conteúdo versionado — implementação parcial F06
+# Cursos e conteúdo versionado
 
 O parser importa integralmente o plano autoral:12 módulos,36 aulas,12 revisões e192 itens de checklist. O teste reconstrói a fonte byte a byte, preservando referências, ressalvas e apêndices. O modelo operacional define atividades de30 segundos e revisões de300 segundos; descritores seguem a escala da fonte. Pesos iniciais iguais são configuração de demonstração, sujeitos à calibração pedagógica.
 
 ## Estado
 
-Backend, importação e seed estão implementados neste checkout; a fase não está concluída. Editor visual, navegação do aluno, integração final com F05, revisão independente e gates remotos permanecem pendentes. A migração006 ainda não foi aplicada à demonstração.
+A migração 006 e o seed completo foram aplicados à demonstração. A revisão independente do backend e as regressões constam de [PHASE06_BACKEND_REVIEW.md](PHASE06_BACKEND_REVIEW.md).
 
 ## Contratos
 
-- Administrador: GET/POST `/api/courses/manage`, GET/PUT `/:id`, POST `/:id/publish`, `/:id/archive`, `/:id/assign`, POST `/:id/assets`.
+- Administrador: GET/POST `/api/courses/manage`, GET/PUT `/:id`, POST `/:id/publish`, `/:id/archive`, `/:id/assign`, GET/POST `/:id/assets`, GET `/:id/assignable` com busca e paginação de alunos e turmas.
+- Escola: GET `/api/courses/school`, GET `/:id`, GET `/:id/assignable` e POST `/:id/assign`. Apenas versões publicadas e alunos ou turmas das escolas ativas que a pessoa administra.
 - Operador: os mesmos endpoints sob `/api/backoffice/courses/:orgId`.
 - Base publicada: GET `/api/courses/base`; cópia usa `copyBaseCourseId` na criação e cria objetos próprios para os anexos.
 - Aluno: GET `/api/courses` e `/api/courses/:id`, com a versão registrada na matrícula. Desativar cursos impede acesso atual, preservando dados.
@@ -24,6 +25,6 @@ Materiais ficam em filesystem privado. PDFs e slides em PDF têm limite20 MB e v
 
 ## Validação e próximos gates
 
-Os doze testes de API/modelo cobrem cópia, publicação repetida e após arquivo, versão preservada, atribuição de nova versão a ingressantes, edição concorrente, isolamento, curso de acompanhamento, toggle, seed aditivo, cancelamento de acesso e anexos privados/ranges/truncamento. Os seis testes do importador verificam integridade da fonte. A revisão do backend está registrada em `PHASE06_BACKEND_REVIEW.md`. A suíte completa e o E2E do editor devem ser executados após a integração de frontend e da F05.
+Os doze testes de API/modelo cobrem cópia, publicação repetida e após arquivo, versão preservada, atribuição de nova versão a ingressantes, edição concorrente, isolamento, curso de acompanhamento, toggle, seed aditivo, cancelamento de acesso e anexos privados/ranges/truncamento. Os seis testes do importador verificam integridade da fonte. A revisão do backend está registrada em `PHASE06_BACKEND_REVIEW.md`. A suíte integrada registrou 171 testes aprovados. Treze jornadas Playwright em schema isolado cobriram editor, aluno, backoffice e atribuição escolar em desktop e celular.
 
 Rollback preserva versões, matrículas e objetos; reverte código e restringe acesso até reconciliar a migração. Não há deploy nesta fase.

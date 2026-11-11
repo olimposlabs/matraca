@@ -19,8 +19,8 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | 02 | Integrada com revisão independente e CI verde | PR #2, head 5fa7718, merge ffa1445 |
 | 03 | Integrada com revisão independente e CI verde | PR #3, head 3f36442, merge de3cb8f |
 | 04 | Integrada com revisão independente e CI verde | PR #4, head 7f52e78, merge b697603 |
-| 05 | Implementação e validação local completas, PR em preparação | 151 testes e sete jornadas de navegador |
-| 06 | Currículo e backend implementados, editor em desenvolvimento | /tmp/matraca-phase06 |
+| 05 | Integrada com revisão independente e CI verde | PR #5, head 8e45b2b, merge 2ef0f0e |
+| 06 | Currículo, editor e atribuição validados, PR em preparação | 13 jornadas de navegador |
 | 07, 08, 12 | Desenvolvimento paralelo de mídia, avaliação e precificação | Worktrees locais por fase |
 | 09–11, 13–14 | Pendentes | Dependências e aceite no plano aprovado |
 
@@ -104,3 +104,14 @@ A migração 005 foi aplicada no banco local. A revisão independente verificou 
 Passaram 151 testes integrados, typecheck, lint, build e diff check. Sete jornadas reais no navegador cobriram extrato, perda da resposta depois do commit, retomada sem duplicação, ajuste, pacote, limite escolar, estorno e backoffice. Desktop e celular foram inspecionados. Os saldos e a política foram restaurados por operações auditáveis. Os lançamentos sintéticos permanecem no extrato local.
 
 Rollback preserva tabelas, saldos, reservas e lançamentos. Reverter a aplicação não exige remover a migração. O motor de avaliação e o faturamento serão integrados nas fases seguintes.
+
+A PR #5 foi integrada à main em 11 de novembro de 2026 no merge 2ef0f0e, após revisão independente e CI verde no head 8e45b2b.
+
+
+## Fase 06
+
+O currículo integral foi importado com 12 módulos, 36 aulas e 12 revisões. Administradores podem criar e copiar cursos, editar rubricas, incluir anexos privados, publicar versões e atribuir. O backoffice opera em organização selecionada. A escola atribui versões publicadas às suas turmas e alunos. Publicações não alteram matrículas existentes, e novos alunos de uma turma recebem a versão mais recente atribuída.
+
+A revisão independente encontrou e tratou republicação de curso arquivado, revogação após cancelamento de matrícula, integridade de imagens e versão atribuída a novos alunos. A migração 006 e o seed foram aplicados à demonstração. Treze jornadas de navegador em schema isolado verificaram editor, conteúdo, cópia, anexos, versões, atribuição, modo escolar e desativação de cursos. Consulte [os contratos](technical/COURSES.md) e [a revisão](technical/PHASE06_BACKEND_REVIEW.md).
+
+Rollback preserva versões publicadas, matrículas e arquivos privados. Nenhum deploy foi executado.

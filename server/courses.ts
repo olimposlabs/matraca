@@ -2,10 +2,10 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { FastifyInstance,FastifyRequest } from 'fastify';
 import type { PoolClient } from 'pg';
 import { z } from 'zod';
-import { requireIdentity,type AuthIdentity } from './auth.js';
+import { requireIdentity,type AuthIdentity,type IdentityRole } from './auth.js';
 import { localHostname } from './config.js';
 import { courseDocumentSchema,emptyCourse,validatePublication,type CourseDocument } from './course-model.js';
-import { assertStudentScope } from './permissions.js';
+import { assertStudentScope,managedSchoolIds } from './permissions.js';
 
 export class CourseError extends Error {constructor(public readonly statusCode:400|401|403|404|409,message:string){super(message);}}
 const uuid=z.uuid();
@@ -13,10 +13,10 @@ function parse<T>(schema:z.ZodType<T>,value:unknown):T{const result=schema.safeP
 interface CourseRow {id:string;org_id:string;title:string;status:string;draft_revision:number;draft:CourseDocument}
 interface VersionRow {id:string;course_id:string;org_id:string;version:number;document:CourseDocument}
 const revision=z.object({expectedRevision:z.number().int().min(0)}).strict();
-async function revalidate(client:PoolClient,request:FastifyRequest,actor:AuthIdentity){
+async function revalidate(client:PoolClient,request:FastifyRequest,actor:AuthIdentity,role:IdentityRole=actor.org.kind==='backoffice'?'operator':'org_admin'){
  const current=await client.query<{roles:string[]}>(`SELECT u.roles FROM sessions s JOIN users u ON u.id=s.user_id AND u.org_id=s.org_id JOIN orgs o ON o.id=s.org_id JOIN domains d ON d.hostname=s.hostname AND d.org_id=s.org_id WHERE s.token_hash=$1 AND s.hostname=$2 AND s.org_id=$3 AND s.user_id=$4 AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp() AND u.status='active' AND u.archived_at IS NULL AND o.status='active' FOR SHARE OF u,o`,[createHash('sha256').update(request.cookies.matraca_session??'').digest('hex'),localHostname(request.headers.host),actor.org.id,actor.user.id]);
  if(!current.rows[0])throw new CourseError(401,'Seu acesso foi encerrado.');
- if(!current.rows[0].roles.includes(actor.org.kind==='backoffice'?'operator':'org_admin'))throw new CourseError(403,'O administrador publica os cursos da organização.');
+ if(!current.rows[0].roles.includes(role))throw new CourseError(403,'Seu perfil atual não pode executar esta operação de curso.');
 }
 async function target(request:FastifyRequest,central:boolean){
  const actor=await requireIdentity(request,central?['operator']:['org_admin']);
@@ -59,6 +59,66 @@ export async function enrollAssignedCourses(client:PoolClient,orgId:string,class
   ORDER BY a.course_id,v.version DESC,a.created_at DESC,a.id`,[orgId,classId]);
  for(const item of assignments.rows)await client.query("INSERT INTO course_enrollments(org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,'assignment',$5) ON CONFLICT(course_id,student_id) DO NOTHING",[orgId,item.course_id,item.version_id,studentId,item.id]);
 }
+const assignmentInput = z.object({
+  versionId: uuid, studentId: uuid.optional(), classId: uuid.optional(),
+}).strict().refine(input => Boolean(input.studentId) !== Boolean(input.classId));
+type AssignmentInput = z.infer<typeof assignmentInput>;
+
+export async function schoolCourseScope(request: FastifyRequest) {
+  const actor = await requireIdentity(request, ['school']);
+  const schoolIds = await managedSchoolIds(request.server.db, { ...actor, user: { ...actor.user, roles: ['school'] } });
+  if (!schoolIds.length) throw new CourseError(403, 'Você não administra uma escola ativa.');
+  return { orgId: actor.org.id, schoolIds };
+}
+
+async function assignCourse(client: PoolClient, orgId: string, actorId: string, id: string, input: AssignmentInput, schoolIds: string[] | null = null) {
+  const item = await course(client, orgId, id);
+  if (item.status !== 'published') throw new CourseError(409, 'Publique o curso antes de atribuir.');
+  const version = await client.query('SELECT id FROM course_versions WHERE id=$1 AND course_id=$2 AND org_id=$3', [input.versionId, id, orgId]);
+  if (!version.rowCount) throw new CourseError(404, 'Versão não encontrada.');
+  let students: string[] = [];
+  if (input.studentId) {
+    const student = await client.query(
+      `SELECT u.id FROM users u WHERE u.id=$1 AND u.org_id=$2 AND 'student'=ANY(u.roles)
+         AND u.status IN ('active','invited') AND u.archived_at IS NULL
+         AND ($3::uuid[] IS NULL OR EXISTS(SELECT 1 FROM student_schools ss
+           WHERE ss.org_id=u.org_id AND ss.student_id=u.id AND ss.ended_at IS NULL AND ss.school_id=ANY($3::uuid[])))`,
+      [input.studentId, orgId, schoolIds],
+    );
+    if (!student.rowCount) throw new CourseError(404, 'Aluno não encontrado no seu escopo.');
+    students = [input.studentId];
+  }
+  if (input.classId) {
+    const assignedClass = await client.query(
+      `SELECT c.id FROM classes c JOIN schools s ON s.id=c.school_id AND s.org_id=c.org_id
+       WHERE c.id=$1 AND c.org_id=$2 AND c.status='active' AND s.status='active'
+         AND ($3::uuid[] IS NULL OR c.school_id=ANY($3::uuid[]))`, [input.classId, orgId, schoolIds],
+    );
+    if (!assignedClass.rowCount) throw new CourseError(404, 'Turma ativa não encontrada no seu escopo.');
+    const enrolled = await client.query<{ student_id: string }>(
+      `SELECT e.student_id FROM enrollments e JOIN users u ON u.id=e.student_id AND u.org_id=e.org_id
+       WHERE e.class_id=$1 AND e.org_id=$2 AND e.status='active' AND 'student'=ANY(u.roles)
+         AND u.status IN ('active','invited') AND u.archived_at IS NULL`, [input.classId, orgId],
+    );
+    students = enrolled.rows.map(row => row.student_id);
+  }
+  const existing = await client.query<{ id: string }>(
+    'SELECT id FROM course_assignments WHERE version_id=$1 AND (student_id=$2 OR class_id=$3)',
+    [input.versionId, input.studentId ?? null, input.classId ?? null],
+  );
+  const assignmentId = existing.rows[0]?.id ?? randomUUID();
+  if (!existing.rowCount) await client.query(
+    'INSERT INTO course_assignments(id,org_id,course_id,version_id,class_id,student_id,assigned_by) VALUES($1,$2,$3,$4,$5,$6,$7)',
+    [assignmentId, orgId, id, input.versionId, input.classId ?? null, input.studentId ?? null, actorId],
+  );
+  const enrolled = await client.query(
+    `INSERT INTO course_enrollments(org_id,course_id,version_id,student_id,source,source_ref)
+     SELECT $1,$2,$3,student,'assignment',$4 FROM unnest($5::uuid[]) student
+     ON CONFLICT(course_id,student_id) DO NOTHING`, [orgId, id, input.versionId, assignmentId, students],
+  );
+  return { assignmentId, enrolled: enrolled.rowCount ?? 0 };
+}
+
 export async function registerCourses(app:FastifyInstance){
  for(const central of [false,true]){
   const base=central?'/api/backoffice/courses/:orgId':'/api/courses/manage';
@@ -89,21 +149,39 @@ export async function registerCourses(app:FastifyInstance){
   });
   app.post(`${base}/:id/publish`,async request=>{const input=parse(revision,request.body);return mutation(request,central,async(client,orgId,actor)=>({version:await publish(client,orgId,courseId(request),input.expectedRevision,actor.user.id)}));});
   app.post(`${base}/:id/archive`,async request=>mutation(request,central,async(client,orgId)=>{const item=await course(client,orgId,courseId(request));await client.query("UPDATE courses SET status='archived',updated_at=now() WHERE id=$1",[item.id]);return {archived:true};}));
-  app.post(`${base}/:id/assign`,async request=>{
-   const input=parse(z.object({versionId:uuid,studentId:uuid.optional(),classId:uuid.optional()}).strict().refine(value=>Boolean(value.studentId)!==Boolean(value.classId)),request.body);
-   return mutation(request,central,async(client,orgId,actor)=>{
-    const item=await course(client,orgId,courseId(request));if(item.status!=='published')throw new CourseError(409,'Publique o curso antes de atribuir.');
-    if(!(await client.query('SELECT id FROM course_versions WHERE id=$1 AND course_id=$2 AND org_id=$3',[input.versionId,item.id,orgId])).rowCount)throw new CourseError(404,'Versão não encontrada.');
-    let students:string[]=[];
-    if(input.studentId){if(!(await client.query("SELECT id FROM users WHERE id=$1 AND org_id=$2 AND 'student'=ANY(roles) AND status IN ('active','invited') AND archived_at IS NULL",[input.studentId,orgId])).rowCount)throw new CourseError(404,'Aluno não encontrado.');students=[input.studentId];}
-    if(input.classId){if(!(await client.query("SELECT id FROM classes WHERE id=$1 AND org_id=$2 AND status='active'",[input.classId,orgId])).rowCount)throw new CourseError(404,'Turma ativa não encontrada.');students=(await client.query<{student_id:string}>("SELECT student_id FROM enrollments WHERE class_id=$1 AND org_id=$2 AND status='active'",[input.classId,orgId])).rows.map(row=>row.student_id);}
-    const existing=(await client.query<{id:string}>('SELECT id FROM course_assignments WHERE version_id=$1 AND (student_id=$2 OR class_id=$3)',[input.versionId,input.studentId??null,input.classId??null])).rows[0];
-    const assignmentId=existing?.id??randomUUID();if(!existing)await client.query('INSERT INTO course_assignments(id,org_id,course_id,version_id,class_id,student_id,assigned_by) VALUES($1,$2,$3,$4,$5,$6,$7)',[assignmentId,orgId,item.id,input.versionId,input.classId??null,input.studentId??null,actor.user.id]);
-    let inserted=0;for(const studentId of students)inserted+=(await client.query("INSERT INTO course_enrollments(org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,'assignment',$5) ON CONFLICT(course_id,student_id) DO NOTHING",[orgId,item.id,input.versionId,studentId,assignmentId])).rowCount??0;
-    return {assignmentId,enrolled:inserted};
-   });
+  app.post(`${base}/:id/assign`, async request => {
+    const input = parse(assignmentInput, request.body);
+    return mutation(request, central, (client, orgId, actor) => assignCourse(client, orgId, actor.user.id, courseId(request), input));
   });
  }
+ app.get('/api/courses/school', async request => {
+  const { orgId } = await schoolCourseScope(request);
+  const result = await app.db.query(
+    `SELECT c.id,c.title,c.status,(SELECT max(version) FROM course_versions v WHERE v.course_id=c.id) AS "publishedVersion"
+     FROM courses c WHERE c.org_id=$1 AND c.status='published' ORDER BY lower(c.title),c.id`, [orgId],
+  );
+  return { courses: result.rows };
+ });
+ app.get('/api/courses/school/:id', async request => {
+  const { orgId } = await schoolCourseScope(request);
+  const id = courseId(request);
+  const course = await app.db.query("SELECT id,title,status FROM courses WHERE id=$1 AND org_id=$2 AND status='published'", [id, orgId]);
+  if (!course.rowCount) throw new CourseError(404, 'Curso publicado não encontrado.');
+  const versions = await app.db.query('SELECT id,version,published_at FROM course_versions WHERE course_id=$1 AND org_id=$2 ORDER BY version DESC', [id, orgId]);
+  return { course: course.rows[0], versions: versions.rows };
+ });
+ app.post('/api/courses/school/:id/assign', async request => {
+  const input = parse(assignmentInput, request.body);
+  const actor = await requireIdentity(request, ['school']);
+  const orgId = actor.org.id;
+  return app.db.transaction(async client => {
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4))', [orgId]);
+    await revalidate(client, request, actor, 'school');
+    const schoolIds = await managedSchoolIds(client, { ...actor, user: { ...actor.user, roles: ['school'] } });
+    if (!schoolIds.length) throw new CourseError(403, 'Você não administra uma escola ativa.');
+    return assignCourse(client, orgId, actor.user.id, courseId(request), input, schoolIds);
+  });
+ });
  app.get('/api/courses/base',async request=>{await requireIdentity(request,['org_admin','operator']);return {courses:(await app.db.query("SELECT c.id,c.title FROM courses c JOIN orgs o ON o.id=c.org_id WHERE o.kind='matraca' AND c.status='published' ORDER BY c.title")).rows};});
  app.get('/api/courses',async request=>{
   const actor=await requireIdentity(request,['student']);if(actor.org.settings.coursesEnabled===false)return {enabled:false,courses:[]};

@@ -27,6 +27,7 @@ import { apiJson } from './api';
 import { OrganizationsPage, OrganizationSettingsPage, brandDisplayName, organizationTheme } from './organizations';
 import { EducationPage } from './education';
 import { WalletPage } from './wallet';
+import { CoursesManagementPage, StudentCoursesPage } from './courses';
 
 const waveformHeights = [18, 30, 23, 42, 57, 36, 25, 48, 68, 52, 31, 44, 60, 79, 65, 43, 29, 46, 63, 48, 34, 54, 72, 49, 31, 45, 58, 35, 25, 39, 22, 14];
 
@@ -259,10 +260,13 @@ function AppShell() {
       '/teacher': 'Área do professor — Matraca',
       '/app/classes': 'Minhas turmas — Matraca',
       '/app/wallet': 'Minha carteira — Matraca',
+      '/app/courses': 'Meus cursos — Matraca',
+      '/admin/courses': 'Conteúdo e cursos — Matraca',
+      '/backoffice/courses': 'Operação de cursos — Matraca',
       '/admin/credits': 'Gestão de créditos — Matraca',
       '/backoffice/credits': 'Operação de créditos — Matraca',
     };
-    document.title = titles[location.pathname] ?? 'Página não encontrada — Matraca';
+    document.title = titles[location.pathname] ?? (location.pathname.startsWith('/app/courses/') ? 'Meu curso — Matraca' : 'Página não encontrada — Matraca');
     if (!location.hash) window.scrollTo(0, 0);
   }, [location.pathname, location.hash]);
 
@@ -271,7 +275,7 @@ function AppShell() {
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
       <WorkspaceNavigation />
-      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/courses" element={<StudentCoursesPage />} /><Route path="/app/courses/:courseId" element={<StudentCoursesPage />} /><Route path="/admin/courses" element={<CoursesManagementPage />} /><Route path="/backoffice/courses" element={<CoursesManagementPage central />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
       <SiteFooter />
     </div>
   );
