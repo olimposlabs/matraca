@@ -1,18 +1,18 @@
 # Testes
 
-A fase 01 introduz Vitest para API, armazenamento e prova de mídia, TypeScript estrito, ESLint e build Vite. As jornadas Playwright serão acrescentadas junto das telas funcionais.
+A suíte usa Vitest para contratos, autorização e persistência em PostgreSQL, Playwright para fluxos no navegador, TypeScript, ESLint e build Vite.
 
 | Comando | Finalidade |
 | --- | --- |
 | npm run typecheck | Tipos de cliente, servidor e testes |
 | npm run lint | Análise estática |
-| npm test | Testes locais. Requer banco para os testes de saúde positivos |
+| npm test | Testes unitários e de integração. Inicie o banco local antes de executar. |
 | npm run build | Tipos e build da interface |
-| npm run test:e2e | Jornadas de navegador, a serem incluídas nas fases de produto |
+| npm run test:e2e | Jornadas Chromium com API e PostgreSQL locais em schemas descartáveis |
 
 As fixtures de mídia são sintéticas. FFmpeg é usado apenas para gerar amostras de teste. O probe de produção usa mediabunny. Nenhuma pessoa real aparece nas fixtures.
 
-Resultados e limitações estão no [registro SPI](EXECUCAO_SPI.md). A existência de um comando não representa validação concluída.
+Prepare as jornadas com `npm run db:start`, `npx playwright install chromium` e `npm run build`. Execute `npm run test:e2e`. Cada roteiro usa armazenamento temporário e portas próprias. Capturas de tela ficam em `.data`. A matriz descreve a cobertura de cada jornada, incluindo verificações manuais e lacunas. [Matriz de aceite](technical/PILOT_ACCEPTANCE.md) · [Registro SPI](EXECUCAO_SPI.md)
 
 ## Estratégia
 
