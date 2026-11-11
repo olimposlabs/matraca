@@ -18,3 +18,9 @@ CI executa verificações locais equivalentes, com banco de serviço e sem segre
 - Deploy manual, mutação de produção, acesso a segredos e operações destrutivas exigem a autorização e o preflight aplicáveis. Commit, PR, revisão e merge não ampliam essa autorização.
 - Confirme os nomes das branches antes de usá-las. Só configure deploy automático quando houver uma decisão aprovada que estabeleça esse fluxo.
 - Execute somente comandos de deploy confirmados no projeto. Registre aqui os procedimentos e os filtros efetivos de CI/CD assim que existirem. Para promoção no SPI, siga o [protocolo SPI](SMART_PHASES_IMPLEMENTATION.md).
+
+## Interface compilada
+
+Depois de `npm run build`, `APP_PUBLIC_PORT=3001 npm start` serve API e interface na porta3001. O servidor local deve estar livre nessa porta; encerre a execução dev correspondente antes de usar esse modo. A porta pública orienta os links da mailbox. A rota de frontend não converte caminhos /api inexistentes em HTML.
+
+O modo dev usa Vite em5173 e API em3001. O Vite permite apenas os diretórios públicos necessários e nega dados privados, inclusive /@fs e importações raw. A inbox é consultada por `npm run inbox`, com filtros --email e --host.

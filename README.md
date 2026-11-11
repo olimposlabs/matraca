@@ -14,6 +14,10 @@ A fundação usa Node 24 LTS, React, Vite, Fastify e PostgreSQL 17. Docker preci
 
 Acompanhe os gates e evidências no [registro SPI](docs/EXECUCAO_SPI.md).
 
+## Funcionalidades locais disponíveis
+
+Identidade independente por organização, login por link e logout, cadastro de parceiros no backoffice, configuração de preferências, edição de marca com preview, publicação e restauração, upload de logo validado. Escolas, cursos, avaliações, carteiras e cobrança continuam nas fases seguintes do plano.
+
 ## Contas de demonstração e login
 
 O acesso usa links de uso único. Em `http://matraca.localhost:5173/login`, solicite um link para `ana@exemplo.test`. Depois execute `npm run inbox -- --email ana@exemplo.test --host matraca.localhost` e abra o link local recebido. O e-mail é simulado, enquanto a sessão é real e pertence somente ao host usado.

@@ -52,7 +52,12 @@ export async function apiJson<T>(path: string, options: ApiOptions = {}): Promis
     });
 
     if (!response.ok) {
-      throw new ApiError(response.status, responseMessages[response.status] ?? 'O serviço não está disponível agora. Tente novamente em instantes.');
+      let message = responseMessages[response.status] ?? 'O serviço não está disponível agora. Tente novamente em instantes.';
+      if ([400, 409, 422].includes(response.status)) {
+        const problem = await response.json().catch(() => null) as { error?: unknown } | null;
+        if (typeof problem?.error === 'string' && problem.error.length <= 300) message = problem.error;
+      }
+      throw new ApiError(response.status, message);
     }
     if (response.status === 204) return undefined as T;
 
