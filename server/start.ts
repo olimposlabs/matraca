@@ -2,7 +2,7 @@ import { createApp } from './app.js';
 import { configuration } from './config.js';
 import { MockEvaluationProvider } from './evaluation/provider.js';
 import { startEvaluationWorker } from './evaluation/worker.js';
-const app = await createApp();
+const app = await createApp({ clientRoot: process.env.APP_CLIENT_ROOT });
 await app.listen({ host: '127.0.0.1', port: configuration().port });
 process.stdout.write(`Matraca API local disponível na porta ${configuration().port}\n`);
 const stopWorker = startEvaluationWorker(app.db, new MockEvaluationProvider());

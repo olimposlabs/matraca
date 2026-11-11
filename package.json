@@ -20,7 +20,8 @@
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/start.ts",
     "inbox": "tsx scripts/inbox.ts",
-    "billing:close": "tsx scripts/close-billing.ts"
+    "billing:close": "tsx scripts/close-billing.ts",
+    "pilot:sandbox": "tsx scripts/sandbox.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",
