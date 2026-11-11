@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { PoolClient } from 'pg';
 import { z } from 'zod';
+import { grantInitialCreditInTransaction } from './wallet.js';
 import { localHostname } from './config.js';
 
 export type IdentityRole = 'student' | 'teacher' | 'school' | 'org_admin' | 'operator';
@@ -160,6 +161,7 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
       );
       if (!consumed.rowCount) return false;
       await client.query("UPDATE users SET status='active',updated_at=now() WHERE id=$1 AND org_id=$2", [user.id, current.org.id]);
+      if (user.roles.includes('student')) await grantInitialCreditInTransaction(client,{orgId:current.org.id,userId:user.id});
       await client.query(
         `INSERT INTO sessions (org_id,user_id,hostname,token_hash,expires_at)
          VALUES ($1,$2,$3,$4,now()+interval '7 days')`,

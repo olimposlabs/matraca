@@ -34,7 +34,7 @@ O editor do curso permitirá definir a quantidade de créditos concedida ao alun
 | Conclusão de módulo | 5 créditos | Um pedido de até 5 minutos |
 | Conclusão de curso | 20 ou 30 créditos | Saldo para avaliações posteriores, respeitando o arredondamento por pedido e os limites de duração |
 
-Os critérios de conclusão e o momento de liberação devem permitir que o aluno obtenha os créditos necessários antes de solicitar a avaliação correspondente. A definição desses marcos, a concessão para a apresentação inicial e as recompensas por repetir aulas, módulos ou cursos, inclusive após mudanças de versão, estão a definir.
+Os critérios de conclusão e o momento de liberação devem permitir que o aluno obtenha os créditos necessários antes de solicitar a avaliação correspondente. No plano aprovado, o primeiro acesso do aluno concede um crédito inicial por organização. O estudo e o checklist liberam a prática antes da avaliação; repetir o mesmo marco não concede novamente. Recompensas e eventos permanecem identificados por curso, unidade e aluno.
 
 ### Direcionamento e histórico da avaliação
 
@@ -48,7 +48,7 @@ As concessões registram créditos disponibilizados ao aluno. O consumo registra
 
 Os pontos do leaderboard e as medalhas mantêm sua função de reconhecimento pedagógico. Os créditos representam capacidade de solicitar avaliações. O nome personalizado pelo parceiro se aplica à unidade de consumo.
 
-Cada movimentação deverá identificar organização, aluno, quantidade, origem e pedido ou evento associado. A repetição técnica de um mesmo evento deve preservar uma única concessão ou consumo, conforme os princípios de idempotência do projeto. Os preços finais, a expiração, as regras de transferência de saldo e o tratamento de falhas, cancelamentos e reavaliações estão a definir. As modalidades de aquisição e cobrança estão descritas nas seções seguintes. A aplicação da unidade às avaliações apenas de áudio também precisa ser definida.
+Cada movimentação deverá identificar organização, aluno, quantidade, origem e pedido ou evento associado. A repetição técnica de um mesmo evento deve preservar uma única concessão ou consumo, conforme os princípios de idempotência do projeto. Áudio e vídeo seguem a mesma unidade no piloto. O saldo não expira, usa origens mais antigas primeiro e não é transferido entre organizações. Uma avaliação reserva créditos; apenas o resultado válido persistido confirma o consumo. Falha definitiva ou cancelamento libera a reserva, retry técnico mantém o pedido e uma nova avaliação solicitada pelo aluno gera novo consumo. Estornos acrescentam lançamento compensatório e restauram as origens do consumo.
 
 ## Clientes diretos do Matraca
 
@@ -56,7 +56,7 @@ O cliente direto poderá comprar um curso com uma quantidade configurável de cr
 
 O backoffice Matraca poderá conceder manualmente créditos ou pacotes a usuários diretos. O registro deve identificar beneficiário, quantidade, origem e responsável pela concessão. O catálogo de pacotes e suas faixas de preço serão configuráveis pelo time Matraca.
 
-Créditos provenientes do curso, de compras extras ou de concessões manuais precisam conservar sua origem no histórico. As regras de validade e a ordem de utilização desses saldos estão a definir.
+Créditos provenientes do curso, de compras extras ou de concessões manuais precisam conservar sua origem no histórico. No piloto não há expiração, e o consumo usa primeiro as origens mais antigas.
 
 ## Créditos extras no white label
 
@@ -69,7 +69,7 @@ O administrador da organização poderá conceder ou adquirir créditos adiciona
 | Gestão da escola | Atribuir ou adquirir créditos para seus alunos conforme as permissões dadas pela organização |
 | Aluno white label | Usar o saldo recebido dentro das regras da organização. A compra diretamente pelo aluno depende de definição própria |
 
-A autonomia de uma escola para adquirir créditos precisa identificar o responsável financeiro. A escolha entre cobrança direta à escola e inclusão na fatura central da organização está a definir.
+A autonomia de uma escola para adquirir créditos precisa identificar o responsável financeiro. No piloto, os extras são pós-pagos na fatura central da organização. A concessão administrativa não gera cobrança antecipada: somente o consumo concluído entra na apuração. A autonomia escolar começa desabilitada, com limite mensal por escola configurável.
 
 Na cobrança mensal por consumo, entram os créditos efetivamente utilizados em avaliações, inclusive os obtidos pelo curso, por concessão administrativa, por premiação ou como extras. O histórico deverá distinguir a disponibilização de saldo do seu consumo. Caso a aquisição de extras envolva pagamento antecipado, a conciliação com a cobrança mensal precisa ser definida para reconhecer esse pagamento uma única vez.
 
@@ -77,7 +77,7 @@ Na cobrança mensal por consumo, entram os créditos efetivamente utilizados em 
 
 Cada organização poderá configurar créditos como premiação de suas classificações. O exemplo do fundador concede 3 créditos ao primeiro colocado, 2 ao segundo e 1 ao terceiro. Quantidades, posições premiadas, classificação abrangida e periodicidade são configuráveis.
 
-O fechamento de cada premiação deverá identificar organização, ranking, período, classificação e aluno beneficiado. O processamento repetido do mesmo resultado preserva uma única concessão. O momento de apuração e a regra para empates estão a definir.
+O fechamento de cada premiação deverá identificar organização, ranking, período, classificação e aluno beneficiado. O processamento repetido do mesmo resultado preserva uma única concessão. O plano aprovado define período e escopo configuráveis e desempate pelo instante em que a pontuação foi alcançada, seguido de identificador estável. O fechamento é único por campanha e período.
 
 Os pontos que determinam a classificação e o saldo de créditos têm funções próprias. A premiação converte um resultado de ranking em uma concessão identificada de créditos, conforme a política publicada pela organização.
 
@@ -92,7 +92,7 @@ O contrato poderá combinar componentes fixos mensais e consumo variável de cr�
 | Licença por aluno | R$ 1 por aluno por mês |
 | Avaliações | Créditos consumidos no período, valorizados pela tabela contratada |
 
-A unidade por participante dessa proposta é o aluno. O modelo descrito contempla professores sem um componente mensal específico por professor. As regras de contagem de alunos com múltiplas turmas, papéis ou transferências precisam ser definidas antes da implementação.
+A unidade por participante dessa proposta é o aluno. O modelo descrito contempla professores sem um componente mensal específico por professor. O piloto conta cada aluno ativo, com convite aceito no corte, uma única vez por organização, independentemente de turmas, transferências ou papéis adicionais. Professores sem papel de aluno não são contados.
 
 ### Competências do fechamento
 
@@ -102,34 +102,25 @@ O cálculo conceitual é `licença da organização + quantidade de escolas cobr
 
 Exemplo inteiramente hipotético, com cobrança integral das licenças de dezembro para uma organização, três escolas e 50 alunos elegíveis. Adotando os valores ilustrativos acima, 100 créditos consumidos em novembro e uma única faixa de R$ 0,90 por crédito, o fechamento seria composto por R$ 1.350 de licenciamento e R$ 90 de consumo, totalizando **R$ 1.440**. A faixa única serve apenas para ilustrar a conta.
 
-A data de corte, os critérios de elegibilidade e a proporcionalidade para entradas, saídas e cancelamentos estão a definir. Mudanças contratuais deverão identificar sua vigência, preservando os valores aplicáveis aos períodos já apurados.
+O corte usa o encerramento do mês em America/Sao_Paulo. Escolas ativas e alunos elegíveis compõem o snapshot; não há proporcionalidade no piloto. Entradas após o corte ficam para o próximo snapshot. Mudanças contratuais deverão identificar sua vigência, preservando os valores aplicáveis aos períodos já apurados.
 
 ## Preços por faixas
 
 O catálogo direto do Matraca e cada contrato white label poderão ter tabelas de preço por quantidade. No atendimento direto, as faixas podem compor os pacotes adquiridos. No white label, a tabela será definida no cadastro da organização, conforme o contrato.
 
-O fundador sugeriu como referência uma faixa de **10 créditos ou mais a R$ 0,90 por crédito**. Os valores para as demais quantidades e o modo de aplicar a faixa ainda precisam ser definidos. Os preços finais serão ajustados após a investigação do custo de avaliação por minuto.
+O fundador sugeriu como referência uma faixa de **10 créditos ou mais a R$ 0,90 por crédito**. O plano aprovado suporta as modalidades por volume e progressiva; cada tabela escolhe seu modo. Os demais preços permanecem configuráveis. Os preços finais serão ajustados após a investigação do custo de avaliação por minuto.
 
 Uma única faixa, cobrindo todas as quantidades permitidas, representa preço unitário constante. Sua vigência seguirá o contrato, inclusive quando o preço for acordado por prazo indeterminado.
 
-Para publicar uma tabela, deverão estar definidos os limites de cada faixa, o preço unitário, a quantidade usada como referência e o modo de aplicação. Falta escolher entre os modos abaixo.
+Para publicar uma tabela, deverão estar definidos os limites de cada faixa, o preço unitário, a quantidade usada como referência e o modo de aplicação. Os dois modos abaixo fazem parte do piloto.
 
 - **Por volume.** A faixa atingida determina o preço de todas as unidades da quantidade apurada.
 - **Progressivo.** Cada parcela da quantidade recebe o preço da faixa em que se encontra.
 
-Também precisa ser definida a base da quantidade no white label, como consumo mensal agregado da organização ou outra base contratual. A tabela vigente e a quantidade apurada devem acompanhar o registro da cobrança.
+A base no white label é o consumo mensal agregado da organização; no catálogo direto, a quantidade comprada. A tabela vigente e a quantidade apurada devem acompanhar o registro da cobrança.
 
-## Pontos a definir
+## Decisões do piloto e pendências reais
 
-| Tema | Decisão pendente |
-| --- | --- |
-| Preços finais | Valores após medição dos custos, tamanho dos pacotes e termos contratuais |
-| Aplicação das faixas | Por volume ou progressiva e quantidade de referência em cada modalidade |
-| Contagem de licenças | Alunos e escolas elegíveis, múltiplos vínculos, data de corte e proporcionalidade |
-| Extras no white label | Responsável financeiro, eventual pagamento antecipado e conciliação com o consumo mensal |
-| Jornada inicial | Saldo para diagnóstico e critérios de liberação das recompensas antes das avaliações |
-| Repetição de atividades | Novas concessões após repetir aulas, módulos, cursos ou versões |
-| Saldo | Expiração, ordem de utilização por origem e regras de transferência |
-| Avaliações | Débito, falhas, cancelamentos, reavaliações e aplicação da unidade a áudio |
-| Premiações | Período, escopo do ranking, empates e momento de fechamento |
-| Pagamentos | Cobrança dentro da plataforma no piloto e formas de pagamento |
+As regras acima foram consolidadas no [plano aprovado](PLANO_DE_EXECUCAO_PILOTO.md). A carteira transacional e a administração de concessões estão na fase05. Compras, precificação comercial e fechamento de fatura são implementados na fase12; a existência do ledger não indica que o checkout já esteja pronto.
+
+Permanecem pendentes os preços comerciais finais, a calibração do custo real por provedor e os termos de cada contrato. Pagamentos serão simulados no piloto. O nome da unidade, quantidades, autonomia, limites e preços são configuráveis; dados de demonstração não representam uma oferta comercial.

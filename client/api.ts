@@ -12,6 +12,7 @@ type ApiOptions = Omit<RequestInit, 'body' | 'credentials' | 'mode'> & {
 const responseMessages: Record<number, string> = {
   400: 'Confira os dados informados e tente novamente.',
   401: 'Entre novamente para continuar.',
+  402: 'O saldo disponível é insuficiente para esta operação.',
   403: 'Sua conta não tem permissão para realizar esta ação nesta organização.',
   404: 'Não foi possível encontrar este recurso nesta organização.',
   409: 'Não foi possível concluir esta ação. Atualize a página e tente novamente.',
@@ -53,7 +54,7 @@ export async function apiJson<T>(path: string, options: ApiOptions = {}): Promis
 
     if (!response.ok) {
       let message = responseMessages[response.status] ?? 'O serviço não está disponível agora. Tente novamente em instantes.';
-      if ([400, 409, 422].includes(response.status)) {
+      if ([400, 402, 409, 422].includes(response.status)) {
         const problem = await response.json().catch(() => null) as { error?: unknown } | null;
         if (typeof problem?.error === 'string' && problem.error.length <= 300) message = problem.error;
       }
