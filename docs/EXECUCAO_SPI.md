@@ -193,3 +193,9 @@ As jornadas estão documentadas com suas verificações de UI, API e processo. F
 Os portais carregam as páginas por rota. A versão do currículo importada em ambientes novos exige áudio para critérios vocais. Versões publicadas e relatórios existentes preservam suas rubricas históricas. O piloto usa IA, e-mail e pagamento simulados. AWS, DNS público, deploy e validação em câmeras físicas pertencem às etapas posteriores.
 
 Rollback preserva o banco, o armazenamento e as versões publicadas. Para reiniciar, use o mesmo nome, checkout e porta do sandbox. Para apagar um sandbox, use o comando com confirmação do nome. [Guia do piloto](GUIA_DO_PILOTO.md)
+
+A PR #14 foi integrada à main no merge `0f9081f3b36167ad52d7d2bdf3ef92e9db6cbad2`, após o check `validate` verde no head `8ad79660152d13a15bab55eb999e0101ae8854f1`. O pedido de revisão Codex no GitHub ficou sem resposta até o merge. A revisão independente autorizada pelo fundador foi registrada na PR e verificou as correções de escopo da fila de exemplos e de isolamento de domínios locais. [PR #14](https://github.com/olimposlabs/matraca/pull/14)
+
+A suíte integrada passou com 326 testes em 21 arquivos. Passaram TypeScript, ESLint, build, auditoria de dependências e dez roteiros Chromium no Node 24.22.2. A instalação limpa em Node 24.22.2 concluiu com o lockfile. Os roteiros cobriram as 20 jornadas com ações de interface, requisições autenticadas e verificações de persistência conforme a matriz. [Matriz de aceite](technical/PILOT_ACCEPTANCE.md)
+
+A interface principal e os três domínios do sandbox responderam ao smoke local. A reaplicação dos exemplos conservou os identificadores dos pedidos, da avaliação, da mentoria e da fatura. O comando de fechamento local retornou a fatura de demonstração existente sem duplicá-la. O ambiente principal permanece aberto na porta 5173. O sandbox de exemplos está na porta 5174. O workflow do repositório executa CI e o merge funcional não disparou deploy.
