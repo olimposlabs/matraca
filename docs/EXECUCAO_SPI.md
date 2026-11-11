@@ -20,9 +20,10 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | 03 | Integrada com revisão independente e CI verde | PR #3, head 3f36442, merge de3cb8f |
 | 04 | Integrada com revisão independente e CI verde | PR #4, head 7f52e78, merge b697603 |
 | 05 | Integrada com revisão independente e CI verde | PR #5, head 8e45b2b, merge 2ef0f0e |
-| 06 | Currículo, editor e atribuição validados, PR em preparação | 13 jornadas de navegador |
-| 07, 08, 12 | Desenvolvimento paralelo de mídia, avaliação e precificação | Worktrees locais por fase |
-| 09–11, 13–14 | Pendentes | Dependências e aceite no plano aprovado |
+| 06 | Integrada com revisão independente e CI verde | PR #6, head c579a54, merge 89c8867 |
+| 07 | Estúdio e mídia validados, PR em preparação | 198 testes integrados e captura real Chromium |
+| 08–12 | Desenvolvimento paralelo | Worktrees locais por fase |
+| 13–14 | Pendentes | Dependências e aceite no plano aprovado |
 
 Em 11 de novembro de 2026, o fundador autorizou o mecanismo de revisão independente com CI verde após a ausência de resposta do Codex Review no GitHub. As fases 01–04 foram integradas por PR na ordem, com o commit revisado fixado no merge e a mesma árvore validada pela CI. O ambiente local permaneceu em execução. AWS e deploy continuam para uma etapa futura.
 
@@ -115,3 +116,12 @@ O currículo integral foi importado com 12 módulos, 36 aulas e 12 revisões. Ad
 A revisão independente encontrou e tratou republicação de curso arquivado, revogação após cancelamento de matrícula, integridade de imagens e versão atribuída a novos alunos. A migração 006 e o seed foram aplicados à demonstração. Treze jornadas de navegador em schema isolado verificaram editor, conteúdo, cópia, anexos, versões, atribuição, modo escolar e desativação de cursos. Consulte [os contratos](technical/COURSES.md) e [a revisão](technical/PHASE06_BACKEND_REVIEW.md).
 
 Rollback preserva versões publicadas, matrículas e arquivos privados. Nenhum deploy foi executado.
+
+
+## Fase 07
+
+O estúdio captura áudio e vídeo no navegador ou recebe arquivo, com limite por atividade, prévia, descarte e cancelamento durante a transmissão. O servidor verifica os pacotes da mídia, registra duração e mantém o objeto privado. O player entrega ranges somente ao aluno e aos perfis com escopo pedagógico atual. Gravações livres continuam quando cursos estão desativados. Upload não debita créditos.
+
+A revisão independente verificou 27 casos de mídia e autorização. Foram corrigidas a auditoria do upload e a restrição de diagnóstico por organização. Validação integrada registrou 198 testes, tipos, lint, build e Playwright com MediaRecorder real usando dispositivos sintéticos. Consulte [a revisão](technical/PHASE07_REVIEW.md) e [a validação de interface](technical/PHASE07_UI_VALIDATION.md).
+
+Rollback preserva objetos e registros de gravação. Sem deploy.
