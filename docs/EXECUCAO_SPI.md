@@ -161,3 +161,13 @@ A PR #10 foi integrada à main no merge 2371826, após revisão independente no 
 A jornada registra pontos e medalhas de forma idempotente. Rankings anuais e campanhas isolam cada organização. Grupos usam os vínculos do momento do evento, inclusive depois da transferência. O fechamento da campanha salva a classificação e concede os créditos em uma transação.
 
 Passaram 241 testes, tipos, lint, build e o roteiro de navegador `scripts/check-gamification-ui.ts` em desktop e celular. A suíte verifica fronteira anual no fuso de São Paulo, desempate, transferências, concessão de 3, 2 e 1 créditos e repetição de fechamento. Rollback preserva o histórico de pontos e prêmios. Sem deploy.
+
+A revisão independente reproduziu uma medalha perdida quando duas transações consultavam pontos antes do commit. O cálculo passou a serializar eventos por aluno. A regressão e o Playwright passaram após a correção. A PR #11 foi integrada no merge 291a558, após CI verde no head 36c5c7f. [Revisão de gamificação](technical/PHASE11_BACKEND_REVIEW.md)
+
+## Fase 12
+
+O catálogo direto oferece cursos e pacotes. Pedidos guardam preço e versão, e a confirmação simulada entrega os benefícios uma vez. A loja aplica preços por volume ou progressivos. Contratos versionados guardam licenças, termos e faixas. Faturas registram consumo da competência, licenças do mês seguinte, elegibilidade histórica e ajustes.
+
+Os roteiros Playwright usam API, PostgreSQL e armazenamento reais em schemas isolados. Verificaram catálogo, preço, matrícula, replay de pagamento e escopo. O fechamento de novembro do cenário sintético resultou em R$ 1.440, com três escolas e 50 alunos únicos. A publicação posterior preservou relatório, matrícula e fatura. A liquidação foi repetida após perda de resposta sem duplicação. [Contratos](technical/COMMERCE.md) · [Validação do comércio](technical/PHASE12_COMMERCE_UI_VALIDATION.md)
+
+Rollback preserva os pedidos, benefícios, versões e faturas. Pagamentos são simulados. Sem deploy.
