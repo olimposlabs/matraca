@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import type { Database } from '../db.js';
+import { applyCourseEvaluation } from '../journey-progress.js';
 import { consumeReservationInTransaction, releaseReservationInTransaction } from '../wallet.js';
 import { EvaluationProviderError, validateEvaluationReport, type EvaluationContext, type EvaluationProvider, type EvaluationReport, type EvaluationScenario } from './provider.js';
 
@@ -90,6 +91,10 @@ async function settle(db: Database, job: Job, result: EvaluationReport | Evaluat
       await finishJob(client, job.request_id, 'failed', result.code);
       return;
     }
+    await applyCourseEvaluation(client, {
+      orgId: job.org_id, studentId: job.student_id,
+      recordingId: job.context.recording.id, evaluationId: job.request_id,
+    });
     const reservation = await consumeReservationInTransaction(client, target);
     await client.query(
       `INSERT INTO evaluation_results(request_id,org_id,student_id,report,consumption_entry_id)
