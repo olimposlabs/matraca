@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { createDatabase } from '../server/db.js';
 import { configuration } from '../server/config.js';
 import { DEFAULT_BRANDING } from '../server/organizations.js';
@@ -6,10 +5,8 @@ import { seedEducation } from './seed-education.js';
 import { seedWallet } from './seed-wallet.js';
 import { seedCourses } from './seed-courses.js';
 
-export function seedId(value: string): string {
-  const hex = createHash('sha256').update(`matraca-demo:${value}`).digest('hex');
-  return `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-a${hex.slice(17,20)}-${hex.slice(20,32)}`;
-}
+import { seedId } from './seed-id.js';
+
 const organizations = [
   { slug: 'matraca', name: 'Matraca', kind: 'matraca', hosts: ['matraca.localhost','localhost','127.0.0.1'] },
   { slug: 'parceiro', name: 'Horizonte Oratória', kind: 'partner', hosts: ['parceiro.matraca.localhost','parceiro.localhost'] },

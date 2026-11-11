@@ -21,7 +21,8 @@
     "start": "tsx server/start.ts",
     "inbox": "tsx scripts/inbox.ts",
     "billing:close": "tsx scripts/close-billing.ts",
-    "pilot:sandbox": "tsx scripts/sandbox.ts"
+    "pilot:sandbox": "tsx scripts/sandbox.ts",
+    "db:seed:examples": "tsx scripts/seed-pilot-examples.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",

@@ -7,7 +7,7 @@ import { createDatabase } from '../server/db.js';
 import { startLocalDatabase } from './db-start.js';
 
 const { values, positionals } = parseArgs({
-  options: { name: { type: 'string' }, port: { type: 'string', default: '5174' }, confirm: { type: 'string' } },
+  options: { name: { type: 'string' }, port: { type: 'string', default: '5174' }, confirm: { type: 'string' }, examples: { type: 'boolean', default: false } },
   allowPositionals: true,
 });
 const [action] = positionals;
@@ -51,6 +51,7 @@ try {
       PORT: String(port), APP_PUBLIC_PORT: String(port), APP_CLIENT_ROOT: clientRoot,
     };
     for (const task of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', task], { env, stdio: 'inherit' });
+    if (values.examples) execFileSync('npm', ['run', 'db:seed:examples', '--', '--invoice'], { env, stdio: 'inherit' });
     const isolated = createDatabase(database.toString());
     const domains = {
       matraca: `${name}.matraca.localhost`,
