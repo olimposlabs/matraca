@@ -23,8 +23,9 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | 06 | Integrada com revisão independente e CI verde | PR #6, head c579a54, merge 89c8867 |
 | 07 | Integrada com revisão independente e CI verde | PR #7, head 0aeae0a, merge 2c39dd5 |
 | 08 | Integrada com revisão independente e CI verde | PR #8, head 7f4c6c1, merge 0b23ff5 |
-| 09 | Jornada e evolução validadas, PR em preparação | 217 testes e nove fluxos de navegador |
-| 10–13 | Desenvolvimento paralelo | Worktrees locais por fase |
+| 09 | Integrada com revisão independente e CI verde | PR #9, head c564c8f, merge 38ca8b6 |
+| 10 | Mentorias e plano individual validados, PR em preparação | 238 testes e quatro fluxos de navegador |
+| 11–13 | Desenvolvimento paralelo | Worktrees locais por fase |
 | 14 | Pendente | Dependências e aceite no plano aprovado |
 
 Em 11 de novembro de 2026, o fundador autorizou o mecanismo de revisão independente com CI verde após a ausência de resposta do Codex Review no GitHub. As fases 01–04 foram integradas por PR na ordem, com o commit revisado fixado no merge e a mesma árvore validada pela CI. O ambiente local permaneceu em execução. AWS e deploy continuam para uma etapa futura.
@@ -145,3 +146,10 @@ O portal do aluno abre a jornada com perfil, escolha de entrada, diagnóstico e 
 A revisão verificou locks e atomicidade. Um curso publicado agora só aceita pré-requisitos anteriores; versões antigas mantêm os requisitos em ordem topológica. Ativar sequência obrigatória após estudo adaptativo passa a bloquear a avaliação ainda incompleta até concluir as unidades anteriores. A migração 009 vincula progresso à versão e registra grupos por evento.
 
 Passaram 217 testes integrados, tipos, lint, build e nove fluxos Playwright em schema isolado, com perfil, diagnóstico, áudio real, checklist, grants, revisão, nova tentativa, conclusão e comparação por rubrica. Consulte [a jornada](technical/JOURNEY.md). Rollback preserva histórico, progresso e lançamentos. Sem deploy.
+
+
+## Fase 10
+
+Professores aprovados e atribuídos registram mentorias e revisões humanas, com autoria e trechos da gravação. Alunos respondem e atualizam o plano. Gestores consultam e administram o plano no escopo atual. O relatório original da IA permanece separado e revisões humanas não debitam créditos.
+
+Passaram 238 testes integrados, tipos, lint, build e quatro fluxos Playwright. A validação revelou uma lista obsoleta na troca de aba, corrigida e revalidada. A revisão independente confirmou vínculos atuais, revalidação, integridade dos registros e histórico de plano. Consulte [mentorias](technical/MENTORING.md). Rollback preserva histórico. Sem deploy.
