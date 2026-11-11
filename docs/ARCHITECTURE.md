@@ -19,7 +19,7 @@ A mudança evita acoplar o piloto a uma nuvem diferente da escolhida pelo fundad
 
 ## Fronteiras
 
-Entradas HTTP ficam em server/app.ts e módulos registrados pela API. Configuração local, acesso transacional ao banco e armazenamento privado possuem módulos próprios. A fase 02 implementa organização resolvida pelo domínio, identidade e papéis. Escopos escolares específicos serão acrescentados na fase 04. O mesmo e-mail em organizações diferentes tem identidades e sessões independentes. Tokens são de uso único, sessões são revogáveis e o transporte de e-mail é uma caixa local privada.
+Entradas HTTP ficam em server/app.ts e módulos registrados pela API. Configuração local, acesso transacional ao banco e armazenamento privado possuem módulos próprios. A fase 02 implementa organização resolvida pelo domínio, identidade e papéis. A fase 04 acrescenta escolas, turmas, vínculos históricos e grupos, com autorização centralizada em server/permissions.ts. Mutações educacionais revalidam a sessão dentro da transação depois de adquirir o lock da organização. O mesmo e-mail em organizações diferentes tem identidades e sessões independentes. Tokens são de uso único, sessões são revogáveis e o transporte de e-mail é uma caixa local privada.
 
 O arquivo de mídia é real, e sua duração será verificada antes de qualquer reserva de créditos. O mock de IA substituirá somente a resposta externa. Regras de negócio, ledger, pedidos e resultados continuarão persistidos de verdade.
 

@@ -16,10 +16,12 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | Fase | Estado | Evidência |
 | --- | --- | --- |
 | 01 | CI verde, aguardando revisão Codex | PR #1, head 6dfb11e |
-| 02 | Implementação e validação locais concluídas, integração pendente | Branch codex/spi-02-identity |
-| 03 | Código e E2E local aprovados, PR em preparação | Branch codex/spi-03-portals-branding |
-| 04 | Preparação paralela em checkout separado | /tmp/matraca-phase04, branch codex/spi-04-schools |
-| 05–14 | Pendentes | Dependências e aceite no plano aprovado |
+| 02 | CI verde, aguardando revisão Codex e integração | PR #2, head 5fa7718 |
+| 03 | CI e E2E local aprovados, aguardando revisão Codex | PR #3, head 3f36442 |
+| 04 | Gestão escolar e E2E local validados; PR em preparação | Branch codex/spi-04-schools |
+| 05 | Carteira transacional em implementação paralela | /tmp/matraca-phase05 |
+| 06 | Importação integral do currículo em preparação paralela | /tmp/matraca-phase06 |
+| 07–14 | Pendentes | Dependências e aceite no plano aprovado |
 
 ## Fase 01
 
@@ -74,3 +76,17 @@ A inspeção de navegador do fluxo completo ainda está em andamento neste regis
 - E2E final da fase 03 aprovado. Criação de parceiro e login do novo administrador, preview sem publicação antecipada, upload staged, publicação, portal com marca, preferências, restauração e conflito409 foram exercitados pela interface.
 - Não houve erro JavaScript nem overflow entre320 e1440px. A organização temporária e seus registros/arquivos foram removidos por IDs exatos. Personas e branding do seed permaneceram inalterados.
 - Preparação da fase 04 iniciada em checkout separado a partir de3ba089e, conforme autorização de paralelismo. A fase03 continua com gate remoto aberto.
+
+## Fase 04
+
+Baseline final3f36442. Escopo: gestão escolar, pessoas, aprovações, certificações, turmas, vínculos, grupos hierárquicos e transferências dentro da organização. O ID do aluno e os registros encerrados são preservados. As permissões seguem o vínculo atual; possuir histórico não garante acesso ao aluno após transferência.
+
+A migração004 foi aplicada ao banco de demonstração. Seed aditivo cria uma escola, três professores aprovados, seis alunos, uma turma ativa e uma encerrada e quatro níveis de grupos. Reexecutar o seed não restaura vínculos encerrados nem sobrescreve edições.
+
+Os20 testes específicos verificam isolamento, matrículas concorrentes, grupos sem ciclos, transferência e revogação. A revisão identificou uma janela de autorização durante espera pelo lock; a identidade passou a ser relida na mesma transação após adquirir o lock, com três regressões determinísticas de suspensão, papel e logout. Consulte [revisão independente](technical/PHASE04_REVIEW.md).
+
+Validação integrada final:111 testes aprovados, tipos, lint, build e diff check passaram. O build da interface foi servido pelo backend local na porta3004 para a inspeção de navegador.
+
+E2E real aprovado com cadastro de escola, aluno e turma, login do convidado, matrícula, vínculo docente, atribuição à turma, transferência e histórico. O professor recebeu200 antes e403 depois da transferência; o gestor da escola de destino recebeu200. Interface sem overflow de320 a1440px e sem erros de página. Fixtures sintéticas temporárias foram removidas por IDs exatos; seed permanece disponível.
+
+Rollback reverte o código da fase e mantém as tabelas/históricos para inspeção. Não há deploy. Revisão remota, CI do head final e merge permanecem gates abertos; frentes05/06 seguem localmente sob autorização de paralelismo.

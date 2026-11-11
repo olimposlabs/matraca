@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { createDatabase } from '../server/db.js';
 import { configuration } from '../server/config.js';
 import { DEFAULT_BRANDING } from '../server/organizations.js';
+import { seedEducation } from './seed-education.js';
 
 export function seedId(value: string): string {
   const hex = createHash('sha256').update(`matraca-demo:${value}`).digest('hex');
@@ -37,6 +38,7 @@ try {
       ];
       for (const person of people) await client.query("INSERT INTO users (id,org_id,email,name,roles,status,profile) VALUES ($1,$2,$3,$4,$5,'active',$6) ON CONFLICT (org_id,email) DO NOTHING",[seedId(`${org.slug}:${person.email}`),orgId,person.email,person.name,person.roles,{}]);
     }
+    await seedEducation(client,seedId);
   });
   process.stdout.write('Seed local conferido, sem sobrescrever dados existentes.\n');
 } finally { await db.close(); }

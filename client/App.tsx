@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Route, Routes, useLocation } from 'react-router';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import {
   ArrowDown,
   ArrowRight,
@@ -25,6 +25,7 @@ import {
 import { AuthProvider, AuthenticatedArea, LoginPage, WorkspaceNavigation, sessionHome, useAuth } from './auth';
 import { apiJson } from './api';
 import { OrganizationsPage, OrganizationSettingsPage, brandDisplayName, organizationTheme } from './organizations';
+import { EducationPage } from './education';
 
 const waveformHeights = [18, 30, 23, 42, 57, 36, 25, 48, 68, 52, 31, 44, 60, 79, 65, 43, 29, 46, 63, 48, 34, 54, 72, 49, 31, 45, 58, 35, 25, 39, 22, 14];
 
@@ -236,6 +237,11 @@ function HomeEntry() {
   return org?.kind === 'matraca' ? <HomePage /> : <LoginPage />;
 }
 
+function AdminEntry() {
+  const { user } = useAuth();
+  return user?.roles.includes('school') && !user.roles.includes('org_admin') ? <Navigate to="/admin/education" replace /> : <OrganizationSettingsPage />;
+}
+
 function AppShell() {
   const location = useLocation();
   const { org } = useAuth();
@@ -248,6 +254,9 @@ function AppShell() {
       '/app': 'Área do aluno — Matraca',
       '/admin': 'Gestão — Matraca',
       '/backoffice': 'Backoffice — Matraca',
+      '/admin/education': 'Pessoas e turmas — Matraca',
+      '/teacher': 'Área do professor — Matraca',
+      '/app/classes': 'Minhas turmas — Matraca',
     };
     document.title = titles[location.pathname] ?? 'Página não encontrada — Matraca';
     if (!location.hash) window.scrollTo(0, 0);
@@ -258,7 +267,7 @@ function AppShell() {
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
       <WorkspaceNavigation />
-      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<OrganizationSettingsPage />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<AuthenticatedArea />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
       <SiteFooter />
     </div>
   );
