@@ -153,3 +153,11 @@ Passaram 217 testes integrados, tipos, lint, build e nove fluxos Playwright em s
 Professores aprovados e atribuídos registram mentorias e revisões humanas, com autoria e trechos da gravação. Alunos respondem e atualizam o plano. Gestores consultam e administram o plano no escopo atual. O relatório original da IA permanece separado e revisões humanas não debitam créditos.
 
 Passaram 238 testes integrados, tipos, lint, build e quatro fluxos Playwright. A validação revelou uma lista obsoleta na troca de aba, corrigida e revalidada. A revisão independente confirmou vínculos atuais, revalidação, integridade dos registros e histórico de plano. Consulte [mentorias](technical/MENTORING.md). Rollback preserva histórico. Sem deploy.
+
+A PR #10 foi integrada à main no merge 2371826, após revisão independente no head 1c29c74 e CI verde.
+
+## Fase 11
+
+A jornada registra pontos e medalhas de forma idempotente. Rankings anuais e campanhas isolam cada organização. Grupos usam os vínculos do momento do evento, inclusive depois da transferência. O fechamento da campanha salva a classificação e concede os créditos em uma transação.
+
+Passaram 241 testes, tipos, lint, build e o roteiro de navegador `scripts/check-gamification-ui.ts` em desktop e celular. A suíte verifica fronteira anual no fuso de São Paulo, desempate, transferências, concessão de 3, 2 e 1 créditos e repetição de fechamento. Rollback preserva o histórico de pontos e prêmios. Sem deploy.
