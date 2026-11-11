@@ -14,6 +14,14 @@ A fundação usa Node 24 LTS, React, Vite, Fastify e PostgreSQL 17. Docker preci
 
 Acompanhe os gates e evidências no [registro SPI](docs/EXECUCAO_SPI.md).
 
+## Contas de demonstração e login
+
+O acesso usa links de uso único. Em `http://matraca.localhost:5173/login`, solicite um link para `ana@exemplo.test`. Depois execute `npm run inbox -- --email ana@exemplo.test --host matraca.localhost` e abra o link local recebido. O e-mail é simulado, enquanto a sessão é real e pertence somente ao host usado.
+
+No parceiro, use `http://parceiro.matraca.localhost:5173/login`. Estão disponíveis `ana@exemplo.test`, `admin@parceiro.test`, `escola@parceiro.test` e `professor1@parceiro.test`. No backoffice, use `http://backoffice.matraca.localhost:5173/login` com `operador@matraca.test`. Filtre a inbox pelo host correspondente para evitar confundir mensagens do mesmo e-mail.
+
+As mensagens ficam em arquivos privados, fora do Git e fora do acesso HTTP do Vite. Não há endpoint público que entregue tokens. Somente dados sintéticos devem ser usados neste piloto local.
+
 ## Documentação
 
 - [Plano aprovado de execução do piloto](docs/PLANO_DE_EXECUCAO_PILOTO.md)

@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "build": "tsc --noEmit && vite build",
-    "start": "tsx server/start.ts"
+    "start": "tsx server/start.ts",
+    "inbox": "tsx scripts/inbox.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",
