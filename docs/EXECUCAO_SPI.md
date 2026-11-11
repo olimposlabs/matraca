@@ -171,3 +171,13 @@ O catálogo direto oferece cursos e pacotes. Pedidos guardam preço e versão, e
 Os roteiros Playwright usam API, PostgreSQL e armazenamento reais em schemas isolados. Verificaram catálogo, preço, matrícula, replay de pagamento e escopo. O fechamento de novembro do cenário sintético resultou em R$ 1.440, com três escolas e 50 alunos únicos. A publicação posterior preservou relatório, matrícula e fatura. A liquidação foi repetida após perda de resposta sem duplicação. [Contratos](technical/COMMERCE.md) · [Validação do comércio](technical/PHASE12_COMMERCE_UI_VALIDATION.md)
 
 Rollback preserva os pedidos, benefícios, versões e faturas. Pagamentos são simulados. Sem deploy.
+
+A PR #12 foi integrada no merge c45a339, após revisão independente e CI verde no head b6d6cbf. A suíte integrada executou 320 testes. Dois testes foram ajustados para injetar seu relógio financeiro pelo ponto de entrada do app.
+
+## Fase 13
+
+O backoffice tem métricas por organização, escola, aluno e período, auditoria, jobs e reservas. Valores simulados ficam separados dos minutos verificados e dos lançamentos de créditos. Políticas por organização controlam limites e cenários. O fechamento de fatura via interface e comando local usa a mesma função.
+
+O navegador verificou filtros, limites, retomada de job e liberação de reserva órfã. Testes integrados verificaram cenário de pagamento e relógio financeiro por organização, preservação de histórico, permissões e limites. [Operação e recuperação](technical/OPERATIONS_CONSOLE.md)
+
+Rollback preserva auditoria, jobs e lançamentos. Sem deploy.

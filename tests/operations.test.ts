@@ -165,4 +165,70 @@ describe('controles operacionais e reconciliação', () => {
     expect(known.statusCode).toBe(500);
     expect(unknown.body).toBe(known.body);
   });
+
+  it('usa callbacks reais do app por organização para pagamento omitido e relógio financeiro, preservando replays', async () => {
+    const operator = await actor('operator');
+    const nativeOrgId = randomUUID();
+    await db.query("INSERT INTO orgs(id,slug,name,kind) VALUES($1,$2,'Matraca sintética','matraca')", [nativeOrgId, `native-${nativeOrgId}`]);
+    const buyer = await actor('student', nativeOrgId);
+    const partner = await actor('org_admin');
+    const prices = { mode: 'volume', tiers: [{ from: 1, to: null, unitPriceCents: 90 }] };
+    const catalog = `/api/backoffice/commerce/orgs/${buyer.orgId}/catalog`;
+    const created = await call(operator, 'POST', catalog, { title: 'Cinco práticas', kind: 'credits', creditAmount: 5, priceTable: prices });
+    expect(created.statusCode, created.body).toBe(201);
+    const offerId = created.json().offer.id;
+    expect((await call(operator, 'POST', `${catalog}/${offerId}/publish`, { expectedRevision: 1 })).statusCode).toBe(200);
+
+    const nativePolicy = { ...defaultOperationPolicy, paymentScenario: 'declined', clockOverride: '2099-02-02T12:00:00Z' };
+    expect((await call(operator, 'PUT', `${ops(buyer)}/policy`, { expectedRevision: 0, config: nativePolicy })).statusCode).toBe(200);
+    const declinedOrder = await call(buyer, 'POST', '/api/commerce/orders', { offerId, clientKey: randomUUID() });
+    expect(declinedOrder.statusCode, declinedOrder.body).toBe(201);
+    const declinedPath = `/api/commerce/orders/${declinedOrder.json().order.id}/simulate`, declinedEvent = { eventId: randomUUID() };
+    const declined = await call(buyer, 'POST', declinedPath, declinedEvent); // No status: use target-organization policy.
+    expect(declined.statusCode, declined.body).toBe(200);
+    expect(declined.json()).toMatchObject({ order: { status: 'declined' }, applied: true, replay: false });
+    expect((await db.query("SELECT id FROM wallet_entries WHERE org_id=$1 AND source='purchase'", [buyer.orgId])).rowCount).toBe(0);
+
+    expect((await call(operator, 'PUT', `${ops(buyer)}/policy`, { expectedRevision: 1, config: { ...nativePolicy, paymentScenario: 'approved' } })).statusCode).toBe(200);
+    const approvedOrder = await call(buyer, 'POST', '/api/commerce/orders', { offerId, clientKey: randomUUID() });
+    expect(approvedOrder.statusCode, approvedOrder.body).toBe(201);
+    const approvedPath = `/api/commerce/orders/${approvedOrder.json().order.id}/simulate`, approvedEvent = { eventId: randomUUID() };
+    const approved = await call(buyer, 'POST', approvedPath, approvedEvent);
+    expect(approved.statusCode, approved.body).toBe(200);
+    expect(approved.json()).toMatchObject({ order: { status: 'paid', creditAmount: 5 }, applied: true, replay: false });
+    expect((await call(buyer, 'POST', declinedPath, declinedEvent)).json()).toMatchObject({ order: { status: 'declined' }, replay: true });
+    expect((await call(operator, 'PUT', `${ops(buyer)}/policy`, { expectedRevision: 2, config: nativePolicy })).statusCode).toBe(200);
+    expect((await call(buyer, 'POST', approvedPath, approvedEvent)).json()).toMatchObject({ order: { status: 'paid' }, replay: true });
+    expect((await getWallet(db, buyer)).balance).toBe(5);
+    expect((await db.query("SELECT id FROM wallet_entries WHERE org_id=$1 AND source='purchase'", [buyer.orgId])).rowCount).toBe(1);
+
+    // Known synthetic coverage, with fixed historical dates independent of the machine's current month.
+    const month = '2025-11', billing = `/api/backoffice/billing/orgs/${partner.orgId}`;
+    await db.query("UPDATE billing_observation_coverage SET tracked_since='2025-11-01T03:00:00Z' WHERE org_id=$1", [partner.orgId]);
+    const contract = { effectiveFrom: month, expectedRevision: 0, licenses: { organizationCents: 10_000, schoolCents: 1000, studentCents: 100 }, credits: prices };
+    expect((await call(operator, 'POST', `${billing}/contracts`, contract)).statusCode).toBe(201);
+    const partnerPolicy = { ...defaultOperationPolicy, clockOverride: '2025-11-15T12:00:00Z' };
+    expect((await call(operator, 'PUT', `${ops(partner)}/policy`, { expectedRevision: 0, config: partnerPolicy })).statusCode).toBe(200);
+    const open = await call(operator, 'GET', `${billing}/preview?month=${month}`);
+    expect(open.statusCode, open.body).toBe(200);
+    expect(open.json().preview).toMatchObject({ provisional: true, financialNow: '2025-11-15T12:00:00.000Z', cutoff: '2025-12-01T03:00:00.000Z' });
+    expect((await call(operator, 'POST', `${billing}/close`, { month })).statusCode).toBe(409);
+    // Financial time does not expire or otherwise replace real authentication time.
+    expect((await call(partner, 'GET', '/api/auth/session')).statusCode).toBe(200);
+
+    expect((await call(operator, 'PUT', `${ops(partner)}/policy`, { expectedRevision: 1, config: { ...partnerPolicy, clockOverride: '2025-12-02T12:00:00Z' } })).statusCode).toBe(200);
+    const closed = await call(operator, 'POST', `${billing}/close`, { month });
+    expect(closed.statusCode, closed.body).toBe(201);
+    const original = closed.json().invoice;
+    expect(original).toMatchObject({ totalCents: 10_000, snapshot: { provisional: false, consumptionMonth: month, licenseMonth: '2025-12', financialNow: '2025-12-02T12:00:00.000Z' } });
+    expect((await call(operator, 'PUT', `${ops(partner)}/policy`, { expectedRevision: 2, config: partnerPolicy })).statusCode).toBe(200);
+    expect((await call(operator, 'POST', `${billing}/contracts`, { ...contract, expectedRevision: 1, licenses: { ...contract.licenses, organizationCents: 20_000 } })).statusCode).toBe(409);
+    const frozen = await call(partner, 'GET', `/api/billing/preview?month=${month}`);
+    expect(frozen.statusCode, frozen.body).toBe(200);
+    expect(frozen.json()).toEqual({ closedInvoiceId: original.id, preview: original.snapshot });
+    const repeated = await call(operator, 'POST', `${billing}/close`, { month });
+    expect(repeated.statusCode, repeated.body).toBe(200);
+    expect(repeated.json()).toEqual({ invoice: original, replay: true });
+    expect((await db.query('SELECT id FROM billing_invoices WHERE org_id=$1', [partner.orgId])).rowCount).toBe(1);
+  });
 });
