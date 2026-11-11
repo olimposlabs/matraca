@@ -114,10 +114,14 @@ try {
   await expect(page.locator('.shop-notice')).toContainText('confirmado');
   assert.equal((await db.query("SELECT count(*)::int AS total FROM wallet_entries WHERE org_id=$1 AND source='purchase'", [orgId])).rows[0].total, 1);
   assert.equal((await db.query('SELECT balance FROM wallets WHERE org_id=$1 AND user_id=$2', [orgId, student.id])).rows[0].balance, 10);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: resolve('.data/phase12-commerce-checkout.png'), fullPage: true });
 
-  await buy('Curso para sua voz');
+  const courseOrderId = await buy('Curso para sua voz');
+  await expect(page.getByLabel('Resultado do pagamento simulado', { exact: true })).toHaveValue('default');
+  const defaultPayment = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith(`/orders/${courseOrderId}/simulate`));
   await page.getByRole('button', { name: 'Simular pagamento', exact: true }).click();
+  assert.equal(Object.hasOwn((await defaultPayment).request().postDataJSON(), 'status'), false);
   await expect(page.locator('.shop-entitlements')).toContainText('matrícula nesta versão');
   assert.equal((await db.query('SELECT balance FROM wallets WHERE org_id=$1 AND user_id=$2', [orgId, student.id])).rows[0].balance, 17);
   assert.equal((await db.query("SELECT version_id FROM course_enrollments WHERE org_id=$1 AND student_id=$2 AND source='purchase'", [orgId, student.id])).rows[0].version_id, versionId);

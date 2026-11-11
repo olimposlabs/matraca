@@ -15,11 +15,21 @@ import { registerEvaluations } from './evaluation/routes.js';
 import { registerJourney } from './journey.js';
 import { registerMentoring } from './mentoring.js';
 import { registerGamification } from './gamification.js';
+import { registerCommerce } from './commerce.js';
+import { registerBilling } from './billing.js';
 import staticFiles from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-export async function createApp(options: { databaseUrl?: string; storageRoot?: string; clientRoot?: string } = {}) {
+export interface AppOptions {
+  databaseUrl?: string;
+  storageRoot?: string;
+  clientRoot?: string;
+  /** Trusted server-side clock for the local financial simulator. */
+  billingNow?: (orgId: string) => Date | Promise<Date>;
+}
+
+export async function createApp(options: AppOptions = {}) {
   const config = configuration(options);
   const db = createDatabase(config.databaseUrl);
   const storage = new LocalStorage(config.storageRoot);
@@ -66,6 +76,8 @@ export async function createApp(options: { databaseUrl?: string; storageRoot?: s
   await registerJourney(app);
   await registerMentoring(app);
   await registerGamification(app);
+  await registerCommerce(app);
+  await registerBilling(app, { now: options.billingNow });
   const clientRoot = resolve(options.clientRoot ?? 'dist/client');
   if (existsSync(resolve(clientRoot, 'index.html'))) {
     await app.register(staticFiles, { root: clientRoot, wildcard: false });

@@ -31,6 +31,8 @@ import { RecordingsPage } from './recordings';
 import { EvaluationAction, EvaluationsPage } from './evaluations';
 import { MentoringPage } from './mentoring';
 import { GamificationPage } from './gamification';
+import { CommercePage } from './commerce';
+import { BillingPage } from './billing';
 import { CoursesManagementPage, StudentCoursesPage } from './courses';
 import { JourneyPage, EvolutionPage } from './journey';
 
@@ -285,6 +287,10 @@ function AppShell() {
       '/backoffice/courses': 'Operação de cursos — Matraca',
       '/admin/credits': 'Gestão de créditos — Matraca',
       '/backoffice/credits': 'Operação de créditos — Matraca',
+      '/app/store': 'Loja — Matraca',
+      '/backoffice/commerce': 'Loja e pedidos — Matraca',
+      '/admin/billing': 'Faturamento — Matraca',
+      '/backoffice/billing': 'Faturamento — Matraca',
     };
     document.title = titles[location.pathname] ?? (location.pathname.startsWith('/app/evaluations/') ? 'Relatório — Matraca' : location.pathname.startsWith('/app/courses/') ? 'Meu curso — Matraca' : 'Página não encontrada — Matraca');
     if (!location.hash) window.scrollTo(0, 0);
@@ -295,7 +301,7 @@ function AppShell() {
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
       <WorkspaceNavigation />
-      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<MemberEntry />} /><Route path="/app/journey" element={<JourneyPage />} /><Route path="/app/evolution" element={<EvolutionPage />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/courses" element={<StudentCoursesPage />} /><Route path="/app/courses/:courseId" element={<StudentCoursesPage />} /><Route path="/admin/courses" element={<CoursesManagementPage />} /><Route path="/backoffice/courses" element={<CoursesManagementPage central />} /><Route path="/app/recordings" element={<AuthenticatedArea area="learner"><RecordingsPage renderActions={recording => <EvaluationAction key={recording.id} recording={recording} />} /></AuthenticatedArea>} /><Route path="/app/evaluations" element={<EvaluationsPage />} /><Route path="/app/evaluations/:evaluationId" element={<EvaluationsPage />} /><Route path="/app/mentoring" element={<MentoringPage view="student" />} /><Route path="/teacher/mentoring" element={<MentoringPage />} /><Route path="/admin/mentoring" element={<MentoringPage view="manage" />} /><Route path="/app/achievements" element={<GamificationPage mode="student" />} /><Route path="/admin/gamification" element={<GamificationPage mode="manage" />} /><Route path="/backoffice/gamification" element={<GamificationPage mode="backoffice" />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<MemberEntry />} /><Route path="/app/journey" element={<JourneyPage />} /><Route path="/app/evolution" element={<EvolutionPage />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/courses" element={<StudentCoursesPage />} /><Route path="/app/courses/:courseId" element={<StudentCoursesPage />} /><Route path="/admin/courses" element={<CoursesManagementPage />} /><Route path="/backoffice/courses" element={<CoursesManagementPage central />} /><Route path="/app/recordings" element={<AuthenticatedArea area="learner"><RecordingsPage renderActions={recording => <EvaluationAction key={recording.id} recording={recording} />} /></AuthenticatedArea>} /><Route path="/app/evaluations" element={<EvaluationsPage />} /><Route path="/app/evaluations/:evaluationId" element={<EvaluationsPage />} /><Route path="/app/mentoring" element={<MentoringPage view="student" />} /><Route path="/teacher/mentoring" element={<MentoringPage />} /><Route path="/admin/mentoring" element={<MentoringPage view="manage" />} /><Route path="/app/achievements" element={<GamificationPage mode="student" />} /><Route path="/admin/gamification" element={<GamificationPage mode="manage" />} /><Route path="/backoffice/gamification" element={<GamificationPage mode="backoffice" />} /><Route path="/app/store" element={<CommercePage />} /><Route path="/backoffice/commerce" element={<CommercePage mode="backoffice" />} /><Route path="/admin/billing" element={<BillingPage />} /><Route path="/backoffice/billing" element={<BillingPage central />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
       <SiteFooter />
     </div>
   );
