@@ -11,6 +11,7 @@ import { registerCourses } from './courses.js';
 import { registerCourseAssets } from './course-assets.js';
 import { registerCourseManagementReads } from './course-management-read.js';
 import { registerRecordings } from './recordings.js';
+import { registerEvaluations } from './evaluation/routes.js';
 import staticFiles from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -58,6 +59,7 @@ export async function createApp(options: { databaseUrl?: string; storageRoot?: s
   await registerCourseAssets(app);
   await registerCourseManagementReads(app);
   await registerRecordings(app);
+  await registerEvaluations(app);
   const clientRoot = resolve(options.clientRoot ?? 'dist/client');
   if (existsSync(resolve(clientRoot, 'index.html'))) {
     await app.register(staticFiles, { root: clientRoot, wildcard: false });
