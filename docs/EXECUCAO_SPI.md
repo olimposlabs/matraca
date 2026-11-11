@@ -15,13 +15,16 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 
 | Fase | Estado | Evidência |
 | --- | --- | --- |
-| 01 | CI verde, aguardando revisão Codex | PR #1, head 6dfb11e |
-| 02 | CI verde, aguardando revisão Codex e integração | PR #2, head 5fa7718 |
-| 03 | CI e E2E local aprovados, aguardando revisão Codex | PR #3, head 3f36442 |
-| 04 | Gestão escolar e E2E local validados; PR em preparação | Branch codex/spi-04-schools |
-| 05 | Carteira transacional em implementação paralela | /tmp/matraca-phase05 |
-| 06 | Importação integral do currículo em preparação paralela | /tmp/matraca-phase06 |
-| 07–14 | Pendentes | Dependências e aceite no plano aprovado |
+| 01 | Integrada com revisão independente e CI verde | PR #1, head 6dfb11e, merge 0336335 |
+| 02 | Integrada com revisão independente e CI verde | PR #2, head 5fa7718, merge ffa1445 |
+| 03 | Integrada com revisão independente e CI verde | PR #3, head 3f36442, merge de3cb8f |
+| 04 | Integrada com revisão independente e CI verde | PR #4, head 7f52e78, merge b697603 |
+| 05 | Implementação e validação local completas, PR em preparação | 151 testes e sete jornadas de navegador |
+| 06 | Currículo e backend implementados, editor em desenvolvimento | /tmp/matraca-phase06 |
+| 07, 08, 12 | Desenvolvimento paralelo de mídia, avaliação e precificação | Worktrees locais por fase |
+| 09–11, 13–14 | Pendentes | Dependências e aceite no plano aprovado |
+
+Em 11 de novembro de 2026, o fundador autorizou o mecanismo de revisão independente com CI verde após a ausência de resposta do Codex Review no GitHub. As fases 01–04 foram integradas por PR na ordem, com o commit revisado fixado no merge e a mesma árvore validada pela CI. O ambiente local permaneceu em execução. AWS e deploy continuam para uma etapa futura.
 
 ## Fase 01
 
@@ -29,7 +32,7 @@ Escopo compreende ambiente, fundação web/API, banco persistente, armazenamento
 
 Riscos incluem formatos de mídia, recuperação de banco, host routing e divergência entre execução local e futura AWS. Rollback consiste em reverter o commit da fase e manter o volume PostgreSQL e diretório .data para inspeção. Não apagar dados para encobrir falhas de migração.
 
-Gate pendente de testes, build, revisão no head, checks, merge e smoke local. Deploy é não aplicável por instrução explícita. Não existe workflow de deploy.
+Testes, build, revisão independente e checks foram concluídos antes do merge de 11 de novembro. Deploy é não aplicável por instrução explícita. Não existe workflow de deploy.
 
 ### Evidências locais da fase 01
 
@@ -40,7 +43,7 @@ Gate pendente de testes, build, revisão no head, checks, merge e smoke local. D
 - Host matraca.localhost:5173 resolve a interface e encaminha a API. Desktop e mobile inspecionados de 320 a 1440 pixels, sem overflow ou erro JavaScript.
 - Prova de MediaRecorder real do Chromium usa vídeo sintético de canvas. MP4, WebM sem duração declarada, áudio, timestamps deslocados, truncamento e cinco minutos foram verificados.
 - Docker Desktop teve helper de credenciais bloqueado. O bootstrap agora obtém a imagem pública com configuração temporária isolada e usa compose sem pull implícito, preservando credenciais do usuário.
-- Revisão interna concluída sem achado bloqueante pendente no escopo. Revisão GitHub ainda pendente.
+- Revisão interna concluída sem achado bloqueante pendente no escopo. A integração do GitHub não retornou revisão. A revisão independente foi usada após a autorização.
 
 ## Fase 02
 
@@ -57,11 +60,11 @@ A PR #1 teve CI validate aprovada no head 6dfb11e. Revisão foi solicitada por c
 - Suíte integrada chegou a 59 testes aprovados. Os casos de identidade usam schema exclusivo de teste e mailbox temporária, sem limpar dados da demonstração.
 - A revisão identificou exposição potencial da mailbox pelo servidor de desenvolvimento. Vite foi restrito aos diretórios públicos necessários, com teste HTTP de caminho relativo, /@fs e importação raw.
 - O teste de Vite passou a usar cache próprio para não invalidar dependências do servidor de demonstração em execução.
-- Revisão independente sem achado bloqueante adicional. E2E de navegador e CI da fase ainda pendentes no momento deste registro.
+- Revisão independente sem achado bloqueante adicional.
 
 - E2E real confirmou cadastro direto, login Matraca/parceiro com o mesmo e-mail em contexto único de navegador, logout independente, rejeição de replay e acesso por papel a gestão e backoffice. Tokens não foram publicados em saídas.
 - Build, lint, tipos e os 59 testes passaram após a integração. Screenshots de aluno, parceiro mobile e backoffice foram inspecionados.
-- Merges aguardam a revisão remota ou autorização do mecanismo substituto exigido pelo SPI. A pergunta foi enviada sem interromper implementação local independente.
+- O mecanismo substituto foi autorizado e a PR #2 integrada após a PR #1.
 
 ## Fase 03
 
@@ -71,11 +74,11 @@ Escopo compreende provisionamento de parceiro, domínio local, administrador, ge
 
 A suíte integrada tem 91 testes aprovados, incluindo 31 de organizações/branding e servidor do build. Lint, tipos e build passaram. O servidor compilado foi iniciado em porta local separada e entregou SPA e bundle com HTTP200. Instalação limpa usa defaults completos de branding no seed. A API valida contraste, rejeita referências de logo de outro tenant e impede a suspensão do próprio backoffice.
 
-A inspeção de navegador do fluxo completo ainda está em andamento neste registro. Os gates remotos permanecem pendentes.
+A inspeção do fluxo completo foi concluída antes da integração.
 
 - E2E final da fase 03 aprovado. Criação de parceiro e login do novo administrador, preview sem publicação antecipada, upload staged, publicação, portal com marca, preferências, restauração e conflito409 foram exercitados pela interface.
 - Não houve erro JavaScript nem overflow entre320 e1440px. A organização temporária e seus registros/arquivos foram removidos por IDs exatos. Personas e branding do seed permaneceram inalterados.
-- Preparação da fase 04 iniciada em checkout separado a partir de3ba089e, conforme autorização de paralelismo. A fase03 continua com gate remoto aberto.
+- Preparação da fase 04 iniciada em checkout separado a partir de3ba089e, conforme autorização de paralelismo. A fase 03 foi integrada após a fase 02.
 
 ## Fase 04
 
@@ -89,4 +92,15 @@ Validação integrada final:111 testes aprovados, tipos, lint, build e diff chec
 
 E2E real aprovado com cadastro de escola, aluno e turma, login do convidado, matrícula, vínculo docente, atribuição à turma, transferência e histórico. O professor recebeu200 antes e403 depois da transferência; o gestor da escola de destino recebeu200. Interface sem overflow de320 a1440px e sem erros de página. Fixtures sintéticas temporárias foram removidas por IDs exatos; seed permanece disponível.
 
-Rollback reverte o código da fase e mantém as tabelas/históricos para inspeção. Não há deploy. Revisão remota, CI do head final e merge permanecem gates abertos; frentes05/06 seguem localmente sob autorização de paralelismo.
+Rollback reverte o código da fase e mantém as tabelas/históricos para inspeção. Não há deploy. A revisão independente, a CI e o merge da PR #4 foram confirmados em 11 de novembro.
+
+
+## Fase 05
+
+A carteira usa saldo, reservas e lançamentos imutáveis com origens FIFO. Cada aluno recebe um crédito inicial por organização. Concessões, pacotes, ajustes, estornos e limites escolares têm autorização por papel, idempotência e trilha de auditoria. Transferir um aluno preserva o saldo e o orçamento histórico da escola que concedeu.
+
+A migração 005 foi aplicada no banco local. A revisão independente verificou 40 casos específicos, incluindo uma regressão de concorrência entre login e concessão da primeira carteira. O titular é bloqueado antes da carteira, evitando a espera circular. Consulte [a revisão](technical/PHASE05_REVIEW.md) e [os contratos](technical/CREDITS.md).
+
+Passaram 151 testes integrados, typecheck, lint, build e diff check. Sete jornadas reais no navegador cobriram extrato, perda da resposta depois do commit, retomada sem duplicação, ajuste, pacote, limite escolar, estorno e backoffice. Desktop e celular foram inspecionados. Os saldos e a política foram restaurados por operações auditáveis. Os lançamentos sintéticos permanecem no extrato local.
+
+Rollback preserva tabelas, saldos, reservas e lançamentos. Reverter a aplicação não exige remover a migração. O motor de avaliação e o faturamento serão integrados nas fases seguintes.

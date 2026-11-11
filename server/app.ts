@@ -6,6 +6,7 @@ import { LocalStorage } from './storage.js';
 import { registerIdentity } from './auth.js';
 import { registerOrganizations } from './organizations.js';
 import { registerEducation } from './education.js';
+import { registerCredits } from './credits.js';
 import staticFiles from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -48,6 +49,7 @@ export async function createApp(options: { databaseUrl?: string; storageRoot?: s
   await registerIdentity(app);
   await registerOrganizations(app);
   await registerEducation(app);
+  await registerCredits(app);
   const clientRoot = resolve(options.clientRoot ?? 'dist/client');
   if (existsSync(resolve(clientRoot, 'index.html'))) {
     await app.register(staticFiles, { root: clientRoot, wildcard: false });
