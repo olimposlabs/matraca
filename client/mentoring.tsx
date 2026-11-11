@@ -59,7 +59,9 @@ function MentoringConsole({ view }: { view: 'teacher' | 'manage' | 'student' }) 
 function StudentWorkspace({ studentId }: { studentId: string }) {
   const { user } = useAuth();
   const [detail, setDetail] = useState<Detail | null>(null), [tab, setTab] = useState<Tab>('plan'), [page, setPage] = useState(1), [version, setVersion] = useState(0);
-  const [list, setList] = useState<Page<Plan | Session | Review | Evaluation> | null>(null), [error, setError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<{ tab: Tab; page: number; version: number; data: Page<Plan | Session | Review | Evaluation> } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const list = loaded?.tab === tab && loaded.page === page && loaded.version === version ? loaded.data : null;
   const [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState('');
   const base = `/api/mentoring/students/${studentId}`;
   useEffect(() => {
@@ -68,9 +70,11 @@ function StudentWorkspace({ studentId }: { studentId: string }) {
     return () => controller.abort();
   }, [base, version]);
   useEffect(() => {
-    const controller = new AbortController(); setList(null); setError(null);
+    const controller = new AbortController(); setError(null);
     const path = tab === 'evaluations' ? `/api/evaluations?studentId=${studentId}&page=${page}&pageSize=10` : `${base}/${tab}?page=${page}&pageSize=10`;
-    void apiJson<Page<Plan | Session | Review | Evaluation>>(path, { signal: controller.signal }).then(setList).catch(problem => { if (!controller.signal.aborted) setError(errorMessage(problem)); });
+    void apiJson<Page<Plan | Session | Review | Evaluation>>(path, { signal: controller.signal }).then(data => {
+      if (!controller.signal.aborted) setLoaded({ tab, page, version, data });
+    }).catch(problem => { if (!controller.signal.aborted) setError(errorMessage(problem)); });
     return () => controller.abort();
   }, [base, studentId, tab, page, version]);
   const saved = () => { setNotice('Acompanhamento salvo. O histórico foi preservado.'); setVersion(value => value + 1); setAction(null); };

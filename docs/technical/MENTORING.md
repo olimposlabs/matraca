@@ -60,3 +60,8 @@ Migração `010_mentoring.sql`: `mentoring_sessions`, `human_reviews`, `individu
 `tests/mentoring.test.ts`: **21 testes passaram** em schema e armazenamento exclusivos, sem alterar demonstração. Cobrem painel/escopo, idempotência concorrente, append-only, correção de mentoria, critério/tempo/modalidade, conservação do relatório IA e saldo, progresso/resposta do aluno, CAS concorrente, papéis cumulativos, referências cruzadas, transferência, quatro revogações e três cenários de revogação durante espera. TypeScript e lint passaram.
 
 Fixtures de avaliações são sintéticas e válidas para o contrato de persistência; não afirmam medir oratória real. O módulo não cria nova avaliação, nova cobrança ou prêmio. A integração da jornada F09 e a validação visual/E2E, revisão independente, CI e SHA final permanecem pendentes.
+
+
+## Validação de interface
+
+O professor atribuído registrou mentoria e revisão humana com trecho de gravação reproduzível. O aluno atualizou a tarefa e respondeu pelo portal. A gestora consultou o histórico, sem permissão de autoria docente. Durante o teste, a troca de abas revelou que uma resposta antiga podia ser renderizada como outro tipo de registro. A lista agora guarda aba, página e revisão da requisição, descartando respostas obsoletas. A nova rodada passou em desktop e 390 px, sem erros JavaScript. Foram usados schema e armazenamento sintéticos isolados.

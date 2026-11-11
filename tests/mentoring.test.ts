@@ -61,7 +61,7 @@ describe('mentorias, revisão humana e plano individual', () => {
   async function evaluation(student: Actor) {
     const recordingId = randomUUID(), evaluationId = randomUUID();
     const context: EvaluationContext = { requestId: evaluationId, recording: { id: recordingId, durationMicroseconds: 30_000_000, hasAudio: true, hasVideo: false },
-      objective: 'Mensagem principal', purpose: 'free', rubricVersion: 'free-v1', learner: {}, recentResults: [], criteria: [
+      objective: 'Mensagem principal', purpose: 'free', audienceScenario: 'one_on_one', activity: null, rubricVersion: 'free-v1', learner: {}, recentResults: [], criteria: [
         { id: 'clarity', title: 'Clareza', weight: 1, modality: 'both', descriptors: ['Inicial', 'Parcial', 'Consistente', 'Flexível'] },
         { id: 'posture', title: 'Postura', weight: 1, modality: 'visual', descriptors: ['Inicial', 'Parcial', 'Consistente', 'Flexível'] },
       ] };
