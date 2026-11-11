@@ -55,6 +55,22 @@ function allUnits(enrollment: Enrollment) {
   return enrollment.document.modules.flatMap(module => module.units);
 }
 
+/** Older publications could reference a later unit. Keep all requirements without deadlocking the sequence. */
+function orderedUnits(units: CourseUnit[], sequential: boolean) {
+  if (!sequential) return units;
+  const remaining = [...units];
+  const ordered: CourseUnit[] = [];
+  const emitted = new Set<string>();
+  while (remaining.length) {
+    const index = remaining.findIndex(unit => unit.prerequisites.every(id => emitted.has(id)));
+    if (index < 0) return units;
+    const [unit] = remaining.splice(index, 1);
+    ordered.push(unit);
+    emitted.add(unit.id);
+  }
+  return ordered;
+}
+
 function blockers(unit: CourseUnit, units: CourseUnit[], progress: Map<string, Progress>, sequential: boolean) {
   const index = units.findIndex(item => item.id === unit.id);
   const required = new Set(unit.prerequisites);
@@ -63,8 +79,8 @@ function blockers(unit: CourseUnit, units: CourseUnit[], progress: Map<string, P
 }
 
 function progressView(enrollment: Enrollment, progress: Map<string, Progress>, strict: boolean) {
-  const units = allUnits(enrollment);
   const sequential = strict || enrollment.document.journey === 'sequential';
+  const units = orderedUnits(allUnits(enrollment), sequential);
   return {
     enrollmentId: enrollment.id,
     versionId: enrollment.version_id,
@@ -156,7 +172,7 @@ export async function updateStudy(
   const current = progress.get(unit.id);
   if (current?.studied_at) return progressView(enrollment, progress, strict);
   const sequential = strict || enrollment.document.journey === 'sequential';
-  if (blockers(unit, units, progress, sequential).length) throw new JourneyError(409, 'Conclua as unidades anteriores exigidas antes de continuar.');
+  if (blockers(unit, orderedUnits(units, sequential), progress, sequential).length) throw new JourneyError(409, 'Conclua as unidades anteriores exigidas antes de continuar.');
   const checked = [...new Set(input.checked)].sort((a, b) => a - b);
   if (checked.some(index => index < 0 || index >= unit.checklist.length)) throw new JourneyError(400, 'O checklist foi alterado. Recarregue a unidade.');
   if (input.completeStudy && checked.length !== unit.checklist.length) throw new JourneyError(409, 'Marque todos os itens do checklist antes de concluir o estudo.');

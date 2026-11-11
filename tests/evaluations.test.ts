@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { emptyCourse, type CourseUnit } from '../server/course-model.js';
+import { emptyCourse, validatePublication, type CourseUnit } from '../server/course-model.js';
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
@@ -314,6 +314,12 @@ describe('fila, relatórios e reserva atômica', () => {
       diagnostic: { enabled: true, evaluationId: null, priorities: [] },
     });
     expect((await db.query('SELECT profile FROM users WHERE id=$1', [actor.userId])).rows[0].profile.language).toBe('pt-BR');
+    const diagnostic = await submit(actor, await recording(actor, 20_000_000, 'diagnostic'));
+    await runEvaluationJob(db, provider);
+    const adapted = await call(actor, 'GET', '/api/journey');
+    expect(adapted.statusCode, adapted.body).toBe(200);
+    expect(adapted.json().diagnostic).toMatchObject({ evaluationId: diagnostic.id, status: 'completed' });
+    expect(adapted.json().diagnostic.priorities).toHaveLength(2);
   });
 
   it('libera estudo e crédito uma vez, mantém sequência e conclui por avaliação válida', async () => {
@@ -334,7 +340,10 @@ describe('fila, relatórios e reserva atômica', () => {
       }] },
     };
     const review: CourseUnit = { ...lesson, id: 'review', title: 'Revisão', kind: 'review', checklist: [], studyCreditGrant: 5, requiresEvaluation: false };
-    const document = { ...emptyCourse('Curso sintético'), journey: 'adaptive', modules: [{ id: 'module', title: 'Oratória', introductionMarkdown: '', units: [lesson, review] }] };
+    const document = { ...emptyCourse('Curso sintético'), journey: 'adaptive' as const, modules: [{ id: 'module', title: 'Oratória', introductionMarkdown: '', units: [lesson, review] }] };
+    const forward = structuredClone(document);
+    forward.modules[0].units[0].prerequisites = ['review'];
+    expect(validatePublication(forward)).toContain('O pré-requisito de Clareza deve vir antes na ordem do curso.');
     await db.query("INSERT INTO courses(id,org_id,title,status,draft) VALUES($1,$2,'Curso sintético','published',$3)", [courseId, actor.orgId, document]);
     await db.query('INSERT INTO course_versions(id,org_id,course_id,version,document) VALUES($1,$2,$3,1,$4)', [versionId, actor.orgId, courseId, document]);
     await db.query("INSERT INTO course_enrollments(id,org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,$5,'demo','fixture')",

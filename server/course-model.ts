@@ -35,6 +35,16 @@ export function validatePublication(document:CourseDocument):string[] {
       for(const reference of unit.references) if(!/^(https?:\/\/|[A-Za-z0-9_./-]+\.md(?:#[A-Za-z0-9_-]+)?)$/.test(reference.href)&&!/^https?:\/\//.test(reference.href))issues.push(`Referência inválida em ${unit.title}.`);
     }
   }
+  const position = new Map([...units.keys()].map((id, index) => [id, index]));
+  for (const unit of units.values()) {
+    const ownPosition = position.get(unit.id)!;
+    for (const prerequisite of unit.prerequisites) {
+      const requiredPosition = position.get(prerequisite);
+      if (requiredPosition !== undefined && requiredPosition >= ownPosition) {
+        issues.push(`O pré-requisito de ${unit.title} deve vir antes na ordem do curso.`);
+      }
+    }
+  }
   const visiting=new Set<string>();const visited=new Set<string>();
   function visit(id:string){if(visiting.has(id)){issues.push('Os pré-requisitos contêm um ciclo.');return;}if(visited.has(id))return;const unit=units.get(id);if(!unit){issues.push(`Pré-requisito ausente: ${id}.`);return;}visiting.add(id);for(const previous of unit.prerequisites)visit(previous);visiting.delete(id);visited.add(id);}
   for(const id of units.keys())visit(id);
