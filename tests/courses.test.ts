@@ -10,6 +10,7 @@ import {localDatabaseUrl} from '../server/config.js';
 import {emptyCourse,courseDocumentSchema,validatePublication,curriculumToCourse,type CourseDocument} from '../server/course-model.js';
 import {parseCurriculum} from '../server/curriculum.js';
 import {seedCourses} from '../scripts/seed-courses.js';
+import { seedId } from '../scripts/seed-id.js';
 interface Actor{orgId:string;userId:string;host:string;cookie:string}
 const example=():CourseDocument=>({...emptyCourse('Curso de teste'),modules:[{id:'module-1',title:'Clareza',introductionMarkdown:'Introdução',units:[{id:'lesson-1',title:'Mensagem principal',chapter:'Fundamentos',kind:'lesson',mode:'content',bodyMarkdown:'Conteúdo autoral completo.',instructionMarkdown:'Apresente uma ideia em trinta segundos.',checklist:['Defini o objetivo.'],references:[],assetIds:[],prerequisites:[],studyCreditGrant:1,requiresEvaluation:true,activity:{maximumSeconds:30,acceptedMedia:['audio','video'],scenario:'one_on_one',criteria:[{id:'clarity',title:'Clareza',enabled:true,weight:1,modality:'both',descriptors:['Requer apoio','Parcial','Consistente','Flexível']}]}}]}]});
 
@@ -149,5 +150,26 @@ describe('cursos versionados e atribuição',()=>{
   expect((await db.query('SELECT id FROM course_assets WHERE org_id=$1',[admin.orgId])).rowCount).toBe(0);
   expect(await readdir(join(root,'objects','course-assets',admin.orgId))).toEqual([]);
  });
- it('seed inicial publica duas cópias completas e repetir preserva alterações',async()=>{const ids=new Map<string,string>();const stable=(key:string)=>{if(!ids.has(key))ids.set(key,randomUUID());return ids.get(key)!;};for(const slug of ['matraca','parceiro']){const orgId=randomUUID();await db.query('INSERT INTO orgs(id,slug,name,kind) VALUES($1,$2,$2,$3)',[orgId,slug,slug==='matraca'?'matraca':'partner']);await actor('student',orgId,slug==='matraca'?'matraca':'partner');}await db.transaction(client=>seedCourses(client,stable));const courses=await db.query('SELECT id,draft FROM courses WHERE id=ANY($1::uuid[])',[[stable('course:matraca:base'),stable('course:parceiro:base')]]);expect(courses.rowCount).toBe(2);expect(courses.rows.every(row=>row.draft.modules.length===12)).toBe(true);await db.query('UPDATE courses SET title=$2 WHERE id=$1',[stable('course:parceiro:base'),'Edição preservada']);await db.transaction(client=>seedCourses(client,stable));expect((await db.query('SELECT title FROM courses WHERE id=$1',[stable('course:parceiro:base')])).rows[0].title).toBe('Edição preservada');});
+ it('seed publica duas cópias completas, matricula só personas e preserva edições', async () => {
+   for (const slug of ['matraca', 'parceiro']) {
+     const orgId = seedId(slug);
+     await db.query('INSERT INTO orgs(id,slug,name,kind) VALUES($1,$2,$2,$3)', [orgId, slug, slug === 'matraca' ? 'matraca' : 'partner']);
+     const email = 'aluno@exemplo.test';
+     await db.query("INSERT INTO users(id,org_id,name,email,roles,status) VALUES($1,$2,'Aluno do seed',$3,ARRAY['student'],'active')", [seedId(`${slug}:${email}`), orgId, email]);
+     await actor('student', orgId, slug === 'matraca' ? 'matraca' : 'partner');
+   }
+   await db.transaction(client => seedCourses(client, seedId));
+   const partnerCourse = seedId('course:parceiro:base');
+   const courseIds = [seedId('course:matraca:base'), partnerCourse];
+   const courses = await db.query('SELECT draft FROM courses WHERE id=ANY($1::uuid[])', [courseIds]);
+   expect(courses.rowCount).toBe(2);
+   expect(courses.rows.every(row => row.draft.modules.length === 12)).toBe(true);
+   const enrollments = await db.query('SELECT student_id FROM course_enrollments WHERE course_id=ANY($1::uuid[])', [courseIds]);
+   expect(enrollments.rows.map(row => row.student_id).sort()).toEqual([
+     seedId('matraca:aluno@exemplo.test'), seedId('parceiro:aluno@exemplo.test'),
+   ].sort());
+   await db.query('UPDATE courses SET title=$2 WHERE id=$1', [partnerCourse, 'Edição preservada']);
+   await db.transaction(client => seedCourses(client, seedId));
+   expect((await db.query('SELECT title FROM courses WHERE id=$1', [partnerCourse])).rows[0].title).toBe('Edição preservada');
+ });
 });
