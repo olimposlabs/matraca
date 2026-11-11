@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { PoolClient } from 'pg';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
@@ -155,4 +156,47 @@ describe('XP, rankings históricos e prêmios', () => {
     expect((await db.query("SELECT id FROM wallet_entries WHERE org_id=$1 AND source='leaderboard'", [admin.orgId])).rowCount).toBe(2);
     expect((await call(first, 'POST', `${manager}/campaigns/${id}/close`)).statusCode).toBe(403);
   });
+  it('concede medalha quando duas matrículas cruzam o limiar simultaneamente', async () => {
+    const student = await actor('student', 'Aluno concorrente');
+    const one = await createLearningEvent(student, '2020-05-01T12:00:00Z');
+    const two = await createLearningEvent(student, '2020-05-02T12:00:00Z');
+    await db.query('DELETE FROM earned_badges WHERE org_id=$1', [student.orgId]);
+    await db.query('DELETE FROM xp_events WHERE org_id=$1', [student.orgId]);
+    await db.query('INSERT INTO gamification_policies(org_id,policy) VALUES($1,$2)', [student.orgId, {
+      points: { lesson: 20, review: 100, course: 500 }, badges: [{ id: 'two', name: 'Duas práticas', metric: 'xp', threshold: 40 }],
+    }]);
+    let release!: () => void, entered!: () => void, holderPid = 0;
+    const barrier = new Promise<void>(resolve => { release = resolve; });
+    const inserted = new Promise<void>(resolve => { entered = resolve; });
+    const first = db.transaction(async client => {
+      holderPid = (await client.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+      const wrapped = new Proxy(client, { get(target, key) {
+        if (key !== 'query') return Reflect.get(target, key);
+        return async (sql: string, values: unknown[]) => {
+          const result = await target.query(sql, values);
+          if (sql.includes('INSERT INTO xp_events')) { entered(); await barrier; }
+          return result;
+        };
+      } }) as PoolClient;
+      await awardLearningEvent(wrapped, one);
+    });
+    let second: Promise<void> | undefined;
+    try {
+      await inserted;
+      second = db.transaction(client => awardLearningEvent(client, two));
+      let queued = false;
+      for (let attempt = 0; attempt < 200 && !queued; attempt++) {
+        queued = (await control.query<{ queued: boolean }>(`SELECT EXISTS(
+          SELECT 1 FROM pg_locks h JOIN pg_locks w ON h.locktype=w.locktype AND h.database IS NOT DISTINCT FROM w.database
+          AND h.classid=w.classid AND h.objid=w.objid AND h.objsubid=w.objsubid
+          WHERE h.pid=$1 AND h.locktype='advisory' AND h.granted AND NOT w.granted
+        ) AS queued`, [holderPid])).rows[0].queued;
+        if (!queued) await new Promise(resolve => setTimeout(resolve, 5));
+      }
+      expect(queued).toBe(true);
+    } finally { release(); await first; await second; }
+    expect((await db.query('SELECT sum(points)::int AS total FROM xp_events WHERE org_id=$1', [student.orgId])).rows[0].total).toBe(40);
+    expect((await db.query('SELECT badge_id FROM earned_badges WHERE org_id=$1', [student.orgId])).rowCount).toBe(1);
+  });
+
 });

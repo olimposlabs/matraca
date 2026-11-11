@@ -45,6 +45,9 @@ export async function learnerTotals(client: PoolClient, orgId: string, studentId
 }
 
 export async function awardLearningEvent(client: PoolClient, event: { id: string; orgId: string; studentId: string; kind: 'lesson' | 'review' | 'course' }) {
+  // Different enrollments may finish concurrently; serialize totals and badge thresholds per learner.
+  // Keep a distinct lock namespace: study already holds the learner(8) and enrollment locks.
+  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,11))', [event.studentId]);
   const { policy, revision } = await readGamificationPolicy(client, event.orgId);
   const awarded = policy.points[event.kind];
   const inserted = await client.query(
