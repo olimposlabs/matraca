@@ -1,5 +1,5 @@
 import { createDatabase } from '../server/db.js';
-import { configuration } from '../server/config.js';
+import { configuration, localPartnerDomainSuffix } from '../server/config.js';
 import { DEFAULT_BRANDING } from '../server/organizations.js';
 import { seedEducation } from './seed-education.js';
 import { seedWallet } from './seed-wallet.js';
@@ -7,10 +7,12 @@ import { seedCourses } from './seed-courses.js';
 
 import { seedId } from './seed-id.js';
 
+const domainSuffix = localPartnerDomainSuffix();
+const defaultHosts = domainSuffix === 'matraca.localhost';
 const organizations = [
-  { slug: 'matraca', name: 'Matraca', kind: 'matraca', hosts: ['matraca.localhost','localhost','127.0.0.1'] },
-  { slug: 'parceiro', name: 'Horizonte Oratória', kind: 'partner', hosts: ['parceiro.matraca.localhost','parceiro.localhost'] },
-  { slug: 'backoffice', name: 'Matraca · Backoffice', kind: 'backoffice', hosts: ['backoffice.matraca.localhost','backoffice.localhost'] },
+  { slug: 'matraca', name: 'Matraca', kind: 'matraca', hosts: [domainSuffix, ...(defaultHosts ? ['localhost', '127.0.0.1'] : [])] },
+  { slug: 'parceiro', name: 'Horizonte Oratória', kind: 'partner', hosts: [`parceiro.${domainSuffix}`, ...(defaultHosts ? ['parceiro.localhost'] : [])] },
+  { slug: 'backoffice', name: 'Matraca · Backoffice', kind: 'backoffice', hosts: [`backoffice.${domainSuffix}`, ...(defaultHosts ? ['backoffice.localhost'] : [])] },
 ];
 const students = ['Ana Silva','Bruno Lima','Carla Souza','Diego Alves','Elisa Rocha','Fabio Costa'];
 const db = createDatabase(configuration().databaseUrl);

@@ -1,3 +1,4 @@
+import { localPartnerDomainSuffix } from './config.js';
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import multipart from '@fastify/multipart';
@@ -76,10 +77,7 @@ export class OrganizationError extends Error {
 export async function registerOrganizations(app: FastifyInstance): Promise<void> {
   const port = Number(process.env.APP_PUBLIC_PORT ?? 5173);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('APP_PUBLIC_PORT inválida.');
-  const domainSuffix = process.env.APP_PARTNER_DOMAIN_SUFFIX ?? 'matraca.localhost';
-  if (!/^(?:[a-z0-9][a-z0-9-]{0,24}\.)?matraca\.localhost$/.test(domainSuffix)) {
-    throw new Error('APP_PARTNER_DOMAIN_SUFFIX inválido.');
-  }
+  const domainSuffix = localPartnerDomainSuffix();
   await app.register(multipart);
 
   app.get('/api/backoffice/orgs', async (request) => {

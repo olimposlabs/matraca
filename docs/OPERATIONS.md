@@ -31,10 +31,10 @@ O modo dev usa Vite em5173 e API em3001. O Vite permite apenas os diretórios p�
 npm run pilot:sandbox -- start --name revisao --port 5174 --examples
 ```
 
-O sandbox cria um schema, uma pasta de mídia, uma mailbox e um build separados. Os endereços aparecem no terminal. Use o host do sandbox ao solicitar o link e a pasta dele na consulta.
+O sandbox cria um schema, uma pasta de mídia, uma mailbox e um build separados. O terminal mostra os endereços, que incluem um identificador do diretório de trabalho para separar sessões entre checkouts. Use o host mostrado para solicitar o link e a pasta do sandbox na consulta.
 
 ```sh
-STORAGE_ROOT=.data/sandboxes/revisao/objects npm run inbox -- --email ana@exemplo.test --host revisao.matraca.localhost
+STORAGE_ROOT=.data/sandboxes/revisao/objects npm run inbox -- --email ana@exemplo.test
 ```
 
 Encerre a execução com Ctrl+C para liberar o lock. O comando abaixo apaga apenas o sandbox com o nome confirmado. Reiniciar com o mesmo nome retoma os dados existentes.
