@@ -4,6 +4,7 @@ import type { PoolClient } from 'pg';
 import { z } from 'zod';
 import type { AuthIdentity, IdentityRole } from './auth.js';
 import { localHostname } from './config.js';
+import { enrollAssignedCourses } from './courses.js';
 import { EducationError, educationIdentity, assertSchoolScope, assertStudentScope, isOrgAdmin,
   managedSchoolIds, PERSON_SCOPE_SQL, STUDENT_SCOPE_SQL, scopeValues, type EducationQuery } from './permissions.js';
 export { requireStudentScope } from './permissions.js';
@@ -207,6 +208,7 @@ export async function registerEducation(app: FastifyInstance): Promise<void> {
       const enrollment=(await client.query(`INSERT INTO enrollments(org_id,class_id,school_id,student_id) VALUES($1,$2,$3,$4)
         ON CONFLICT(org_id,class_id,student_id) WHERE status='active' DO UPDATE SET status='active'
         RETURNING id,student_id AS "studentId",class_id AS "classId",status,started_at AS "startedAt",ended_at AS "endedAt"`,[actor.org.id,c.id,c.schoolId,studentId])).rows[0];
+      await enrollAssignedCourses(client,actor.org.id,c.id,studentId);
       await audit(client,actor,'student_enrolled',studentId);return {enrollment};
     });return reply.code(201).send(result);
   });
