@@ -6,6 +6,7 @@ import type { PoolClient, QueryResultRow } from 'pg';
 import { z } from 'zod';
 import { grantInitialCreditInTransaction } from './wallet.js';
 import { localHostname } from './config.js';
+import { readOperationPolicy } from './operation-policy.js';
 
 export type IdentityRole = 'student' | 'teacher' | 'school' | 'org_admin' | 'operator';
 export type OrganizationKind = 'matraca' | 'partner' | 'backoffice';
@@ -311,6 +312,11 @@ async function issueLink(
   mailRoot: string,
   publicPort: number,
 ): Promise<string | undefined> {
+  if (current.org.kind !== 'backoffice') {
+    const { config } = await readOperationPolicy(client, current.org.id);
+    if (config.mailMode === 'suppressed') return undefined;
+    if (config.mailMode === 'failure') throw new Error('Falha simulada na entrega do e-mail local.');
+  }
   const matched = await client.query<UserRow>(
     `SELECT u.id,u.email,u.name,u.roles,u.status FROM users u JOIN orgs o ON o.id=u.org_id
      WHERE u.org_id=$1 AND u.email=$2 AND u.status IN ('invited','active') AND o.status='active'

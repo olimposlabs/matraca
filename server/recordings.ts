@@ -1,3 +1,4 @@
+import { readOperationPolicy } from './operation-policy.js';
 import { createHash, randomUUID } from 'node:crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { PoolClient } from 'pg';
@@ -10,7 +11,6 @@ import { probeMedia, MediaProbeError, type MediaProbeResult } from './media/prob
 import { assertStudentScope, type EducationQuery } from './permissions.js';
 import { creditsForDuration } from './wallet.js';
 
-const maximumBytes = 200 * 1024 * 1024;
 const purpose = z.enum(['free', 'diagnostic', 'course']);
 const scenario = z.enum(['one_on_one', 'executive', 'audience']);
 const unitId = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,99}$/);
@@ -83,6 +83,8 @@ export async function requireRecordingScope(request: FastifyRequest, id: string)
 }
 
 async function captureContext(client: EducationQuery, actor: AuthIdentity, input: z.infer<typeof contextQuery>): Promise<CaptureContext> {
+  const { config } = await readOperationPolicy(client, actor.org.id);
+  const maximumBytes = config.maxRecordingBytes;
   const org = (await client.query<{ settings: Record<string, unknown> }>('SELECT settings FROM orgs WHERE id=$1', [actor.org.id])).rows[0];
   if (input.purpose === 'diagnostic' && org?.settings.diagnosticEnabled === false) {
     throw new RecordingError(403, 'O diagnóstico está desativado nesta organização.');
@@ -146,6 +148,8 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
 
   app.post('/api/recordings', async (request, reply) => {
     const actor = await requireIdentity(request, ['student']);
+    const { config } = await readOperationPolicy(app.db, actor.org.id);
+    const maximumBytes = config.maxRecordingBytes;
     const controller = new AbortController();
     const abort = () => controller.abort();
     const responseClosed = () => { if (!reply.raw.writableEnded) abort(); };
@@ -170,7 +174,7 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
         filename = cleanFilename(part.filename);
         const information = await app.storage.put(key, part.file);
         uploaded = true;
-        if (part.file.truncated || information.size > maximumBytes) throw new RecordingError(413, 'O arquivo deve ter até 200 MB.');
+        if (part.file.truncated || information.size > maximumBytes) throw new RecordingError(413, 'O arquivo excede o limite de tamanho desta organização.');
         if (!information.size) throw new RecordingError(400, 'O arquivo está vazio.');
       }
       if (!uploaded || !metadata || !initial) throw new RecordingError(400, 'Selecione uma gravação para enviar.');
@@ -184,6 +188,7 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
         await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4))', [actor.org.id]);
         const currentActor = await revalidateUploader(client, request, actor);
         const context = await captureContext(client, currentActor, input);
+        if (media.byteLength > context.constraints.maximumBytes) throw new RecordingError(413, 'O arquivo excede o limite de tamanho desta organização.');
         validateProbe(media, context);
         if (controller.signal.aborted) throw new RecordingError(400, 'O envio foi interrompido.');
         const result = await client.query<StoredRecording>(
