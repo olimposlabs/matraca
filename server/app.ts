@@ -17,6 +17,8 @@ import { registerMentoring } from './mentoring.js';
 import { registerGamification } from './gamification.js';
 import { registerCommerce } from './commerce.js';
 import { registerBilling } from './billing.js';
+import { financialClock, readOperationPolicy } from './operation-policy.js';
+import { registerOperations } from './operations.js';
 import staticFiles from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -76,8 +78,13 @@ export async function createApp(options: AppOptions = {}) {
   await registerJourney(app);
   await registerMentoring(app);
   await registerGamification(app);
-  await registerCommerce(app);
-  await registerBilling(app, { now: options.billingNow });
+  await registerCommerce(app, {
+    defaultPaymentScenario: async orgId => (await readOperationPolicy(db, orgId)).config.paymentScenario,
+  });
+  await registerBilling(app, {
+    now: options.billingNow ?? (async orgId => financialClock((await readOperationPolicy(db, orgId)).config)),
+  });
+  await registerOperations(app);
   const clientRoot = resolve(options.clientRoot ?? 'dist/client');
   if (existsSync(resolve(clientRoot, 'index.html'))) {
     await app.register(staticFiles, { root: clientRoot, wildcard: false });

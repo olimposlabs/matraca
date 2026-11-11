@@ -64,7 +64,7 @@ function errorText(error: unknown) {
 export function EvaluationAction({ recording }: { recording: { id: string; estimatedCredits: number } }) {
   const navigate = useNavigate();
   const { user, org } = useAuth();
-  const [scenario, setScenario] = useState<EvaluationScenario>('success');
+  const [scenario, setScenario] = useState<EvaluationScenario | 'configured'>('configured');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const pending = useRef(false);
@@ -88,7 +88,7 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
     sessionKeys.current.set(key, clientKey);
     try {
       const { evaluation } = await apiJson<{ evaluation: { id: string } }>('/api/evaluations', {
-        method: 'POST', body: { recordingId: recording.id, clientKey, scenario },
+        method: 'POST', body: { recordingId: recording.id, clientKey, ...(scenario === 'configured' ? {} : { scenario }) },
       });
       sessionKeys.current.delete(key);
       try { sessionStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
@@ -107,7 +107,8 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       <p>Esta solicitação reserva {recording.estimatedCredits} {label}. O saldo é debitado quando o relatório fica pronto.</p>
     </div>
     <label>Cenário do simulador
-      <select value={scenario} onChange={event => setScenario(event.target.value as EvaluationScenario)} disabled={busy}>
+      <select value={scenario} onChange={event => setScenario(event.target.value as EvaluationScenario | 'configured')} disabled={busy}>
+        <option value="configured">Padrão da organização</option>
         {scenarios.map(([value, title]) => <option key={value} value={value}>{title}</option>)}
       </select>
     </label>

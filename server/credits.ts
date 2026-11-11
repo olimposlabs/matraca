@@ -1,3 +1,4 @@
+import { readOperationPolicy } from './operation-policy.js';
 import { createHash } from 'node:crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { PoolClient } from 'pg';
@@ -211,12 +212,17 @@ async function move(client:PoolClient,access:Access,userId:string,operation:Oper
   const signature=createHash('sha256').update(JSON.stringify([operation,userId,access.actor.user.id,input])).digest('hex');
   const previous=(await client.query<{request_fingerprint:string;entry_id:string}>('SELECT request_fingerprint,entry_id FROM credit_admin_events WHERE org_id=$1 AND event_id=$2',[access.org.id,input.eventId])).rows[0];
   if(previous){if(previous.request_fingerprint!==signature)throw new CreditsAccessError(409,'Evento já utilizado com outros dados.');return {entry:await entry(client,access.org.id,userId,previous.entry_id),wallet:await wallet(client,access.org.id,userId)};}
+  const { config } = await readOperationPolicy(client, access.org.id);
+  const ensureGrantLimit = (quantity: number) => {
+    if (quantity > config.maxManualGrant) throw new CreditsAccessError(409, 'A quantidade excede o limite operacional por concessão.');
+  };
   let result:WalletEntry,schoolId:string|null=null,budgetMonth:string|null=null;
   const target={orgId:access.org.id,userId},actorUserId=access.actor.user.id,eventKey=`administrative:${input.eventId}`;
   if(operation==='grant'){
     const grant=input as z.infer<typeof grantInput>;
     let quantity=grant.amount!,sourceRef=`manual:${input.eventId}`;
     if(grant.packageId){const item=await grantPackage(client,access.org.id,grant.packageId);if(item.status!=='active')throw new CreditsAccessError(409,'O pacote está arquivado.');quantity=item.amount;sourceRef=`package:${item.id}`;}
+    ensureGrantLimit(quantity);
     if(!access.central&&!isOrgAdmin(access.actor)){
       if(!student.schoolId)throw new CreditsAccessError(403,'O aluno não pertence a uma escola sob sua gestão.');
       const limit=await schoolLimit(client,access.org.id,student.schoolId);
@@ -226,7 +232,9 @@ async function move(client:PoolClient,access:Access,userId:string,operation:Oper
     }
     result=await grantCreditsInTransaction(client,{...target,amount:quantity,source:'manual',sourceRef,eventKey,reason:input.reason,actorUserId});
   }else if(operation==='adjust'){
-    result=await adjustCreditsInTransaction(client,{...target,delta:(input as z.infer<typeof adjustInput>).delta,eventKey,reason:input.reason,actorUserId});
+    const delta = (input as z.infer<typeof adjustInput>).delta;
+    ensureGrantLimit(delta);
+    result=await adjustCreditsInTransaction(client,{...target,delta,eventKey,reason:input.reason,actorUserId});
   }else result=await refundConsumptionInTransaction(client,{...target,entryId:(input as z.infer<typeof refundInput>).entryId,reason:input.reason,actorUserId});
   await client.query('INSERT INTO credit_admin_events(org_id,event_id,operation,user_id,actor_user_id,school_id,budget_month,request_fingerprint,entry_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[access.org.id,input.eventId,operation,userId,actorUserId,schoolId,budgetMonth,signature,result.id]);
   await audit(client,access,`credits_${operation}`,{studentId:userId,entryId:result.id});

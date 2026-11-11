@@ -6,6 +6,7 @@ import { requireIdentity, type AuthIdentity } from '../auth.js';
 import type { CourseDocument } from '../course-model.js';
 import { assertStudentScope } from '../permissions.js';
 import { requireStudyForEvaluation } from '../journey-progress.js';
+import { readOperationPolicy } from '../operation-policy.js';
 import { reserveCreditsInTransaction } from '../wallet.js';
 import { evaluationScenarios, type EvaluationContext, type EvaluationCriterion } from './provider.js';
 import { cancelEvaluationInTransaction } from './worker.js';
@@ -19,7 +20,7 @@ class EvaluationError extends Error {
 const createInput = z.object({
   recordingId: z.uuid(),
   clientKey: z.uuid(),
-  scenario: z.enum(evaluationScenarios).default('success'),
+  scenario: z.enum(evaluationScenarios).optional(),
 }).strict();
 const listQuery = z.object({
   studentId: z.uuid().optional(),
@@ -143,7 +144,7 @@ export async function registerEvaluations(app: FastifyInstance) {
   app.post('/api/evaluations', async (request, reply) => {
     const input = createInput.safeParse(request.body);
     if (!input.success) throw new EvaluationError(400, 'Confira a gravação e o cenário de avaliação.');
-    const { recordingId, clientKey, scenario } = input.data;
+    const { recordingId, clientKey } = input.data;
     const queued = await studentMutation(request, async (client, actor) => {
       const existing = await client.query<{ id: string; recording_id: string; scenario: string; status: string; credits: number }>(
         'SELECT id,recording_id,scenario,status,credits FROM evaluation_requests WHERE org_id=$1 AND student_id=$2 AND client_key=$3',
@@ -151,7 +152,7 @@ export async function registerEvaluations(app: FastifyInstance) {
       );
       const previous = existing.rows[0];
       if (previous) {
-        if (previous.recording_id !== recordingId || previous.scenario !== scenario) throw new EvaluationError(409, 'A chave do pedido já está associada a outra avaliação.');
+        if (previous.recording_id !== recordingId || (input.data.scenario && previous.scenario !== input.data.scenario)) throw new EvaluationError(409, 'A chave do pedido já está associada a outra avaliação.');
         return { id: previous.id, status: previous.status, credits: previous.credits, simulated: true };
       }
       const found = await client.query<Recording>(
@@ -165,7 +166,14 @@ export async function registerEvaluations(app: FastifyInstance) {
         [actor.org.id, actor.user.id],
       );
       if (running.rows.some(item => item.recording_id === recordingId)) throw new EvaluationError(409, 'Esta gravação já tem uma avaliação em andamento.');
-      if (running.rows.length >= 3) throw new EvaluationError(429, 'Aguarde a conclusão de uma das suas avaliações.');
+      const { config } = await readOperationPolicy(client, actor.org.id);
+      if (running.rows.length >= config.maxConcurrentEvaluations) throw new EvaluationError(429, 'Aguarde a conclusão de uma das suas avaliações.');
+      const frequency = await client.query<{ total: number }>(
+        "SELECT count(*)::int AS total FROM evaluation_requests WHERE org_id=$1 AND student_id=$2 AND created_at>=clock_timestamp()-interval '1 hour'",
+        [actor.org.id, actor.user.id],
+      );
+      if (frequency.rows[0].total >= config.maxEvaluationsPerHour) throw new EvaluationError(429, 'O limite de avaliações por hora foi atingido.');
+      const scenario = input.data.scenario ?? config.evaluationScenario;
       const id = randomUUID();
       const context = await contextFor(client, actor, found.rows[0], id);
       const reservation = await reserveCreditsInTransaction(client, {
