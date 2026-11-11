@@ -244,7 +244,6 @@ export function AuthenticatedArea({ area = 'student', children }: { area?: 'stud
 
   if (children) return children;
 
-  const management = area !== 'student';
   const heading = area === 'backoffice' ? 'Um espaço para cuidar de cada jornada.' : area === 'admin' ? 'Acompanhe quem aprende com você.' : 'Sua voz já tem um lugar aqui.';
 
   return (
