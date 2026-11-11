@@ -6,6 +6,8 @@ const context: EvaluationContext = {
   recording: { id: 'synthetic-recording', durationMicroseconds: 30_000_000, hasAudio: true, hasVideo: false },
   objective: 'Explicar a mensagem principal.',
   purpose: 'free',
+  audienceScenario: 'one_on_one',
+  activity: null,
   rubricVersion: 'demo-v1',
   criteria: [
     { id: 'clarity', title: 'Clareza', modality: 'audio', weight: 2, descriptors: ['Inicial', 'Emergente', 'Consistente', 'Avançado'] },

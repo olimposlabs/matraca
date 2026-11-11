@@ -23,6 +23,8 @@ export interface EvaluationContext {
   };
   objective: string;
   purpose: 'free' | 'diagnostic' | 'course';
+  audienceScenario: 'one_on_one' | 'executive' | 'audience';
+  activity: { title: string; instructionMarkdown: string } | null;
   rubricVersion: string;
   criteria: EvaluationCriterion[];
   learner: { profession?: string; experience?: string; goals?: string[] };

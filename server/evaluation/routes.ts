@@ -56,6 +56,7 @@ interface Recording {
   enrollment_id: string | null;
   version_id: string | null;
   unit_id: string | null;
+  scenario: EvaluationContext['audienceScenario'];
 }
 
 const summary = `r.id,r.student_id AS "studentId",r.recording_id AS "recordingId",r.status,r.credits,
@@ -80,6 +81,7 @@ function errorMessage(code: string | null): string | null {
 async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Recording, id: string): Promise<EvaluationContext> {
   let criteria = defaultCriteria;
   let rubricVersion = 'matraca-pilot-v1';
+  let activity: EvaluationContext['activity'] = null;
   if (recording.purpose === 'diagnostic' && actor.org.settings.diagnosticEnabled === false) {
     throw new EvaluationError(403, 'O diagnóstico está desativado nesta organização.');
   }
@@ -96,6 +98,7 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
     const unit = version?.document.modules.flatMap(module => module.units).find(item => item.id === recording.unit_id);
     if (!unit) throw new EvaluationError(403, 'A atividade não está disponível na sua matrícula.');
     criteria = unit.activity.criteria.filter(criterion => criterion.enabled && criterion.weight > 0);
+    activity = { title: unit.title, instructionMarkdown: unit.instructionMarkdown };
     rubricVersion = `${recording.version_id}:${unit.id}:v${version.version}`;
   }
   if (!criteria.length) throw new EvaluationError(409, 'Esta atividade está sem critérios de avaliação.');
@@ -114,6 +117,8 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
     },
     objective: recording.objective,
     purpose: recording.purpose,
+    audienceScenario: recording.scenario,
+    activity,
     rubricVersion,
     criteria,
     learner: learner.success ? learner.data : {},
@@ -148,7 +153,7 @@ export async function registerEvaluations(app: FastifyInstance) {
         return { id: previous.id, status: previous.status, credits: previous.credits, simulated: true };
       }
       const found = await client.query<Recording>(
-        `SELECT id,duration_us,has_audio,has_video,objective,purpose,enrollment_id,version_id,unit_id
+        `SELECT id,duration_us,has_audio,has_video,objective,purpose,enrollment_id,version_id,unit_id,scenario
          FROM recordings WHERE id=$1 AND org_id=$2 AND student_id=$3 FOR SHARE`,
         [recordingId, actor.org.id, actor.user.id],
       );

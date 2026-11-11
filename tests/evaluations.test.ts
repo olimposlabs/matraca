@@ -10,6 +10,7 @@ import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
 import { getWallet, grantCredits } from '../server/wallet.js';
+import { emptyCourse, type CourseDocument } from '../server/course-model.js';
 
 interface Student {
   orgId: string;
@@ -132,6 +133,35 @@ describe('fila, relatórios e reserva atômica', () => {
     expect((await db.query('SELECT id FROM evaluation_requests WHERE recording_id=$1', [media])).rowCount).toBe(0);
   });
 
+  it('preserva cenário e enunciado da versão publicada junto do objetivo pessoal', async () => {
+    const actor = await student(2);
+    const courseId = randomUUID(), versionId = randomUUID(), enrollmentId = randomUUID();
+    const document: CourseDocument = { ...emptyCourse('Curso sintético'), modules: [{ id: 'module-1', title: 'Clareza', introductionMarkdown: '', units: [{
+      id: 'lesson-1', title: 'Proposta em três partes', chapter: '', kind: 'lesson', mode: 'content', bodyMarkdown: 'Conteúdo de teste.',
+      instructionMarkdown: 'Apresente contexto, proposta e próximo passo para uma reunião executiva.', checklist: [], references: [], assetIds: [], prerequisites: [],
+      studyCreditGrant: 1, requiresEvaluation: true,
+      activity: { maximumSeconds: 30, acceptedMedia: ['audio'], scenario: 'executive', criteria: [{ id: 'clarity', title: 'Clareza', enabled: true, weight: 1, modality: 'audio', descriptors: ['Inicial', 'Parcial', 'Consistente', 'Adaptado'] }] },
+    }] }] };
+    await db.query("INSERT INTO courses(id,org_id,title,status,draft) VALUES($1,$2,$3,'published',$4)", [courseId, actor.orgId, document.title, document]);
+    await db.query('INSERT INTO course_versions(id,org_id,course_id,version,document) VALUES($1,$2,$3,1,$4)', [versionId, actor.orgId, courseId, document]);
+    await db.query("INSERT INTO course_enrollments(id,org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,$5,'demo','test')", [enrollmentId, actor.orgId, courseId, versionId, actor.userId]);
+    const media = await recording(actor);
+    await db.query("UPDATE recordings SET purpose='course',enrollment_id=$2,version_id=$3,unit_id='lesson-1',scenario='executive',objective='Quero falar com mais calma.' WHERE id=$1", [media, enrollmentId, versionId]);
+    const order = await submit(actor, media);
+    const snapshot = (await db.query('SELECT context FROM evaluation_requests WHERE id=$1', [order.id])).rows[0].context;
+    expect(snapshot).toMatchObject({
+      objective: 'Quero falar com mais calma.', audienceScenario: 'executive',
+      activity: { title: 'Proposta em três partes', instructionMarkdown: document.modules[0].units[0].instructionMarkdown },
+      rubricVersion: `${versionId}:lesson-1:v1`,
+    });
+    await db.query('UPDATE courses SET draft=$2 WHERE id=$1', [courseId, { ...document, title: 'Rascunho posterior' }]);
+    await runEvaluationJob(db, provider);
+    expect((await db.query('SELECT context FROM evaluation_requests WHERE id=$1', [order.id])).rows[0].context).toEqual(snapshot);
+    const free = await submit(actor, await recording(actor));
+    expect((await db.query('SELECT context FROM evaluation_requests WHERE id=$1', [free.id])).rows[0].context).toMatchObject({ audienceScenario: 'one_on_one', activity: null });
+    await runEvaluationJob(db, provider);
+  });
+
   it('avaliação livre continua quando cursos e diagnóstico estão desativados', async () => {
     const actor = await student(2, { coursesEnabled: false, diagnosticEnabled: false });
     const diagnostic = await recording(actor, 10_000_000, 'diagnostic');
@@ -219,5 +249,55 @@ describe('fila, relatórios e reserva atômica', () => {
     await runEvaluationJob(db, provider);
     expect(await read(actor, order.id)).toMatchObject({ status: 'completed', attempts: 2 });
     expect(await getWallet(db, actor)).toMatchObject({ balance: 0, reserved: 0 });
+  });
+
+  it('descarta o retorno do worker antigo após outro worker recuperar o lease', async () => {
+    const actor = await student(1);
+    const order = await submit(actor, await recording(actor));
+    let started!: () => void, resume!: () => void;
+    const began = new Promise<void>(resolve => { started = resolve; });
+    const held = new Promise<void>(resolve => { resume = resolve; });
+    const oldProvider: EvaluationProvider = { async evaluate(context, options) {
+      started(); await held;
+      const report = await provider.evaluate(context, options) as Record<string, unknown>;
+      return { ...report, summary: 'Retorno obsoleto que não deve substituir o relatório.' };
+    } };
+    const oldWorker = runEvaluationJob(db, oldProvider);
+    try {
+      await Promise.race([began, oldWorker]);
+      await db.query("UPDATE evaluation_jobs SET lease_until=clock_timestamp()-interval '1 second' WHERE request_id=$1", [order.id]);
+      expect(await runEvaluationJob(db, provider)).toBe(true);
+      const accepted = await read(actor, order.id);
+      expect(accepted).toMatchObject({ status: 'completed', attempts: 2 });
+      resume(); await oldWorker;
+      expect((await read(actor, order.id)).report).toEqual(accepted.report);
+      expect((await db.query("SELECT id FROM wallet_entries WHERE org_id=$1 AND user_id=$2 AND kind='consumption'", [actor.orgId, actor.userId])).rowCount).toBe(1);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 0, reserved: 0 });
+    } finally { resume(); await oldWorker; }
+  });
+
+  it.each(['logout', 'suspended', 'role'] as const)('revalida %s enquanto o pedido aguarda o lock do aluno', async change => {
+    const actor = await student(1), media = await recording(actor);
+    const blocker = await db.pool.connect();
+    let pending: ReturnType<typeof call> | undefined;
+    try {
+      await blocker.query('BEGIN');
+      await blocker.query('SELECT pg_advisory_xact_lock(hashtextextended($1,8))', [actor.userId]);
+      const pid = (await blocker.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+      pending = call(actor, 'POST', '/api/evaluations', { recordingId: media, clientKey: randomUUID() });
+      await expect.poll(async () => (await control.query<{ waiting: boolean }>(`SELECT EXISTS(
+        SELECT 1 FROM pg_locks held JOIN pg_locks queued ON held.locktype=queued.locktype
+        AND held.database IS NOT DISTINCT FROM queued.database AND held.classid=queued.classid
+        AND held.objid=queued.objid AND held.objsubid=queued.objsubid
+        WHERE held.pid=$1 AND held.locktype='advisory' AND held.granted AND NOT queued.granted
+      ) AS waiting`, [pid])).rows[0].waiting).toBe(true);
+      if (change === 'logout') await blocker.query('UPDATE sessions SET revoked_at=clock_timestamp() WHERE org_id=$1 AND user_id=$2', [actor.orgId, actor.userId]);
+      if (change === 'suspended') await blocker.query("UPDATE users SET status='suspended' WHERE id=$1", [actor.userId]);
+      if (change === 'role') await blocker.query("UPDATE users SET roles=ARRAY['teacher'] WHERE id=$1", [actor.userId]);
+      await blocker.query('COMMIT');
+      expect((await pending).statusCode).toBe(change === 'role' ? 403 : 401);
+      expect((await db.query('SELECT id FROM evaluation_requests WHERE org_id=$1', [actor.orgId])).rowCount).toBe(0);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 1, reserved: 0 });
+    } finally { await blocker.query('ROLLBACK'); blocker.release(); await pending?.catch(() => {}); }
   });
 });
