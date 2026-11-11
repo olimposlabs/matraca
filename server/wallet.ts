@@ -121,28 +121,40 @@ export function grantInitialCreditInTransaction(client:PoolClient,target:CreditT
 export function grantInitialCredit(db: Database,target: CreditTarget) {
   return grantCredits(db,{...target,amount:1,source:'initial',sourceRef:target.userId,eventKey:`initial:${target.userId}`,reason:'Crédito inicial para diagnóstico'});
 }
-export async function reserveCredits(db: Database, input: CreditTarget & { requestId: string; durationMicroseconds: number }): Promise<CreditReservation> {
-  const amount = creditsForDuration(input.durationMicroseconds); text(input.requestId,160,'Pedido');
+type ReserveCreditInput = CreditTarget & { requestId: string; durationMicroseconds: number };
+
+export async function reserveCredits(db: Database, input: ReserveCreditInput): Promise<CreditReservation> {
   try {
-    return await db.transaction(async client => {
-      const wallet = await lockWallet(client,input);
-      const found = await client.query<CreditReservation>('SELECT * FROM credit_reservations WHERE org_id=$1 AND request_id=$2',[input.orgId,input.requestId]);
-      if (found.rows[0]) {
-        const existing = found.rows[0];
-        if (existing.user_id !== input.userId || Number(existing.duration_us)!==input.durationMicroseconds) throw new CreditError(409,'Pedido já associado a outra reserva.');
-        return existing;
-      }
-      if (wallet.available < amount) throw new CreditError(402,'Créditos disponíveis insuficientes para avaliar esta gravação.');
-      const inserted = await client.query<CreditReservation>(
-        'INSERT INTO credit_reservations (org_id,user_id,request_id,duration_us,amount) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-        [input.orgId,input.userId,input.requestId,input.durationMicroseconds,amount]);
-      await client.query('UPDATE wallets SET reserved=reserved+$3,updated_at=now() WHERE org_id=$1 AND user_id=$2',[input.orgId,input.userId,amount]);
-      return inserted.rows[0];
-    });
-  } catch(error) {
-    if ((error as {code?:string}).code==='23505') throw new CreditError(409,'Pedido já associado a outra reserva.');
+    return await db.transaction(client => reserveCreditsInTransaction(client, input));
+  } catch (error) {
+    if ((error as { code?: string }).code === '23505') {
+      throw new CreditError(409, 'Pedido já associado a outra reserva.');
+    }
     throw error;
   }
+}
+
+export async function reserveCreditsInTransaction(client: PoolClient, input: ReserveCreditInput): Promise<CreditReservation> {
+  const amount = creditsForDuration(input.durationMicroseconds);
+  text(input.requestId, 160, 'Pedido');
+  const wallet = await lockWallet(client, input);
+  const found = await client.query<CreditReservation>(
+    'SELECT * FROM credit_reservations WHERE org_id=$1 AND request_id=$2', [input.orgId, input.requestId],
+  );
+  const existing = found.rows[0];
+  if (existing) {
+    if (existing.user_id !== input.userId || Number(existing.duration_us) !== input.durationMicroseconds) {
+      throw new CreditError(409, 'Pedido já associado a outra reserva.');
+    }
+    return existing;
+  }
+  if (wallet.available < amount) throw new CreditError(402, 'Créditos disponíveis insuficientes para avaliar esta gravação.');
+  const inserted = await client.query<CreditReservation>(
+    'INSERT INTO credit_reservations (org_id,user_id,request_id,duration_us,amount) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [input.orgId, input.userId, input.requestId, input.durationMicroseconds, amount],
+  );
+  await client.query('UPDATE wallets SET reserved=reserved+$3,updated_at=now() WHERE org_id=$1 AND user_id=$2', [input.orgId, input.userId, amount]);
+  return inserted.rows[0];
 }
 async function reservation(client: PoolClient,target: CreditTarget,requestId: string) {
   const found = await client.query<CreditReservation>('SELECT * FROM credit_reservations WHERE org_id=$1 AND user_id=$2 AND request_id=$3 FOR UPDATE',[target.orgId,target.userId,requestId]);
@@ -168,17 +180,23 @@ export async function consumeReservationInTransaction(client: PoolClient,input: 
     const result = await client.query<CreditReservation>("UPDATE credit_reservations SET status='consumed',consumption_entry_id=$2,settled_at=now() WHERE id=$1 RETURNING *",[item.id,entry.rows[0].id]);
     return result.rows[0];
 }
-export async function releaseReservation(db: Database,input: CreditTarget & {requestId:string;reason:string}): Promise<CreditReservation> {
-  text(input.reason,500,'Motivo');
-  return db.transaction(async client => {
-    await lockWallet(client,input);
-    const item = await reservation(client,input,input.requestId);
-    if (item.status==='released') return item;
-    if (item.status==='consumed') throw new CreditError(409,'Uma avaliação consumida exige estorno registrado.');
-    await client.query('UPDATE wallets SET reserved=reserved-$3,updated_at=now() WHERE org_id=$1 AND user_id=$2',[input.orgId,input.userId,item.amount]);
-    const result = await client.query<CreditReservation>("UPDATE credit_reservations SET status='released',release_reason=$2,settled_at=now() WHERE id=$1 RETURNING *",[item.id,input.reason]);
-    return result.rows[0];
-  });
+type ReleaseCreditInput = CreditTarget & { requestId: string; reason: string };
+
+export async function releaseReservation(db: Database, input: ReleaseCreditInput): Promise<CreditReservation> {
+  return db.transaction(client => releaseReservationInTransaction(client, input));
+}
+
+export async function releaseReservationInTransaction(client: PoolClient, input: ReleaseCreditInput): Promise<CreditReservation> {
+  text(input.reason, 500, 'Motivo');
+  await lockWallet(client, input);
+  const item = await reservation(client, input, input.requestId);
+  if (item.status === 'released') return item;
+  if (item.status === 'consumed') throw new CreditError(409, 'Uma avaliação consumida exige estorno registrado.');
+  await client.query('UPDATE wallets SET reserved=reserved-$3,updated_at=now() WHERE org_id=$1 AND user_id=$2', [input.orgId, input.userId, item.amount]);
+  const result = await client.query<CreditReservation>(
+    "UPDATE credit_reservations SET status='released',release_reason=$2,settled_at=now() WHERE id=$1 RETURNING *", [item.id, input.reason],
+  );
+  return result.rows[0];
 }
 export async function refundConsumption(db: Database,input: CreditTarget & {entryId:string;reason:string;actorUserId?:string}): Promise<WalletEntry> {
   return db.transaction(client => refundConsumptionInTransaction(client,input));

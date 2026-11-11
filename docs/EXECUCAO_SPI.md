@@ -21,8 +21,9 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | 04 | Integrada com revisão independente e CI verde | PR #4, head 7f52e78, merge b697603 |
 | 05 | Integrada com revisão independente e CI verde | PR #5, head 8e45b2b, merge 2ef0f0e |
 | 06 | Integrada com revisão independente e CI verde | PR #6, head c579a54, merge 89c8867 |
-| 07 | Estúdio e mídia validados, PR em preparação | 198 testes integrados e captura real Chromium |
-| 08–12 | Desenvolvimento paralelo | Worktrees locais por fase |
+| 07 | Integrada com revisão independente e CI verde | PR #7, head 0aeae0a, merge 2c39dd5 |
+| 08 | Avaliação simulada validada, PR em preparação | 215 testes e jornada Chromium |
+| 09–12 | Desenvolvimento paralelo | Worktrees locais por fase |
 | 13–14 | Pendentes | Dependências e aceite no plano aprovado |
 
 Em 11 de novembro de 2026, o fundador autorizou o mecanismo de revisão independente com CI verde após a ausência de resposta do Codex Review no GitHub. As fases 01–04 foram integradas por PR na ordem, com o commit revisado fixado no merge e a mesma árvore validada pela CI. O ambiente local permaneceu em execução. AWS e deploy continuam para uma etapa futura.
@@ -125,3 +126,12 @@ O estúdio captura áudio e vídeo no navegador ou recebe arquivo, com limite po
 A revisão independente verificou 27 casos de mídia e autorização. Foram corrigidas a auditoria do upload e a restrição de diagnóstico por organização. Validação integrada registrou 198 testes, tipos, lint, build e Playwright com MediaRecorder real usando dispositivos sintéticos. Consulte [a revisão](technical/PHASE07_REVIEW.md) e [a validação de interface](technical/PHASE07_UI_VALIDATION.md).
 
 Rollback preserva objetos e registros de gravação. Sem deploy.
+
+
+## Fase 08
+
+Avaliações de gravações reais usam provedor simulado. A mesma transação registra pedido, job, outbox e reserva. O worker tem lease e recuperação, limita tentativas e valida rubrica e evidências. Resultado e débito são atômicos. Cancelamento e falha definitiva liberam o saldo. O contexto retém objetivo, enunciado, cenário, perfil e resultados recentes do próprio aluno.
+
+A revisão independente verificou transações, escopo, revogações durante espera, recuperação de lease e contexto. Passaram 215 testes integrados, tipos, lint, build e E2E com áudio real, relatório, player, saldo, cancelamento, falha definitiva e retry transitório. A migração 008 mantém os vínculos de mídia, resultado e consumo por organização e aluno. Consulte [os contratos](technical/EVALUATIONS.md) e [a revisão](technical/PHASE08_BACKEND_REVIEW.md).
+
+Rollback preserva gravações, jobs, resultados e lançamentos. Suspenda o worker antes de reverter o código. Sem deploy.

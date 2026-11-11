@@ -1,0 +1,49 @@
+.evaluation-page { max-width: 1024px; padding-block: clamp(1.5rem, 5vw, 3.5rem); }
+.evaluation-heading, .evaluation-summary, .evaluation-progress {
+  display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;
+}
+.evaluation-heading { margin-block: 1rem 1.5rem; }
+.evaluation-heading h1 { margin: 0; overflow-wrap: anywhere; font-size: clamp(1.75rem, 4vw, 2.8rem); }
+.evaluation-heading p, .evaluation-action p { margin: .55rem 0 0; color: var(--color-muted); }
+.evaluation-back { display: inline-flex; align-items: center; gap: .5rem; }
+.evaluation-panel, .evaluation-action {
+  background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 18px; padding: clamp(1rem, 3vw, 1.5rem);
+}
+.evaluation-panel h2, .evaluation-panel h3, .evaluation-action h3 { margin: 0 0 .5rem; }
+.evaluation-panel p { margin-block: .5rem; overflow-wrap: anywhere; }
+.evaluation-action { display: grid; gap: 1rem; justify-items: start; margin-block-start: 1rem; }
+.evaluation-action label { display: grid; gap: .4rem; font-weight: 650; }
+.evaluation-action select { max-width: 100%; border: 1px solid var(--color-line); border-radius: 10px; padding: .6rem; background: var(--color-surface); color: inherit; font: inherit; }
+.evaluation-error { color: #a92e25; }
+.evaluation-list, .evaluation-criteria { list-style: none; padding: 0; display: grid; gap: .8rem; }
+.evaluation-list a {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: .9rem; align-items: center;
+  padding: 1rem; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 14px; color: inherit; text-decoration: none;
+}
+.evaluation-list a:hover { border-color: var(--color-primary); }
+.evaluation-list-icon { padding: .6rem; background: var(--color-background); border-radius: 12px; }
+.evaluation-list-title { display: grid; gap: .3rem; overflow-wrap: anywhere; }
+.evaluation-list-title small { color: var(--color-muted); }
+.evaluation-status { border-radius: 999px; padding: .4rem .75rem; background: #f3eddf; color: #59451d; font-weight: 650; font-size: .82rem; }
+.evaluation-status-completed { background: #e4f0e5; color: #224d2c; }
+.evaluation-status-failed { background: #f9e5e3; color: #892c24; }
+.evaluation-status-cancelled { background: #edeeef; color: #404448; }
+.evaluation-pagination { display: flex; gap: .8rem; justify-content: center; align-items: center; margin-top: 1.25rem; }
+.evaluation-progress > div { flex: 1 1 15rem; }
+.evaluation-player { margin-block: 1rem; }
+.evaluation-player video { width: 100%; display: block; max-height: 480px; background: #171717; border-radius: 12px; }
+.evaluation-player audio { width: 100%; }
+.evaluation-report { display: grid; gap: 1rem; }
+.evaluation-criterion-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem 1rem; justify-content: space-between; }
+.evaluation-criterion-title span { color: var(--color-muted); font-size: .9rem; }
+.evaluation-evidence { margin: .35rem .5rem .2rem 0; white-space: normal; text-align: left; }
+@media (max-width: 560px) {
+  .evaluation-list a { grid-template-columns: minmax(0, 1fr) auto; gap: .55rem; }
+  .evaluation-list-icon, .evaluation-list a > svg { display: none; }
+  .evaluation-status { max-width: 9rem; text-align: center; }
+}
+@media print {
+  .evaluation-page { max-width: none; padding: 0; }
+  .evaluation-back, .evaluation-print, .evaluation-player, .evaluation-evidence { display: none !important; }
+  .evaluation-panel { break-inside: avoid; border-color: #b6b6b6; }
+}

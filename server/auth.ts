@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { chmod, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import type { PoolClient } from 'pg';
+import type { PoolClient, QueryResultRow } from 'pg';
 import { z } from 'zod';
 import { grantInitialCreditInTransaction } from './wallet.js';
 import { localHostname } from './config.js';
@@ -206,19 +206,22 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
 }
 
 /** Rechecks the live domain mapping, organization, user status and roles. No cache. */
-export async function getIdentity(request: FastifyRequest): Promise<AuthIdentity | null> {
+export async function getIdentity(request: FastifyRequest, client?: PoolClient): Promise<AuthIdentity | null> {
   const token = request.cookies[COOKIE];
   const hostname = localHostname(request.headers.host);
   if (!token || !TOKEN_PATTERN.test(token) || !hostname) return null;
-  const found = await request.server.db.query<OrgRow & {
+  const query = <Row extends QueryResultRow>(sql: string, parameters: unknown[]) =>
+    client ? client.query<Row>(sql, parameters) : request.server.db.query<Row>(sql, parameters);
+  const found = await query<OrgRow & {
     user_id: string; user_name: string; email: string; roles: IdentityRole[];
   }>(
     `SELECT o.id,o.slug,o.name,o.kind,o.settings,o.branding,o.status,d.hostname,
             u.id AS user_id,u.name AS user_name,u.email,u.roles
      FROM sessions s JOIN users u ON u.id=s.user_id AND u.org_id=s.org_id
      JOIN orgs o ON o.id=s.org_id JOIN domains d ON d.hostname=s.hostname AND d.org_id=s.org_id
-     WHERE s.token_hash=$1 AND s.hostname=$2 AND s.revoked_at IS NULL AND s.expires_at>now()
-       AND u.status='active' AND o.status='active'`,
+     WHERE s.token_hash=$1 AND s.hostname=$2 AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
+       AND u.status='active' AND u.archived_at IS NULL AND o.status='active'
+       ${client ? 'FOR SHARE OF s,u,o' : ''}`,
     [hash(token), hostname],
   );
   const row = found.rows[0];
@@ -232,8 +235,9 @@ export async function getIdentity(request: FastifyRequest): Promise<AuthIdentity
 export async function requireIdentity(
   request: FastifyRequest,
   allowedRoles?: readonly IdentityRole[],
+  client?: PoolClient,
 ): Promise<AuthIdentity> {
-  const identity = await getIdentity(request);
+  const identity = await getIdentity(request, client);
   if (!identity) throw new IdentityError(401, 'Entre na sua conta para continuar.');
   if (allowedRoles && !identity.user.roles.some((role) => allowedRoles.includes(role))) {
     throw new IdentityError(403, 'Você não tem permissão para esta ação.');
