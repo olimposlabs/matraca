@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import {
   ArrowDown,
@@ -25,17 +25,21 @@ import {
 import { AuthProvider, AuthenticatedArea, LoginPage, WorkspaceNavigation, sessionHome, useAuth } from './auth';
 import { apiJson } from './api';
 import { OrganizationsPage, OrganizationSettingsPage, brandDisplayName, organizationTheme } from './organizations';
-import { EducationPage } from './education';
-import { WalletPage } from './wallet';
-import { RecordingsPage } from './recordings';
-import { EvaluationAction, EvaluationsPage } from './evaluations';
-import { MentoringPage } from './mentoring';
-import { GamificationPage } from './gamification';
-import { CommercePage } from './commerce';
-import { BillingPage } from './billing';
-import { OperationsPage } from './operations';
-import { CoursesManagementPage, StudentCoursesPage } from './courses';
-import { JourneyPage, EvolutionPage } from './journey';
+
+const EducationPage = lazy(() => import('./education').then(page => ({ default: page.EducationPage })));
+const WalletPage = lazy(() => import('./wallet').then(page => ({ default: page.WalletPage })));
+const RecordingsPage = lazy(() => import('./recordings').then(page => ({ default: page.RecordingsPage })));
+const EvaluationAction = lazy(() => import('./evaluations').then(page => ({ default: page.EvaluationAction })));
+const EvaluationsPage = lazy(() => import('./evaluations').then(page => ({ default: page.EvaluationsPage })));
+const MentoringPage = lazy(() => import('./mentoring').then(page => ({ default: page.MentoringPage })));
+const GamificationPage = lazy(() => import('./gamification').then(page => ({ default: page.GamificationPage })));
+const CommercePage = lazy(() => import('./commerce').then(page => ({ default: page.CommercePage })));
+const BillingPage = lazy(() => import('./billing').then(page => ({ default: page.BillingPage })));
+const OperationsPage = lazy(() => import('./operations').then(page => ({ default: page.OperationsPage })));
+const CoursesManagementPage = lazy(() => import('./courses').then(page => ({ default: page.CoursesManagementPage })));
+const StudentCoursesPage = lazy(() => import('./courses').then(page => ({ default: page.StudentCoursesPage })));
+const JourneyPage = lazy(() => import('./journey').then(page => ({ default: page.JourneyPage })));
+const EvolutionPage = lazy(() => import('./journey').then(page => ({ default: page.EvolutionPage })));
 
 const waveformHeights = [18, 30, 23, 42, 57, 36, 25, 48, 68, 52, 31, 44, 60, 79, 65, 43, 29, 46, 63, 48, 34, 54, 72, 49, 31, 45, 58, 35, 25, 39, 22, 14];
 
@@ -303,7 +307,45 @@ function AppShell() {
       <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
       <SiteHeader />
       <WorkspaceNavigation />
-      <main id="conteudo"><Routes><Route path="/" element={<HomeEntry />} /><Route path="/status" element={<StatusPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/app" element={<MemberEntry />} /><Route path="/app/journey" element={<JourneyPage />} /><Route path="/app/evolution" element={<EvolutionPage />} /><Route path="/admin" element={<AdminEntry />} /><Route path="/admin/education" element={<EducationPage />} /><Route path="/teacher" element={<EducationPage view="teacher" />} /><Route path="/app/classes" element={<EducationPage view="student" />} /><Route path="/app/courses" element={<StudentCoursesPage />} /><Route path="/app/courses/:courseId" element={<StudentCoursesPage />} /><Route path="/admin/courses" element={<CoursesManagementPage />} /><Route path="/backoffice/courses" element={<CoursesManagementPage central />} /><Route path="/app/recordings" element={<AuthenticatedArea area="learner"><RecordingsPage renderActions={recording => <EvaluationAction key={recording.id} recording={recording} />} /></AuthenticatedArea>} /><Route path="/app/evaluations" element={<EvaluationsPage />} /><Route path="/app/evaluations/:evaluationId" element={<EvaluationsPage />} /><Route path="/app/mentoring" element={<MentoringPage view="student" />} /><Route path="/teacher/mentoring" element={<MentoringPage />} /><Route path="/admin/mentoring" element={<MentoringPage view="manage" />} /><Route path="/app/achievements" element={<GamificationPage mode="student" />} /><Route path="/admin/gamification" element={<GamificationPage mode="manage" />} /><Route path="/backoffice/gamification" element={<GamificationPage mode="backoffice" />} /><Route path="/app/store" element={<CommercePage />} /><Route path="/backoffice/commerce" element={<CommercePage mode="backoffice" />} /><Route path="/admin/billing" element={<BillingPage />} /><Route path="/backoffice/billing" element={<BillingPage central />} /><Route path="/app/wallet" element={<WalletPage />} /><Route path="/admin/credits" element={<WalletPage mode="manage" />} /><Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} /><Route path="/backoffice/operations" element={<OperationsPage />} /><Route path="/backoffice" element={<OrganizationsPage />} /><Route path="*" element={<NotFoundPage />} /></Routes></main>
+      <main id="conteudo" tabIndex={-1}>
+        <Suspense fallback={<p className="container" role="status">Carregando página…</p>}>
+          <Routes>
+            <Route path="/" element={<HomeEntry />} />
+            <Route path="/status" element={<StatusPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/app" element={<MemberEntry />} />
+            <Route path="/app/journey" element={<JourneyPage />} />
+            <Route path="/app/evolution" element={<EvolutionPage />} />
+            <Route path="/admin" element={<AdminEntry />} />
+            <Route path="/admin/education" element={<EducationPage />} />
+            <Route path="/teacher" element={<EducationPage view="teacher" />} />
+            <Route path="/app/classes" element={<EducationPage view="student" />} />
+            <Route path="/app/courses" element={<StudentCoursesPage />} />
+            <Route path="/app/courses/:courseId" element={<StudentCoursesPage />} />
+            <Route path="/admin/courses" element={<CoursesManagementPage />} />
+            <Route path="/backoffice/courses" element={<CoursesManagementPage central />} />
+            <Route path="/app/recordings" element={<AuthenticatedArea area="learner"><RecordingsPage renderActions={recording => <EvaluationAction key={recording.id} recording={recording} />} /></AuthenticatedArea>} />
+            <Route path="/app/evaluations" element={<EvaluationsPage />} />
+            <Route path="/app/evaluations/:evaluationId" element={<EvaluationsPage />} />
+            <Route path="/app/mentoring" element={<MentoringPage view="student" />} />
+            <Route path="/teacher/mentoring" element={<MentoringPage />} />
+            <Route path="/admin/mentoring" element={<MentoringPage view="manage" />} />
+            <Route path="/app/achievements" element={<GamificationPage mode="student" />} />
+            <Route path="/admin/gamification" element={<GamificationPage mode="manage" />} />
+            <Route path="/backoffice/gamification" element={<GamificationPage mode="backoffice" />} />
+            <Route path="/app/store" element={<CommercePage />} />
+            <Route path="/backoffice/commerce" element={<CommercePage mode="backoffice" />} />
+            <Route path="/admin/billing" element={<BillingPage />} />
+            <Route path="/backoffice/billing" element={<BillingPage central />} />
+            <Route path="/app/wallet" element={<WalletPage />} />
+            <Route path="/admin/credits" element={<WalletPage mode="manage" />} />
+            <Route path="/backoffice/credits" element={<WalletPage mode="backoffice" />} />
+            <Route path="/backoffice/operations" element={<OperationsPage />} />
+            <Route path="/backoffice" element={<OrganizationsPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </main>
       <SiteFooter />
     </div>
   );

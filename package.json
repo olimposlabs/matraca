@@ -16,11 +16,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "tsx scripts/check-recordings-ui.ts && tsx scripts/check-evaluations-ui.ts && tsx scripts/check-gamification-ui.ts && tsx scripts/check-commerce-ui.ts && tsx scripts/check-billing-ui.ts && tsx scripts/check-registration-ui.ts && tsx scripts/check-partner-ui.ts && tsx scripts/check-recovery-ui.ts && tsx scripts/check-complete-course-ui.ts && tsx scripts/check-sandbox-ui.ts",
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/start.ts",
     "inbox": "tsx scripts/inbox.ts",
-    "billing:close": "tsx scripts/close-billing.ts"
+    "billing:close": "tsx scripts/close-billing.ts",
+    "pilot:sandbox": "tsx scripts/sandbox.ts",
+    "db:seed:examples": "tsx scripts/seed-pilot-examples.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",

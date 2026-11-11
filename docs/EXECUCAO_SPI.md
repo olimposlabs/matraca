@@ -181,3 +181,15 @@ O backoffice tem métricas por organização, escola, aluno e período, auditori
 O navegador verificou filtros, limites, retomada de job e liberação de reserva órfã. Testes integrados verificaram cenário de pagamento e relógio financeiro por organização, preservação de histórico, permissões e limites. [Operação e recuperação](technical/OPERATIONS_CONSOLE.md)
 
 Rollback preserva auditoria, jobs e lançamentos. Sem deploy.
+
+A PR #13 foi integrada no merge af01836, após revisão independente e CI verde no head 0415246. A migração 013 foi aplicada ao ambiente principal local.
+
+## Fase 14
+
+A entrega reúne portal direto, white label e backoffice. O seed aditivo oferece seis alunos diretos e seis no parceiro, uma escola, três professores e o mesmo e-mail em dois domínios. O seed de exemplos inclui compra, gravação com avaliação, progresso, mentoria e contrato. Um sandbox pode incluir uma fatura fechada com relógio simulado. O seed foi limitado às identidades de demonstração e preserva professores novos no estado pendente.
+
+As jornadas estão documentadas com suas verificações de UI, API e processo. Foram registrados os fluxos de cadastro e compra, curso completo com 48 unidades, revisão de 300 segundos, isolamento de domínios, fila recuperada após interrupção, histórico financeiro e persistência após reinício. O sandbox exige confirmação do nome para reset e recusa reset com processo ativo. [Matriz de aceite](technical/PILOT_ACCEPTANCE.md)
+
+Os portais carregam as páginas por rota. A versão do currículo importada em ambientes novos exige áudio para critérios vocais. Versões publicadas e relatórios existentes preservam suas rubricas históricas. O piloto usa IA, e-mail e pagamento simulados. AWS, DNS público, deploy e validação em câmeras físicas pertencem às etapas posteriores.
+
+Rollback preserva o banco, o armazenamento e as versões publicadas. Para reiniciar, use o mesmo nome, checkout e porta do sandbox. Para apagar um sandbox, use o comando com confirmação do nome. [Guia do piloto](GUIA_DO_PILOTO.md)

@@ -9,11 +9,12 @@ export async function seedCourses(client:PoolClient,id:(key:string)=>string){
  const base=curriculumToCourse(source);
  const organizations=await client.query<{id:string;slug:string}>("SELECT id,slug FROM orgs WHERE slug IN ('matraca','parceiro') ORDER BY CASE slug WHEN 'matraca' THEN 0 ELSE 1 END");
  for(const org of organizations.rows){
+  if(org.id!==id(org.slug))continue;
   const courseId=id(`course:${org.slug}:base`);const document=org.slug==='matraca'?base:{...base,title:'Horizonte · jornada de oratória',catalogVisible:false};
   const created=await client.query('INSERT INTO courses(id,org_id,title,draft,source_course_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT(id) DO NOTHING RETURNING id',[courseId,org.id,document.title,document,org.slug==='parceiro'?id('course:matraca:base'):null]);
   if(!created.rowCount)continue;
   const version=await publishCourseInTransaction(client,org.id,courseId,0,null);
-  const students=await client.query<{id:string}>("SELECT id FROM users WHERE org_id=$1 AND 'student'=ANY(roles) AND status='active'",[org.id]);
-  for(const student of students.rows)await client.query("INSERT INTO course_enrollments(org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,'demo','pilot-seed') ON CONFLICT(course_id,student_id) DO NOTHING",[org.id,courseId,version.id,student.id]);
+  const students=await client.query<{id:string;email:string}>("SELECT id,email FROM users WHERE org_id=$1 AND 'student'=ANY(roles) AND status='active'",[org.id]);
+  for(const student of students.rows.filter(student=>student.id===id(`${org.slug}:${student.email}`)))await client.query("INSERT INTO course_enrollments(org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,'demo','pilot-seed') ON CONFLICT(course_id,student_id) DO NOTHING",[org.id,courseId,version.id,student.id]);
  }
 }

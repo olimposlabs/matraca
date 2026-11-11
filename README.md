@@ -1,42 +1,51 @@
 # Matraca
 
-Matraca é uma plataforma em descoberta para desenvolver oratória por meio de gravações, avaliações por IA e prática orientada. O produto atenderá usuários avulsos e organizações parceiras com experiência white label e isolamento por organização. O piloto está em execução segundo o plano aprovado.
+O Matraca ajuda a praticar oratória com uma trilha de estudo, gravações e avaliações por rubrica. O piloto atende alunos avulsos e organizações parceiras com identidade visual própria, escolas, professores e mentorias. Cada domínio tem contas e sessões independentes.
 
-## Desenvolvimento local
+## Rodar o piloto
 
-A fundação usa Node 24 LTS, React, Vite, Fastify e PostgreSQL 17. Docker precisa estar ativo para o banco. Instale as dependências com `npm ci` e inicie com `npm run dev`. O comando prepara banco e migrações e inicia web/API. As fases de produto ainda estão em implementação.
+Use Node 24 LTS e inicie o Docker. Na pasta do projeto, execute:
 
-- Interface em `http://matraca.localhost:5173`.
-- API em `http://127.0.0.1:3001/api/health`.
-- PostgreSQL acessível somente no loopback, porta 54329, com dados em volume Docker do projeto.
-- Arquivos privados em `.data/objects`, fora do Git.
-- Serviços externos serão simulados. Não há deploy configurado. AWS será uma etapa posterior.
+```sh
+npm ci
+npm run dev
+```
 
-Acompanhe os gates e evidências no [registro SPI](docs/EXECUCAO_SPI.md).
+O comando inicia PostgreSQL local, aplica as migrações, confere o seed e sobe API e Vite. A API responde em `http://127.0.0.1:3001/api/health`. O volume do Docker preserva o banco, e os arquivos privados ficam em `.data/objects`.
 
-## Funcionalidades locais disponíveis
+| Área | Login | Personas |
+| --- | --- | --- |
+| Matraca direto | [Portal Matraca](http://matraca.localhost:5173/login) | `ana@exemplo.test`, `aluno2@matraca.test` a `aluno6@matraca.test` |
+| Horizonte Oratória | [Portal parceiro](http://parceiro.matraca.localhost:5173/login) | `ana@exemplo.test`, `aluno2@parceiro.test` a `aluno6@parceiro.test` |
+| Gestão do parceiro | [Login parceiro](http://parceiro.matraca.localhost:5173/login) | `admin@parceiro.test`, `escola@parceiro.test`, `professor1@parceiro.test` a `professor3@parceiro.test` |
+| Backoffice | [Login do backoffice](http://backoffice.matraca.localhost:5173/login) | `operador@matraca.test` |
 
-Identidade independente por organização, login por link e logout, cadastro de parceiros no backoffice, preferências, marca com preview, publicação e restauração, upload de logo validado. A gestão escolar inclui escolas, pessoas, aprovação de professores, certificações, turmas, matrículas simultâneas, grupos hierárquicos, transferência e histórico. Cursos, avaliações, carteiras e cobrança continuam nas fases seguintes do plano.
+Solicite um link na tela e consulte a caixa de e-mail local. Use o host da tela de login, especialmente quando o e-mail existir nos dois portais.
 
-O parceiro tem uma escola, três professores aprovados, seis alunos, uma turma atual, uma turma encerrada e grupos de estado, cidade, unidade e turma. Administradores e gestores usam `/admin/education`; professores usam `/teacher` e alunos consultam vínculos em `/app/classes`.
+```sh
+npm run inbox -- --email ana@exemplo.test --host matraca.localhost
+```
 
-## Contas de demonstração e login
+Abra o link retornado. Cada link é de uso único. Para testar compra e pagamento pela primeira vez com um aluno sem matrícula, crie um cadastro sintético no portal Matraca.
 
-O acesso usa links de uso único. Em `http://matraca.localhost:5173/login`, solicite um link para `ana@exemplo.test`. Depois execute `npm run inbox -- --email ana@exemplo.test --host matraca.localhost` e abra o link local recebido. O e-mail é simulado, enquanto a sessão é real e pertence somente ao host usado.
+## Exemplos e ambiente de teste
 
-No parceiro, use `http://parceiro.matraca.localhost:5173/login`. Estão disponíveis `ana@exemplo.test`, `admin@parceiro.test`, `escola@parceiro.test` e `professor1@parceiro.test`. No backoffice, use `http://backoffice.matraca.localhost:5173/login` com `operador@matraca.test`. Filtre a inbox pelo host correspondente para evitar confundir mensagens do mesmo e-mail.
+```sh
+npm run db:seed:examples
+npm run pilot:sandbox -- start --name revisao --port 5174 --examples
+```
 
-As mensagens ficam em arquivos privados, fora do Git e fora do acesso HTTP do Vite. Não há endpoint público que entregue tokens. Somente dados sintéticos devem ser usados neste piloto local.
+O primeiro comando adiciona catálogo, compra simulada de aluno avulso, contrato, uma aula concluída com gravação e mentoria na escola parceira. O segundo cria um ambiente separado e também fecha uma competência de exemplo com relógio financeiro avançado. Para praticar um fechamento desde o início, omita `--examples` e configure o contrato na interface. Consulte a seção de sandbox para a caixa de e-mail e o reset. [Operações locais](docs/OPERATIONS.md)
+
+A gravação, o progresso, a carteira, os pedidos e as faturas são persistidos. O feedback da IA, as transações financeiras e o e-mail são simulações locais. AWS e pipeline de deploy ficam para uma etapa posterior.
 
 ## Documentação
 
-- [Plano aprovado de execução do piloto](docs/PLANO_DE_EXECUCAO_PILOTO.md)
-- [Plano de ensino detalhado e contexto do piloto](docs/PLANO_DE_ENSINO.md)
-- [Créditos, pacotes, recompensas e cobrança](docs/CREDITOS_E_COBRANCA.md)
-- [Guia para agentes e mapa de leitura](AGENTS.md)
-- [Padrões de engenharia](docs/ENGINEERING.md)
-- [Arquitetura e decisões técnicas](docs/ARCHITECTURE.md)
-- [Operação e entrega](docs/OPERATIONS.md)
-- [Estratégia de testes](docs/TESTING.md)
-- [Riscos e dívida técnica](docs/TECH_DEBT.md)
-- [Protocolo Smart Phases Implementation](docs/SMART_PHASES_IMPLEMENTATION.md)
+- [Roteiro do fundador](docs/GUIA_DO_PILOTO.md)
+- [Plano e registro SPI](docs/EXECUCAO_SPI.md)
+- [Plano de ensino](docs/PLANO_DE_ENSINO.md)
+- [Créditos e faturamento](docs/CREDITOS_E_COBRANCA.md)
+- [Arquitetura](docs/ARCHITECTURE.md)
+- [Operações](docs/OPERATIONS.md)
+- [Testes](docs/TESTING.md)
+- [Diretrizes de engenharia](docs/ENGINEERING.md)

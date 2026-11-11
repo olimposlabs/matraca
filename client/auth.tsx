@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Link, Navigate, NavLink, useLocation, useSearchParams } from 'react-router';
-import { Activity, ArrowRight, AudioLines, BookOpen, Building2, Check, ChevronRight, CircleCheck, ClipboardList, LockKeyhole, LogOut, Mail, MessageSquare, RefreshCw, ShieldCheck, Sparkles, Trophy, ShoppingBag, ReceiptText, UserRound, Users, Wallet, Compass, TrendingUp } from 'lucide-react';
+import { Activity, ArrowRight, AudioLines, BookOpen, Building2, Check, ChevronRight, CircleCheck, ClipboardList, LockKeyhole, LogOut, Mail, MessageSquare, RefreshCw, Trophy, ShoppingBag, ReceiptText, UserRound, Users, Wallet, Compass, TrendingUp } from 'lucide-react';
 import { ApiError, apiJson } from './api';
 
 export type Organization = {
@@ -244,7 +244,6 @@ export function AuthenticatedArea({ area = 'student', children }: { area?: 'stud
 
   if (children) return children;
 
-  const management = area !== 'student';
   const heading = area === 'backoffice' ? 'Um espaço para cuidar de cada jornada.' : area === 'admin' ? 'Acompanhe quem aprende com você.' : 'Sua voz já tem um lugar aqui.';
 
   return (
@@ -255,9 +254,14 @@ export function AuthenticatedArea({ area = 'student', children }: { area?: 'stud
         <article className="member-identity"><span className="member-avatar"><UserRound size={28} strokeWidth={1.6} aria-hidden="true" /></span><h2>{user.name}</h2><p>{user.email}</p><div className="role-tags">{user.roles.map(role => <span key={role}>{roleNames[role] ?? 'Perfil da organização'}</span>)}</div><div className="identity-divider" /><span className="member-org-label">Organização atual</span><strong className="member-org-name"><Building2 size={16} aria-hidden="true" />{org.name}</strong><span className="session-confirmation"><CircleCheck size={14} aria-hidden="true" />Acesso confirmado</span><p className="member-isolation-note">Seu perfil e sua jornada ficam separados dos seus acessos em outras organizações.</p></article>
         <div className="member-main">
           <div className="education-dashboard-links">{user.roles.includes('student') && org.settings.coursesEnabled !== false && <Link to="/app/courses"><BookOpen size={20} /><span><strong>Meus cursos</strong><small>Conteúdo, práticas e referências da sua jornada.</small></span><ArrowRight size={17} /></Link>}{canAdmin && <Link to="/admin/courses"><BookOpen size={20} /><span><strong>Cursos e programas</strong><small>{user.roles.includes('org_admin') ? 'Monte a metodologia e publique para seus alunos.' : 'Atribua os programas da organização à sua escola.'}</small></span><ArrowRight size={17} /></Link>}{user.roles.includes('student') && <Link to="/app/wallet"><Wallet size={20} /><span><strong>Minha carteira</strong><small>Saldo disponível, recebimentos e histórico de consumo.</small></span><ArrowRight size={17} /></Link>}{canAdmin && <Link to="/admin/credits"><Wallet size={20} /><span><strong>Gestão de créditos</strong><small>Carteiras, concessões e limites das escolas.</small></span><ArrowRight size={17} /></Link>}{user.roles.includes('student') && <Link to="/app/classes"><Users size={20} /><span><strong>Minhas turmas e escolas</strong><small>Acompanhe seus vínculos e seu histórico.</small></span><ArrowRight size={17} /></Link>}{user.roles.includes('teacher') && <Link to="/teacher"><BookOpen size={20} /><span><strong>Minha área de professor</strong><small>Turmas e alunos atribuídos a você.</small></span><ArrowRight size={17} /></Link>}{canAdmin && <Link to="/admin/education"><Users size={20} /><span><strong>Pessoas e turmas</strong><small>Cadastros, vínculos e gestão escolar.</small></span><ArrowRight size={17} /></Link>}</div>
-          <article className="member-welcome"><span className="member-welcome-icon">{management ? <ShieldCheck size={26} strokeWidth={1.5} aria-hidden="true" /> : <Sparkles size={26} strokeWidth={1.5} aria-hidden="true" />}</span><div><span className="eyebrow">SEU ACESSO ESTÁ PRONTO</span><h2>{management ? 'A base para acompanhar cada pessoa.' : 'O primeiro passo foi dado.'}</h2><p>{management ? 'Sua conta já está conectada ao ambiente de gestão desta organização. As ferramentas de acompanhamento serão adicionadas nas próximas etapas do piloto.' : 'Sua conta está criada e seu espaço está preparado. As próximas etapas do piloto vão trazer seu perfil, sua trilha e as práticas de oratória.'}</p></div></article>
-          <div className="member-next-heading"><h2>{management ? 'A seguir, na área de gestão' : 'A seguir, na sua jornada'}</h2><span>Em construção</span></div>
-          <div className="member-next-grid"><article><span className="feature-icon icon-green">{management ? <Users size={22} aria-hidden="true" /> : <UserRound size={22} aria-hidden="true" />}</span><h3>{management ? 'Pessoas e organizações' : 'Seu ponto de partida'}</h3><p>{management ? 'Cadastros e acompanhamento das pessoas no seu ambiente.' : 'Seus objetivos e sua experiência vão orientar o caminho.'}</p><span className="member-next-state">Próxima etapa</span></article><article><span className="feature-icon icon-peach"><BookOpen size={22} aria-hidden="true" /></span><h3>{management ? 'Conteúdo e progresso' : 'Uma trilha para evoluir'}</h3><p>{management ? 'Cursos, aulas e uma visão da evolução de cada aluno.' : 'Conteúdo, exercícios e revisões conectados à sua prática.'}</p><span className="member-next-state">Próxima etapa</span></article></div>
+          {user.roles.includes('teacher') && <Link className="member-management-link" to="/teacher/mentoring">
+            <span><MessageSquare size={17} aria-hidden="true" />Consulte mentorias e planos dos seus alunos.</span>
+            <span>Abrir mentorias <ArrowRight size={16} aria-hidden="true" /></span>
+          </Link>}
+          {canAdmin && <Link className="member-management-link" to="/admin/mentoring">
+            <span><MessageSquare size={17} aria-hidden="true" />Acompanhe a evolução dos alunos.</span>
+            <span>Abrir acompanhamento <ArrowRight size={16} aria-hidden="true" /></span>
+          </Link>}
           {area === 'student' && canAdmin && <Link className="member-management-link" to="/admin"><span><Check size={17} aria-hidden="true" />Você também tem acesso à gestão.</span><span>Abrir gestão <ArrowRight size={16} aria-hidden="true" /></span></Link>}
           {area === 'admin' && <Link className="button button-text" to="/app">Voltar ao meu espaço <ArrowRight size={16} aria-hidden="true" /></Link>}
         </div>

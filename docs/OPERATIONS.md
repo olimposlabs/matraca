@@ -24,3 +24,23 @@ CI executa verificações locais equivalentes, com banco de serviço e sem segre
 Depois de `npm run build`, `APP_PUBLIC_PORT=3001 npm start` serve API e interface na porta3001. O servidor local deve estar livre nessa porta; encerre a execução dev correspondente antes de usar esse modo. A porta pública orienta os links da mailbox. A rota de frontend não converte caminhos /api inexistentes em HTML.
 
 O modo dev usa Vite em5173 e API em3001. O Vite permite apenas os diretórios públicos necessários e nega dados privados, inclusive /@fs e importações raw. A inbox é consultada por `npm run inbox`, com filtros --email e --host.
+
+## Sandbox com dados separados
+
+```sh
+npm run pilot:sandbox -- start --name revisao --port 5174 --examples
+```
+
+O sandbox cria um schema, uma pasta de mídia, uma mailbox e um build separados. O terminal mostra os endereços, que incluem um identificador do diretório de trabalho para separar sessões entre checkouts. Use o host mostrado para solicitar o link e a pasta do sandbox na consulta.
+
+```sh
+STORAGE_ROOT=.data/sandboxes/revisao/objects npm run inbox -- --email ana@exemplo.test
+```
+
+Encerre a execução com Ctrl+C para liberar o lock. O comando abaixo apaga apenas o sandbox com o nome confirmado. Reiniciar com o mesmo nome retoma os dados existentes.
+
+```sh
+npm run pilot:sandbox -- reset --name revisao --confirm revisao
+```
+
+A operação cotidiana, os cenários locais e o fechamento sob demanda estão descritos em [Console de operações](technical/OPERATIONS_CONSOLE.md).

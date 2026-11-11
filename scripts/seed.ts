@@ -1,19 +1,18 @@
-import { createHash } from 'node:crypto';
 import { createDatabase } from '../server/db.js';
-import { configuration } from '../server/config.js';
+import { configuration, localPartnerDomainSuffix } from '../server/config.js';
 import { DEFAULT_BRANDING } from '../server/organizations.js';
 import { seedEducation } from './seed-education.js';
 import { seedWallet } from './seed-wallet.js';
 import { seedCourses } from './seed-courses.js';
 
-export function seedId(value: string): string {
-  const hex = createHash('sha256').update(`matraca-demo:${value}`).digest('hex');
-  return `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-a${hex.slice(17,20)}-${hex.slice(20,32)}`;
-}
+import { seedId } from './seed-id.js';
+
+const domainSuffix = localPartnerDomainSuffix();
+const defaultHosts = domainSuffix === 'matraca.localhost';
 const organizations = [
-  { slug: 'matraca', name: 'Matraca', kind: 'matraca', hosts: ['matraca.localhost','localhost','127.0.0.1'] },
-  { slug: 'parceiro', name: 'Horizonte Oratória', kind: 'partner', hosts: ['parceiro.matraca.localhost','parceiro.localhost'] },
-  { slug: 'backoffice', name: 'Matraca · Backoffice', kind: 'backoffice', hosts: ['backoffice.matraca.localhost','backoffice.localhost'] },
+  { slug: 'matraca', name: 'Matraca', kind: 'matraca', hosts: [domainSuffix, ...(defaultHosts ? ['localhost', '127.0.0.1'] : [])] },
+  { slug: 'parceiro', name: 'Horizonte Oratória', kind: 'partner', hosts: [`parceiro.${domainSuffix}`, ...(defaultHosts ? ['parceiro.localhost'] : [])] },
+  { slug: 'backoffice', name: 'Matraca · Backoffice', kind: 'backoffice', hosts: [`backoffice.${domainSuffix}`, ...(defaultHosts ? ['backoffice.localhost'] : [])] },
 ];
 const students = ['Ana Silva','Bruno Lima','Carla Souza','Diego Alves','Elisa Rocha','Fabio Costa'];
 const db = createDatabase(configuration().databaseUrl);
@@ -26,6 +25,7 @@ try {
       const candidateId = seedId(org.slug);
       await client.query("INSERT INTO orgs (id,slug,name,kind,status,settings,branding) VALUES ($1,$2,$3,$4,'active',$5,$6) ON CONFLICT (slug) DO NOTHING", [candidateId,org.slug,org.name,org.kind,{ coursesEnabled:true, strictJourney:false },{ ...DEFAULT_BRANDING, displayName: org.name, _revision: 0 }]);
       const orgId = (await client.query('SELECT id FROM orgs WHERE slug=$1',[org.slug])).rows[0].id;
+      if (orgId !== candidateId) continue;
       for (const hostname of org.hosts) await client.query('INSERT INTO domains (hostname,org_id) VALUES ($1,$2) ON CONFLICT (hostname) DO NOTHING',[hostname,orgId]);
       if ((await client.query("SELECT to_regclass('org_branding_history') IS NOT NULL AS ready")).rows[0].ready) {
         await client.query("INSERT INTO org_branding_history (org_id,revision,branding) SELECT id,COALESCE((branding->>'_revision')::int,0),branding FROM orgs WHERE id=$1 ON CONFLICT DO NOTHING", [orgId]);

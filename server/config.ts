@@ -15,3 +15,11 @@ export function localHostname(host: string | undefined): string | null {
   const hostname = host.split(':')[0].toLowerCase();
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.localhost') ? hostname : null;
 }
+
+export function localPartnerDomainSuffix(): string {
+  const suffix = process.env.APP_PARTNER_DOMAIN_SUFFIX ?? 'matraca.localhost';
+  if (!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)?matraca\.localhost$/.test(suffix)) {
+    throw new Error('APP_PARTNER_DOMAIN_SUFFIX inválido.');
+  }
+  return suffix;
+}

@@ -20,14 +20,16 @@ interface Job {
   exhausted: boolean;
 }
 
-async function claim(db: Database): Promise<Job | null> {
+async function claim(db: Database, requestId?: string): Promise<Job | null> {
   return db.transaction(async client => {
     const candidate = await client.query<Omit<Job, 'leaseToken' | 'exhausted'>>(
       `SELECT j.request_id,j.attempts,r.org_id,r.student_id,r.context,r.scenario
        FROM evaluation_jobs j JOIN evaluation_requests r ON r.id=j.request_id
-       WHERE (j.state='queued' AND j.available_at<=clock_timestamp())
-          OR (j.state='leased' AND j.lease_until<=clock_timestamp())
+       WHERE ($1::uuid IS NULL OR j.request_id=$1)
+         AND ((j.state='queued' AND j.available_at<=clock_timestamp())
+           OR (j.state='leased' AND j.lease_until<=clock_timestamp()))
        ORDER BY j.available_at,j.request_id FOR UPDATE OF j SKIP LOCKED LIMIT 1`,
+      [requestId ?? null],
     );
     const row = candidate.rows[0];
     if (!row) return null;
@@ -129,8 +131,12 @@ async function evaluate(job: Job, provider: EvaluationProvider, timeoutMs: numbe
   }
 }
 
-export async function runEvaluationJob(db: Database, provider: EvaluationProvider, timeoutMs = defaultTimeoutMs): Promise<boolean> {
-  const job = await claim(db);
+export async function runEvaluationJob(
+  db: Database,
+  provider: EvaluationProvider,
+  { timeoutMs = defaultTimeoutMs, requestId }: { timeoutMs?: number; requestId?: string } = {},
+): Promise<boolean> {
+  const job = await claim(db, requestId);
   if (!job) return false;
   const result = await evaluate(job, provider, timeoutMs);
   await settle(db, job, result);

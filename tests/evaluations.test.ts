@@ -121,6 +121,20 @@ describe('fila, relatórios e reserva atômica', () => {
       .toEqual([{ event_type: 'queued' }, { event_type: 'completed' }]);
   });
 
+  it('processa o pedido sintético selecionado sem tocar na fila de outra organização', async () => {
+    const other = await student(1);
+    const demo = await student(1);
+    const pending = await submit(other, await recording(other));
+    const example = await submit(demo, await recording(demo));
+    expect(await runEvaluationJob(db, provider, { requestId: example.id })).toBe(true);
+    expect((await read(demo, example.id)).status).toBe('completed');
+    expect(await runEvaluationJob(db, provider, { requestId: example.id })).toBe(false);
+    expect((await read(other, pending.id)).status).toBe('queued');
+    expect(await getWallet(db, other)).toMatchObject({ balance: 1, reserved: 1 });
+    expect(await runEvaluationJob(db, provider)).toBe(true);
+    expect((await read(other, pending.id)).status).toBe('completed');
+  });
+
   it('insuficiência e tentativa cruzada não criam tarefa nem reserva', async () => {
     const owner = await student(0);
     const foreign = await student(1);
@@ -208,7 +222,7 @@ describe('fila, relatórios e reserva atômica', () => {
     const actor = await student(1);
     const order = await submit(actor, await recording(actor), 'timeout');
     for (let i = 0; i < 3; i++) {
-      await runEvaluationJob(db, provider, 5);
+      await runEvaluationJob(db, provider, { timeoutMs: 5 });
       await db.query("UPDATE evaluation_jobs SET available_at=clock_timestamp()-interval '1 second' WHERE request_id=$1", [order.id]);
     }
     expect(await read(actor, order.id)).toMatchObject({ status: 'failed', attempts: 3, errorCode: 'timeout', report: null });

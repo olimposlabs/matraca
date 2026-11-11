@@ -10,6 +10,7 @@ import {localDatabaseUrl} from '../server/config.js';
 import {emptyCourse,courseDocumentSchema,validatePublication,curriculumToCourse,type CourseDocument} from '../server/course-model.js';
 import {parseCurriculum} from '../server/curriculum.js';
 import {seedCourses} from '../scripts/seed-courses.js';
+import { seedId } from '../scripts/seed-id.js';
 interface Actor{orgId:string;userId:string;host:string;cookie:string}
 const example=():CourseDocument=>({...emptyCourse('Curso de teste'),modules:[{id:'module-1',title:'Clareza',introductionMarkdown:'Introdução',units:[{id:'lesson-1',title:'Mensagem principal',chapter:'Fundamentos',kind:'lesson',mode:'content',bodyMarkdown:'Conteúdo autoral completo.',instructionMarkdown:'Apresente uma ideia em trinta segundos.',checklist:['Defini o objetivo.'],references:[],assetIds:[],prerequisites:[],studyCreditGrant:1,requiresEvaluation:true,activity:{maximumSeconds:30,acceptedMedia:['audio','video'],scenario:'one_on_one',criteria:[{id:'clarity',title:'Clareza',enabled:true,weight:1,modality:'both',descriptors:['Requer apoio','Parcial','Consistente','Flexível']}]}}]}]});
 
@@ -22,6 +23,17 @@ describe('cursos versionados e atribuição',()=>{
  async function draft(a:Actor,document=example()){const created=await call(a,'POST','/api/courses/manage',{title:document.title});expect(created.statusCode).toBe(201);const id=created.json().course.id;const saved=await call(a,'PUT',`/api/courses/manage/${id}`,{expectedRevision:0,document});expect(saved.statusCode).toBe(200);return id;}
  async function publish(a:Actor,id:string,expectedRevision=1){const response=await call(a,'POST',`/api/courses/manage/${id}/publish`,{expectedRevision});expect(response.statusCode).toBe(200);return response.json().version;}
  it('importa a base completa em configuração publicável sem perder o texto',async()=>{const content=await readFile(new URL('../docs/PLANO_DE_ENSINO.md',import.meta.url),'utf8');const course=curriculumToCourse(parseCurriculum(content));expect(courseDocumentSchema.safeParse(course).success).toBe(true);expect(validatePublication(course)).toEqual([]);expect(course.modules.flatMap(module=>module.units)).toHaveLength(48);expect(course.provenance?.sourceMarkdown).toBe(content);expect(course.modules.flatMap(module=>module.units).filter(unit=>unit.kind==='lesson').every(unit=>unit.activity.maximumSeconds===30)).toBe(true);});
+ it('exige áudio para os critérios vocais e vídeo para evidência visual no currículo base', async () => {
+   const content = await readFile(new URL('../docs/PLANO_DE_ENSINO.md', import.meta.url), 'utf8');
+   const course = curriculumToCourse(parseCurriculum(content));
+   for (const unit of course.modules.flatMap(module => module.units)) {
+     expect(unit.activity.criteria).toEqual(expect.arrayContaining([
+       expect.objectContaining({ title: 'Inteligibilidade vocal', modality: 'audio' }),
+       expect.objectContaining({ title: 'Expressividade e ritmo', modality: 'audio' }),
+       expect.objectContaining({ title: 'Recursos visuais e corporais', modality: 'visual' }),
+     ]));
+   }
+ });
  it('rejeita publicação incompleta, ciclos e critérios sem peso',()=>{expect(validatePublication(emptyCourse('Vazio')).length).toBeGreaterThan(0);const course=example();course.modules[0].units[0].prerequisites=['lesson-1'];course.modules[0].units[0].activity.criteria[0].weight=0;expect(validatePublication(course)).toContain('Os pré-requisitos contêm um ciclo.');expect(validatePublication(course).some(issue=>issue.includes('peso positivo'))).toBe(true);});
  it('salva com revisão otimista e não duplica publicação repetida',async()=>{const admin=await actor();const id=await draft(admin);expect((await call(admin,'PUT',`/api/courses/manage/${id}`,{expectedRevision:0,document:example()})).statusCode).toBe(409);const first=await publish(admin,id);const second=await publish(admin,id);expect(second.id).toBe(first.id);expect((await db.query('SELECT id FROM course_versions WHERE course_id=$1',[id])).rowCount).toBe(1);});
  it('republica curso arquivado sem duplicar o snapshot idêntico',async()=>{
@@ -138,5 +150,26 @@ describe('cursos versionados e atribuição',()=>{
   expect((await db.query('SELECT id FROM course_assets WHERE org_id=$1',[admin.orgId])).rowCount).toBe(0);
   expect(await readdir(join(root,'objects','course-assets',admin.orgId))).toEqual([]);
  });
- it('seed inicial publica duas cópias completas e repetir preserva alterações',async()=>{const ids=new Map<string,string>();const stable=(key:string)=>{if(!ids.has(key))ids.set(key,randomUUID());return ids.get(key)!;};for(const slug of ['matraca','parceiro']){const orgId=randomUUID();await db.query('INSERT INTO orgs(id,slug,name,kind) VALUES($1,$2,$2,$3)',[orgId,slug,slug==='matraca'?'matraca':'partner']);await actor('student',orgId,slug==='matraca'?'matraca':'partner');}await db.transaction(client=>seedCourses(client,stable));const courses=await db.query('SELECT id,draft FROM courses WHERE id=ANY($1::uuid[])',[[stable('course:matraca:base'),stable('course:parceiro:base')]]);expect(courses.rowCount).toBe(2);expect(courses.rows.every(row=>row.draft.modules.length===12)).toBe(true);await db.query('UPDATE courses SET title=$2 WHERE id=$1',[stable('course:parceiro:base'),'Edição preservada']);await db.transaction(client=>seedCourses(client,stable));expect((await db.query('SELECT title FROM courses WHERE id=$1',[stable('course:parceiro:base')])).rows[0].title).toBe('Edição preservada');});
+ it('seed publica duas cópias completas, matricula só personas e preserva edições', async () => {
+   for (const slug of ['matraca', 'parceiro']) {
+     const orgId = seedId(slug);
+     await db.query('INSERT INTO orgs(id,slug,name,kind) VALUES($1,$2,$2,$3)', [orgId, slug, slug === 'matraca' ? 'matraca' : 'partner']);
+     const email = 'aluno@exemplo.test';
+     await db.query("INSERT INTO users(id,org_id,name,email,roles,status) VALUES($1,$2,'Aluno do seed',$3,ARRAY['student'],'active')", [seedId(`${slug}:${email}`), orgId, email]);
+     await actor('student', orgId, slug === 'matraca' ? 'matraca' : 'partner');
+   }
+   await db.transaction(client => seedCourses(client, seedId));
+   const partnerCourse = seedId('course:parceiro:base');
+   const courseIds = [seedId('course:matraca:base'), partnerCourse];
+   const courses = await db.query('SELECT draft FROM courses WHERE id=ANY($1::uuid[])', [courseIds]);
+   expect(courses.rowCount).toBe(2);
+   expect(courses.rows.every(row => row.draft.modules.length === 12)).toBe(true);
+   const enrollments = await db.query('SELECT student_id FROM course_enrollments WHERE course_id=ANY($1::uuid[])', [courseIds]);
+   expect(enrollments.rows.map(row => row.student_id).sort()).toEqual([
+     seedId('matraca:aluno@exemplo.test'), seedId('parceiro:aluno@exemplo.test'),
+   ].sort());
+   await db.query('UPDATE courses SET title=$2 WHERE id=$1', [partnerCourse, 'Edição preservada']);
+   await db.transaction(client => seedCourses(client, seedId));
+   expect((await db.query('SELECT title FROM courses WHERE id=$1', [partnerCourse])).rows[0].title).toBe('Edição preservada');
+ });
 });
