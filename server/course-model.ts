@@ -56,6 +56,11 @@ export function emptyCourse(title:string):CourseDocument {
 export function curriculumToCourse(source:CourseDraftV1):CourseDocument {
   const references=new Map(source.references.map(reference=>[reference.id,reference]));
   const descriptors=source.evaluation.levels.map(level=>level.description) as [string,string,string,string];
+  const modalities = new Map<string, CourseUnit['activity']['criteria'][number]['modality']>([
+    ['Inteligibilidade vocal', 'audio'],
+    ['Expressividade e ritmo', 'audio'],
+    ['Recursos visuais e corporais', 'visual'],
+  ]);
   return {...emptyCourse('Oratória: da primeira fala à apresentação completa'),description:'12 módulos de prática orientada para clareza, voz, presença, estrutura e adaptação.',catalogVisible:true,journey:'adaptive',introductionMarkdown:source.introductionMarkdown,appendicesMarkdown:source.appendicesMarkdown,
     provenance:{sourcePath:source.provenance.sourcePath,sourceSha256:source.provenance.sourceSha256,sourceMarkdown:source.sourceMarkdown},
     modules:source.modules.map(module=>({id:module.id,title:module.title,introductionMarkdown:module.prefaceMarkdown,units:module.units.map(unit=>({
@@ -63,7 +68,7 @@ export function curriculumToCourse(source:CourseDraftV1):CourseDocument {
       instructionMarkdown:unit.activities.map(activity=>activity.instructionMarkdown).join('\n\n'),checklist:unit.checklist.map(item=>item.text),
       references:[...new Set([...unit.referenceIds,...unit.inheritedReferenceIds])].map(id=>references.get(id)).filter((item):item is NonNullable<typeof item>=>Boolean(item)).map(reference=>({title:reference.labels.join(' · '),href:reference.href})),
       assetIds:[],prerequisites:[],studyCreditGrant:unit.kind==='review'?5:1,requiresEvaluation:true,
-      activity:{maximumSeconds:unit.kind==='review'?300:30,acceptedMedia:['audio','video'],scenario:'one_on_one',criteria:source.evaluation.dimensions.map(dimension=>({id:dimension.id,title:dimension.title,enabled:true,weight:1,modality:dimension.title.includes('corporais')?'visual':'both',descriptors}))},
+      activity:{maximumSeconds:unit.kind==='review'?300:30,acceptedMedia:['audio','video'],scenario:'one_on_one',criteria:source.evaluation.dimensions.map(dimension=>({id:dimension.id,title:dimension.title,enabled:true,weight:1,modality:modalities.get(dimension.title)??'both',descriptors}))},
     }))})),
   };
 }
