@@ -2,7 +2,7 @@
 
 Acesse `/backoffice/operations` com o operador do Matraca. Selecione a organização e, quando disponível, escola, aluno e período. O painel usa o instante de conclusão da avaliação para somar minutos e o instante do lançamento para contabilizar créditos. O filtro por escola usa o vínculo vigente no instante do evento. O saldo representa a carteira atual, enquanto as contagens de uso respeitam o período selecionado.
 
-O painel separa dados do produto de valores simulados. O custo estimado da avaliação é a soma das durações verificadas em minutos multiplicada pelo valor configurado em centavos por minuto, com arredondamento ao centavo para exibição. Pedidos e faturas representam resultados do simulador de pagamento. O extrato é a fonte de créditos consumidos, reservados e estornados.
+O painel separa dados do produto de valores simulados. O custo estimado da avaliação é a soma das durações verificadas em minutos multiplicada pelo valor configurado em centavos por minuto, com arredondamento para cima ao centavo. Pedidos e faturas representam resultados do simulador de pagamento. O extrato é a fonte de créditos consumidos, reservados e estornados.
 
 ## Simulações e limites
 
