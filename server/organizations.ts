@@ -76,6 +76,10 @@ export class OrganizationError extends Error {
 export async function registerOrganizations(app: FastifyInstance): Promise<void> {
   const port = Number(process.env.APP_PUBLIC_PORT ?? 5173);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('APP_PUBLIC_PORT inválida.');
+  const domainSuffix = process.env.APP_PARTNER_DOMAIN_SUFFIX ?? 'matraca.localhost';
+  if (!/^(?:[a-z0-9][a-z0-9-]{0,24}\.)?matraca\.localhost$/.test(domainSuffix)) {
+    throw new Error('APP_PARTNER_DOMAIN_SUFFIX inválido.');
+  }
   await app.register(multipart);
 
   app.get('/api/backoffice/orgs', async (request) => {
@@ -88,7 +92,7 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
     const data = validate(createSchema, request.body);
     const id = randomUUID();
     const adminId = randomUUID();
-    const hostname = `${data.slug}.matraca.localhost`;
+    const hostname = `${data.slug}.${domainSuffix}`;
     const branding = { ...DEFAULT_BRANDING, displayName: data.name.slice(0, 80), _revision: 0 };
     try {
       const result = await app.db.transaction(async (client) => {
@@ -177,8 +181,7 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
 
 const orgSelect = `SELECT o.*,
   (SELECT d.hostname FROM domains d WHERE d.org_id=o.id
-    ORDER BY (d.hostname=CASE WHEN o.kind='matraca' THEN 'matraca.localhost'
-      ELSE o.slug||'.matraca.localhost' END) DESC,d.hostname LIMIT 1) AS hostname,
+    ORDER BY (d.hostname='matraca.localhost' OR d.hostname LIKE '%.matraca.localhost') DESC, length(d.hostname) DESC, d.hostname LIMIT 1) AS hostname,
   (SELECT count(*)::integer FROM users u WHERE u.org_id=o.id) AS user_count FROM orgs o`;
 
 async function operator(request: FastifyRequest): Promise<AuthIdentity> {

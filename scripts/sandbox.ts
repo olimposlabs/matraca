@@ -1,4 +1,5 @@
 import { execFileSync, spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdir, realpath, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -21,8 +22,9 @@ if (!Number.isInteger(port) || port < 1024 || port > 65535 || port === 5173 || p
 }
 if (action === 'reset' && values.confirm !== name) throw new Error('Para apagar o sandbox, confirme o nome exato com --confirm.');
 
-const schema = `matraca_sandbox_${name}`;
 const storage = resolve('.data', 'sandboxes', name);
+const workspaceId = createHash('sha256').update(storage).digest('hex').slice(0, 12);
+const schema = `matraca_sandbox_${name}_${workspaceId}`;
 const objects = resolve(storage, 'objects');
 const clientRoot = resolve(storage, 'client');
 startLocalDatabase();
@@ -46,17 +48,19 @@ try {
     if (await realpath(storage) !== storage) throw new Error('O caminho do sandbox contém um link simbólico.');
     const database = new URL(localDatabaseUrl);
     database.searchParams.set('options', `-c search_path=${schema}`);
+    const hostLabel = name.replaceAll('_', '-');
     const env = {
       ...process.env, APP_MODE: 'local', DATABASE_URL: database.toString(), STORAGE_ROOT: objects,
       PORT: String(port), APP_PUBLIC_PORT: String(port), APP_CLIENT_ROOT: clientRoot,
+      APP_PARTNER_DOMAIN_SUFFIX: `${hostLabel}.matraca.localhost`,
     };
     for (const task of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', task], { env, stdio: 'inherit' });
     if (values.examples) execFileSync('npm', ['run', 'db:seed:examples', '--', '--invoice'], { env, stdio: 'inherit' });
     const isolated = createDatabase(database.toString());
     const domains = {
-      matraca: `${name}.matraca.localhost`,
-      parceiro: `parceiro.${name}.matraca.localhost`,
-      backoffice: `backoffice.${name}.matraca.localhost`,
+      matraca: `${hostLabel}.matraca.localhost`,
+      parceiro: `parceiro.${hostLabel}.matraca.localhost`,
+      backoffice: `backoffice.${hostLabel}.matraca.localhost`,
     };
     try {
       for (const [slug, hostname] of Object.entries(domains)) {
