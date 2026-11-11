@@ -202,12 +202,20 @@ export async function updateStudy(
   return progressView({ ...enrollment, status: complete ? 'completed' : enrollment.status }, progressNow, strict);
 }
 
-export async function requireStudyForEvaluation(client: PoolClient, target: JourneyTarget, unitId: string) {
-  const studied = await client.query(
-    `SELECT 1 FROM course_unit_progress WHERE enrollment_id=$1 AND org_id=$2 AND student_id=$3
-       AND unit_id=$4 AND studied_at IS NOT NULL`, [target.enrollmentId, target.orgId, target.studentId, unitId],
-  );
-  if (!studied.rowCount) throw new JourneyError(409, 'Conclua o estudo e o checklist antes de solicitar a avaliação desta unidade.');
+export async function requireStudyForEvaluation(client: PoolClient, target: JourneyTarget, unitId: string, strict: boolean) {
+  const enrollment = await enrollmentFor(client, target, false);
+  if (!enrollment) throw new JourneyError(404, 'Matrícula não encontrada.');
+  const progress = await readProgress(client, enrollment.id);
+  const record = progress.get(unitId);
+  if (!record?.studied_at) throw new JourneyError(409, 'Conclua o estudo e o checklist antes de solicitar a avaliação desta unidade.');
+  if (record.completed_at) return;
+  const sequential = strict || enrollment.document.journey === 'sequential';
+  const units = orderedUnits(allUnits(enrollment), sequential);
+  const unit = units.find(item => item.id === unitId);
+  if (!unit) throw new JourneyError(404, 'Unidade não encontrada nesta versão.');
+  if (blockers(unit, units, progress, sequential).length) {
+    throw new JourneyError(409, 'Conclua as unidades anteriores exigidas antes de solicitar a avaliação.');
+  }
 }
 
 export async function applyCourseEvaluation(

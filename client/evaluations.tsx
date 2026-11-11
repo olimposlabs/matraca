@@ -24,6 +24,8 @@ interface EvaluationSummary {
 }
 interface EvaluationDetail extends EvaluationSummary {
   criteria: EvaluationCriterion[];
+  activity: { title: string; instructionMarkdown: string } | null;
+  audienceScenario: 'one_on_one' | 'executive' | 'audience' | null;
   report: EvaluationReport | null;
 }
 interface EvaluationList {
@@ -36,6 +38,7 @@ interface EvaluationList {
 const statusLabels: Record<EvaluationStatus, string> = {
   queued: 'Na fila', processing: 'Em processamento', completed: 'Concluída', failed: 'Falhou', cancelled: 'Cancelada',
 };
+const audienceLabels = { one_on_one: 'Conversa individual', executive: 'Reunião executiva', audience: 'Grande plateia' };
 const scenarios: [EvaluationScenario, string][] = [
   ['success', 'Resposta normal'], ['delay', 'Resposta demorada'], ['transient', 'Falha recuperável'],
   ['permanent', 'Falha definitiva'], ['timeout', 'Tempo excedido'], ['invalid', 'Resposta inválida'],
@@ -224,7 +227,12 @@ function EvaluationDetailPage({ id }: { id: string }) {
     {!detail && !error && <p role="status">Carregando avaliação…</p>}
     {detail && <>
       <header className="evaluation-heading">
-        <div><h1>{detail.objective}</h1><p>Simulação local · {clock(detail.durationMicroseconds)} · {dateLabel(detail.createdAt)}</p></div>
+        <div>
+          <h1>{detail.objective}</h1>
+          <p>Simulação local · {clock(detail.durationMicroseconds)} · {dateLabel(detail.createdAt)}</p>
+          {detail.activity && <p>Atividade do curso: {detail.activity.title}</p>}
+          {detail.audienceScenario && <p>Cenário: {audienceLabels[detail.audienceScenario]}</p>}
+        </div>
         <span className={`evaluation-status evaluation-status-${detail.status}`} role="status">{statusLabels[detail.status]}</span>
       </header>
       {isActive(detail.status) && <div className="evaluation-panel evaluation-progress">
@@ -257,6 +265,7 @@ function EvaluationReportContent({ detail, onSeek }: { detail: EvaluationDetail;
       <div>
         <h2>Relatório simulado</h2>
         <p>{report.summary}</p>
+        <p>{detail.activity ? `Rubrica da atividade · versão ${report.rubricVersion.match(/:v(\d+)$/)?.[1] ?? 'registrada'}` : 'Rubrica Matraca · versão 1'}</p>
         {report.overallLevel !== null && <p><strong>Nível simulado {report.overallLevel.toLocaleString('pt-BR')}</strong> de 4</p>}
       </div>
       <button className="button button-secondary evaluation-print" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Imprimir</button>

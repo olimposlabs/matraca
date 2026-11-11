@@ -44,6 +44,8 @@
 }
 @media print {
   .evaluation-page { max-width: none; padding: 0; }
-  .evaluation-back, .evaluation-print, .evaluation-player, .evaluation-evidence { display: none !important; }
+  .evaluation-back, .evaluation-print, .evaluation-player { display: none !important; }
+  body:has(.evaluation-report) .site-header, body:has(.evaluation-report) .workspace-nav-wrap, body:has(.evaluation-report) .site-footer { display: none; }
+  .evaluation-evidence { border: 0; padding: 0; box-shadow: none; }
   .evaluation-panel { break-inside: avoid; border-color: #b6b6b6; }
 }

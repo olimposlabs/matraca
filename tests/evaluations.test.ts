@@ -5,13 +5,12 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { emptyCourse, validatePublication, type CourseUnit } from '../server/course-model.js';
+import { emptyCourse, validatePublication, type CourseDocument, type CourseUnit } from '../server/course-model.js';
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
 import { getWallet, grantCredits } from '../server/wallet.js';
-import { emptyCourse, type CourseDocument } from '../server/course-model.js';
 
 interface Student {
   orgId: string;
@@ -137,22 +136,31 @@ describe('fila, relatórios e reserva atômica', () => {
   it('preserva cenário e enunciado da versão publicada junto do objetivo pessoal', async () => {
     const actor = await student(2);
     const courseId = randomUUID(), versionId = randomUUID(), enrollmentId = randomUUID();
-    const document: CourseDocument = { ...emptyCourse('Curso sintético'), modules: [{ id: 'module-1', title: 'Clareza', introductionMarkdown: '', units: [{
+    const document: CourseDocument = { ...emptyCourse('Curso sintético'), journey: 'adaptive', modules: [{ id: 'module-1', title: 'Clareza', introductionMarkdown: '', units: [{
       id: 'lesson-1', title: 'Proposta em três partes', chapter: '', kind: 'lesson', mode: 'content', bodyMarkdown: 'Conteúdo de teste.',
       instructionMarkdown: 'Apresente contexto, proposta e próximo passo para uma reunião executiva.', checklist: [], references: [], assetIds: [], prerequisites: [],
       studyCreditGrant: 1, requiresEvaluation: true,
       activity: { maximumSeconds: 30, acceptedMedia: ['audio'], scenario: 'executive', criteria: [{ id: 'clarity', title: 'Clareza', enabled: true, weight: 1, modality: 'audio', descriptors: ['Inicial', 'Parcial', 'Consistente', 'Adaptado'] }] },
     }] }] };
+    const activity = document.modules[0].units[0];
+    document.modules[0].units.unshift({ ...activity, id: 'intro', title: 'Introdução' });
     await db.query("INSERT INTO courses(id,org_id,title,status,draft) VALUES($1,$2,$3,'published',$4)", [courseId, actor.orgId, document.title, document]);
     await db.query('INSERT INTO course_versions(id,org_id,course_id,version,document) VALUES($1,$2,$3,1,$4)', [versionId, actor.orgId, courseId, document]);
     await db.query("INSERT INTO course_enrollments(id,org_id,course_id,version_id,student_id,source,source_ref) VALUES($1,$2,$3,$4,$5,'demo','test')", [enrollmentId, actor.orgId, courseId, versionId, actor.userId]);
     const media = await recording(actor);
     await db.query("UPDATE recordings SET purpose='course',enrollment_id=$2,version_id=$3,unit_id='lesson-1',scenario='executive',objective='Quero falar com mais calma.' WHERE id=$1", [media, enrollmentId, versionId]);
+    const study = await call(actor, 'PUT', `/api/journey/courses/${enrollmentId}/study`, { unitId: 'lesson-1', checked: [], completeStudy: true });
+    expect(study.statusCode, study.body).toBe(200);
+    await db.query('UPDATE orgs SET settings=$2 WHERE id=$1', [actor.orgId, { strictJourney: true }]);
+    const blocked = await call(actor, 'POST', '/api/evaluations', { recordingId: media, clientKey: randomUUID() });
+    expect(blocked.statusCode, blocked.body).toBe(409);
+    expect((await getWallet(db, actor)).reserved).toBe(0);
+    await db.query('UPDATE orgs SET settings=$2 WHERE id=$1', [actor.orgId, { strictJourney: false }]);
     const order = await submit(actor, media);
     const snapshot = (await db.query('SELECT context FROM evaluation_requests WHERE id=$1', [order.id])).rows[0].context;
     expect(snapshot).toMatchObject({
       objective: 'Quero falar com mais calma.', audienceScenario: 'executive',
-      activity: { title: 'Proposta em três partes', instructionMarkdown: document.modules[0].units[0].instructionMarkdown },
+      activity: { title: 'Proposta em três partes', instructionMarkdown: activity.instructionMarkdown },
       rubricVersion: `${versionId}:lesson-1:v1`,
     });
     await db.query('UPDATE courses SET draft=$2 WHERE id=$1', [courseId, { ...document, title: 'Rascunho posterior' }]);
