@@ -1,12 +1,18 @@
 # Testes
 
-Na criação destas diretrizes, não havia código de aplicação, manifesto ou suíte de testes na árvore de trabalho.
+A fase 01 introduz Vitest para API, armazenamento e prova de mídia, TypeScript estrito, ESLint e build Vite. As jornadas Playwright serão acrescentadas junto das telas funcionais.
 
-| Tema | Estado inicial |
+| Comando | Finalidade |
 | --- | --- |
-| Ferramentas de teste, lint e build | **A definir** |
-| Comandos confirmados no projeto | Nenhum nesta etapa |
-| Medição de cobertura | **A definir** |
+| npm run typecheck | Tipos de cliente, servidor e testes |
+| npm run lint | Análise estática |
+| npm test | Testes locais. Requer banco para os testes de saúde positivos |
+| npm run build | Tipos e build da interface |
+| npm run test:e2e | Jornadas de navegador, a serem incluídas nas fases de produto |
+
+As fixtures de mídia são sintéticas. FFmpeg é usado apenas para gerar amostras de teste. O probe de produção usa mediabunny. Nenhuma pessoa real aparece nas fixtures.
+
+Resultados e limitações estão no [registro SPI](EXECUCAO_SPI.md). A existência de um comando não representa validação concluída.
 
 ## Estratégia
 

@@ -1,6 +1,6 @@
 # Matraca · guia para agentes
 
-Matraca é uma plataforma em descoberta para desenvolver oratória com avaliação por IA, destinada a usuários avulsos e organizações white label. O [plano de ensino](docs/PLANO_DE_ENSINO.md) registra o contexto do piloto e uma proposta pedagógica a validar. A diretriz técnica é serverless. Stack, componentes e escopo da implementação estão **A definir**. Ao introduzir componentes, siga os [padrões de engenharia](docs/ENGINEERING.md) e registre as fronteiras aprovadas em [Arquitetura](docs/ARCHITECTURE.md).
+Matraca é uma plataforma em descoberta para desenvolver oratória com avaliação por IA, destinada a usuários avulsos e organizações white label. O [plano de ensino](docs/PLANO_DE_ENSINO.md) registra o contexto do piloto e uma proposta pedagógica a validar. A diretriz técnica é serverless. O piloto local está em implementação. A autorização mais recente define AWS como destino futuro, sem deploy nesta execução. Consulte o plano e o registro SPI antes de alterar a aplicação. Ao introduzir componentes, siga os [padrões de engenharia](docs/ENGINEERING.md) e registre as fronteiras aprovadas em [Arquitetura](docs/ARCHITECTURE.md).
 
 ## Fluxo de trabalho
 
@@ -23,6 +23,7 @@ Matraca é uma plataforma em descoberta para desenvolver oratória com avaliaç�
 | Tarefa | Fonte |
 | --- | --- |
 | Entender o produto e o setup | [README](README.md) |
+| Retomar a execução, consultar fase, PR e gates | [Registro SPI](docs/EXECUCAO_SPI.md) |
 | Consultar fases, padrões propostos e critérios de entrega do piloto | [Plano de execução do piloto](docs/PLANO_DE_EXECUCAO_PILOTO.md) |
 | Consultar o piloto, as aulas, as avaliações e as mentorias propostas | [Plano de ensino](docs/PLANO_DE_ENSINO.md) |
 | Consultar consumo, concessões, pacotes, preços e faturamento | [Créditos e cobrança](docs/CREDITOS_E_COBRANCA.md) |
