@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Link, Navigate, NavLink, useLocation, useSearchParams } from 'react-router';
-import { Activity, ArrowRight, AudioLines, BookOpen, Building2, Check, ChevronRight, CircleCheck, ClipboardList, LockKeyhole, LogOut, Mail, MessageSquare, RefreshCw, ShieldCheck, Sparkles, Trophy, ShoppingBag, ReceiptText, UserRound, Users, Wallet, Compass, TrendingUp } from 'lucide-react';
+import { Activity, ArrowRight, AudioLines, BookOpen, Building2, Check, ChevronRight, CircleCheck, ClipboardList, LockKeyhole, LogOut, Mail, MessageSquare, RefreshCw, Trophy, ShoppingBag, ReceiptText, UserRound, Users, Wallet, Compass, TrendingUp } from 'lucide-react';
 import { ApiError, apiJson } from './api';
 
 export type Organization = {
