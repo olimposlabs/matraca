@@ -8,6 +8,8 @@ Entregar o piloto completo e executável localmente, com portal público, área 
 
 O fundador fará seus testes somente após a implementação, os testes automatizados, a inspeção das telas e a correção das falhas encontradas. A aprovação deste plano autoriza executar todas as fases sem aprovações intermediárias de decisões rotineiras. Mudanças que alterem materialmente o escopo aprovado ou operações externas não abrangidas por ele serão explicitadas.
 
+Em 16 de novembro de 2026, o fundador reafirmou a concentração de suas validações manuais em um único E2E final, após todo o escopo implementado. Essa homologação fica pendente até sua execução, sem impedir o avanço do desenvolvimento nem alterar os resultados técnicos já observados. [Matriz de aceite](technical/PILOT_ACCEPTANCE.md)
+
 Fontes de requisitos são o [plano de ensino](PLANO_DE_ENSINO.md), as regras de [créditos e cobrança](CREDITOS_E_COBRANCA.md) e as decisões do fundador. Os padrões abaixo preenchem pendências para permitir execução autônoma. Foram aprovados com o plano, sujeitos às alterações explícitas posteriores do fundador.
 
 ## Fronteira entre aplicação e simulação
@@ -73,7 +75,7 @@ A revisão também tornou explícitos dois requisitos já solicitados. Avaliaç�
 
 ## Modo de execução
 
-A fase 01 está em execução. O estado corrente está no registro EXECUCAO_SPI.md. Cada fase terá implementação, validação dos critérios, correção das falhas e atualização documental. Uma fase dependente só será considerada concluída depois de passar pelos requisitos anteriores.
+O estado corrente das fases está no [registro SPI](EXECUCAO_SPI.md). Cada fase compreende implementação, validação dos critérios, correção das falhas e atualização documental. Uma fase dependente só será considerada concluída depois de passar pelos requisitos anteriores.
 
 Trabalhos independentes poderão ocorrer em paralelo, com contratos e responsabilidade por arquivos definidos. Créditos e autorização terão revisão específica antes de sua integração às telas. A execução manterá um registro curto com fase, passo, resultado dos testes, problemas resolvidos e próximos itens. Retomadas usarão esse registro, sem presumir conclusão pela passagem do tempo.
 
