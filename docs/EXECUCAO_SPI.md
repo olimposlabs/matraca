@@ -24,11 +24,19 @@ Execução autorizada em 10 de novembro de 2026. O fundador autorizou desenvolvi
 | 07 | Integrada com revisão independente e CI verde | PR #7, head 0aeae0a, merge 2c39dd5 |
 | 08 | Integrada com revisão independente e CI verde | PR #8, head 7f4c6c1, merge 0b23ff5 |
 | 09 | Integrada com revisão independente e CI verde | PR #9, head c564c8f, merge 38ca8b6 |
-| 10 | Mentorias e plano individual validados, PR em preparação | 238 testes e quatro fluxos de navegador |
-| 11–13 | Desenvolvimento paralelo | Worktrees locais por fase |
-| 14 | Pendente | Dependências e aceite no plano aprovado |
+| 10 | Integrada com revisão independente e CI verde | PR #10, head 1c29c74, merge 2371826 |
+| 11 | Integrada com revisão independente e CI verde | PR #11, head 36c5c7f, merge 291a558 |
+| 12 | Integrada com revisão independente e CI verde | PR #12, head b6d6cbf, merge c45a339 |
+| 13 | Integrada com revisão independente e CI verde | PR #13, head 0415246, merge af01836 |
+| 14 | Integrada com revisão independente e CI verde | PR #14, head 8ad7966, merge 0f9081f; fechamento documental na PR #15, merge 5e4b8b4 |
 
 Em 11 de novembro de 2026, o fundador autorizou o mecanismo de revisão independente com CI verde após a ausência de resposta do Codex Review no GitHub. As fases 01–04 foram integradas por PR na ordem, com o commit revisado fixado no merge e a mesma árvore validada pela CI. O ambiente local permaneceu em execução. AWS e deploy continuam para uma etapa futura.
+
+## Homologação final do fundador
+
+Em 16 de novembro de 2026, o fundador reafirmou que suas validações e testes manuais devem ocorrer em um único E2E final, depois de todo o escopo implementado, sem aprovações manuais intermediárias. O desenvolvimento das 14 fases do piloto local está concluído. O quadro acima foi reconciliado com os registros de conclusão de cada fase, substituindo os estados intermediários obsoletos das fases 10–14.
+
+A homologação manual do fundador permanece **pendente de execução no E2E final**. A orientação permite prosseguir sem aguardar essa homologação e preserva os resultados técnicos já registrados. Testes ainda não executados não recebem resultado de aprovação. O roteiro consolidado é a matriz J01–J20, com captura em dispositivos físicos na rodada manual. AWS, deploy e integrações externas reais continuam na etapa futura já definida. [Matriz de aceite](technical/PILOT_ACCEPTANCE.md)
 
 ## Fase 01
 

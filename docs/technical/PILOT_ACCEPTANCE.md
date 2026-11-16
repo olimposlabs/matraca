@@ -4,6 +4,14 @@ Esta matriz registra as evidências observadas em 11/11/2026 para o [plano aprov
 
 **UI observada** significa interação com a interface e API/banco reais, com serviços externos simulados. **Parcial** indica que somente parte da jornada ou sua camada de API foi executada. **Pendente** significa que o resultado necessário ainda não está disponível. Dados sintéticos preparados diretamente no banco são identificados como fixtures; não representam funcionalidades que o usuário final precise executar manualmente.
 
+## Homologação manual consolidada
+
+**Estado em 16/11/2026: pendente de execução no E2E final pelo fundador.** As 14 fases do piloto local foram implementadas e integradas. Por orientação do fundador, suas validações manuais ficam concentradas em uma única rodada final, sem bloqueios intermediários de desenvolvimento por falta de teste manual.
+
+Na rodada final, percorrer J01–J20 no mesmo build, com os perfis de aluno avulso, aluno parceiro, professor, gestor escolar, administrador da organização e operador do backoffice. Incluir captura e reprodução em câmera e celular físicos. Registrar o SHA, ambiente, navegador, dispositivo, resultado de cada jornada e eventuais correções, repetindo os casos afetados antes do aceite.
+
+As evidências técnicas abaixo permanecem históricas e não representam a homologação manual do fundador. IA, e-mail e pagamentos seguem simulados no escopo local. Validação de provedores reais, custo de IA e infraestrutura AWS pertence à etapa futura registrada em [dívida técnica](../TECH_DEBT.md).
+
 ## Preparação e registro da reprodução
 
 1. Use PostgreSQL local e um sandbox exclusivo, com seed novo. Não execute os scripts históricos de `/tmp` contra a demonstração: alguns possuem portas e caminhos fixos e esperam uma persona sem progresso. Registre branch, SHA, alterações locais, porta, nome do schema e caminho de armazenamento antes de começar.
