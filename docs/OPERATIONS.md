@@ -44,3 +44,7 @@ npm run pilot:sandbox -- reset --name revisao --confirm revisao
 ```
 
 A operação cotidiana, os cenários locais e o fechamento sob demanda estão descritos em [Console de operações](technical/OPERATIONS_CONSOLE.md).
+
+## OpenAI real no ambiente local
+
+Autorizada em 24/11/2026: `npm run dev:openai`, ou `EVALUATION_PROVIDER=openai` ao iniciar a API. O segredo é lido no servidor, do ambiente ou do Chaves do macOS. `npm run dev` e CI preservam o modo mock. [Operação, modelos e smoke pago](technical/OPENAI.md).

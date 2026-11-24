@@ -13,6 +13,8 @@ npm run dev
 
 O comando inicia PostgreSQL local, aplica as migrações, confere o seed e sobe API e Vite. A API responde em `http://127.0.0.1:3001/api/health`. O volume do Docker preserva o banco, e os arquivos privados ficam em `.data/objects`.
 
+Para avaliar com a **OpenAI real**, use `npm run dev:openai`. A API lê a chave do ambiente do servidor ou do item `Matraca IA DEV - OpenAI` no Chaves do macOS. Áudio e vídeo de até cinco minutos geram relatório real; o vídeo é analisado por quadros amostrados. O comando normal mantém o mock. [Configuração, custos e limitações](docs/technical/OPENAI.md).
+
 | Área | Login | Personas |
 | --- | --- | --- |
 | Matraca direto | [Portal Matraca](http://matraca.localhost:5173/login) | `ana@exemplo.test`, `aluno2@matraca.test` a `aluno6@matraca.test` |
