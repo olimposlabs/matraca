@@ -80,6 +80,7 @@ function normalized(value: string) {
 
 interface ResultRow {
   id: string;
+  provider: 'mock' | 'openai';
   status: string;
   report: {
     overallLevel: number | null;
@@ -106,7 +107,7 @@ export async function registerJourney(app: FastifyInstance) {
       const person = await client.query<{ profile: unknown }>('SELECT profile FROM users WHERE org_id=$1 AND id=$2', [actor.org.id, actor.user.id]);
       const profile = publicProfile(person.rows[0]?.profile);
       const result = await client.query<ResultRow>(
-        `SELECT r.id,r.status,er.report FROM evaluation_requests r
+        `SELECT r.id,r.status,r.provider,er.report FROM evaluation_requests r
          JOIN recordings m ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
          LEFT JOIN evaluation_results er ON er.request_id=r.id
          WHERE r.org_id=$1 AND r.student_id=$2 AND m.purpose='diagnostic' ORDER BY r.created_at DESC,r.id DESC LIMIT 1`,
@@ -143,6 +144,7 @@ export async function registerJourney(app: FastifyInstance) {
       return {
         profile, courses: courses.rows, coursesEnabled, strictJourney,
         diagnostic: {
+          simulated: diagnostic?.provider !== 'openai',
           enabled: actor.org.settings.diagnosticEnabled !== false,
           evaluationId: diagnostic?.id ?? null,
           status: diagnostic?.status ?? null,
@@ -209,7 +211,7 @@ export async function registerJourney(app: FastifyInstance) {
         objective: string;
         criteria: CourseDocument['modules'][number]['units'][number]['activity']['criteria'];
       }>(
-        `SELECT r.id,r.status,r.recording_id AS "recordingId",r.completed_at AS "completedAt",
+        `SELECT r.id,r.status,r.provider,r.recording_id AS "recordingId",r.completed_at AS "completedAt",
             m.purpose,m.objective,r.context->'criteria' AS criteria,er.report
          FROM evaluation_results er JOIN evaluation_requests r ON r.id=er.request_id
          JOIN recordings m ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
@@ -217,7 +219,7 @@ export async function registerJourney(app: FastifyInstance) {
         [actor.org.id, target],
       );
       const attempts = found.rows.reverse().map(row => ({
-        id: row.id, recordingId: row.recordingId, completedAt: row.completedAt,
+        id: row.id, provider: row.provider, recordingId: row.recordingId, completedAt: row.completedAt,
         purpose: row.purpose, objective: row.objective, rubricVersion: row.report?.rubricVersion,
         overallLevel: row.report?.overallLevel,
         scores: row.report?.observations.map(item => ({

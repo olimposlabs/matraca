@@ -10,6 +10,7 @@ import { readOperationPolicy } from '../operation-policy.js';
 import { reserveCreditsInTransaction } from '../wallet.js';
 import { evaluationScenarios, type EvaluationContext, type EvaluationCriterion } from './provider.js';
 import { cancelEvaluationInTransaction } from './worker.js';
+import { liveEvaluationMaximumSeconds } from './openai-config.js';
 
 class EvaluationError extends Error {
   constructor(readonly statusCode: 400 | 403 | 404 | 409 | 429, message: string) {
@@ -21,6 +22,7 @@ const createInput = z.object({
   recordingId: z.uuid(),
   clientKey: z.uuid(),
   scenario: z.enum(evaluationScenarios).optional(),
+  expectedProvider: z.enum(['mock', 'openai']).optional(),
 }).strict();
 const listQuery = z.object({
   studentId: z.uuid().optional(),
@@ -65,22 +67,25 @@ const summary = `r.id,r.student_id AS "studentId",r.recording_id AS "recordingId
   r.created_at AS "createdAt",r.completed_at AS "completedAt",j.attempts,r.error_code AS "errorCode",
   m.purpose,m.objective,m.duration_us::double precision AS "durationMicroseconds",m.unit_id AS "unitId",
   m.version_id AS "versionId",m.enrollment_id AS "enrollmentId",m.has_audio AS "hasAudio",m.has_video AS "hasVideo",
-  (er.report->>'overallLevel')::double precision AS "overallLevel",true AS simulated`;
+  (er.report->>'overallLevel')::double precision AS "overallLevel",r.provider,(r.provider='mock') AS simulated`;
 const joined = `FROM evaluation_requests r JOIN evaluation_jobs j ON j.request_id=r.id
   JOIN recordings m ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
   LEFT JOIN evaluation_results er ON er.request_id=r.id`;
 
 function errorMessage(code: string | null): string | null {
   switch (code) {
-    case 'timeout': return 'O simulador excedeu o tempo de resposta. Os créditos reservados foram liberados.';
-    case 'invalid': return 'O simulador devolveu um relatório inválido. Os créditos reservados foram liberados.';
+    case 'timeout': return 'A avaliação excedeu o tempo de resposta. Os créditos reservados foram liberados.';
+    case 'invalid': return 'O provedor devolveu um relatório inválido. Os créditos reservados foram liberados.';
+    case 'credentials': return 'O acesso ao provedor de IA precisa ser configurado pelo administrador. Os créditos reservados foram liberados.';
+    case 'quota': return 'O provedor de IA está sem saldo ou cota disponível. Os créditos reservados foram liberados.';
+    case 'media': return 'Não foi possível preparar a mídia para avaliação. Os créditos reservados foram liberados.';
     case 'permanent':
-    case 'temporary': return 'A avaliação simulada falhou. Os créditos reservados foram liberados.';
+    case 'temporary': return 'A avaliação falhou. Os créditos reservados foram liberados.';
     default: return null;
   }
 }
 
-async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Recording, id: string): Promise<EvaluationContext> {
+async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Recording, id: string, provider: 'mock' | 'openai'): Promise<EvaluationContext> {
   let criteria = defaultCriteria;
   let rubricVersion = 'matraca-pilot-v1';
   let activity: EvaluationContext['activity'] = null;
@@ -109,8 +114,8 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
   const learner = learnerProfile.safeParse(person.rows[0]?.profile);
   const history = await client.query<{ rubricVersion: string; score: number | null }>(
     `SELECT report->>'rubricVersion' AS "rubricVersion",(report->>'overallLevel')::double precision AS score
-     FROM evaluation_results WHERE org_id=$1 AND student_id=$2 ORDER BY created_at DESC,request_id DESC LIMIT 5`,
-    [actor.org.id, actor.user.id],
+     FROM evaluation_results WHERE org_id=$1 AND student_id=$2 AND report->>'provider'=$3 ORDER BY created_at DESC,request_id DESC LIMIT 5`,
+    [actor.org.id, actor.user.id, provider],
   );
   return {
     requestId: id,
@@ -140,27 +145,36 @@ async function studentMutation<T>(request: FastifyRequest, task: (client: PoolCl
   });
 }
 
-export async function registerEvaluations(app: FastifyInstance) {
+export async function registerEvaluations(app: FastifyInstance, provider: 'mock' | 'openai' = 'mock') {
+  app.get('/api/evaluation-capabilities', async request => {
+    await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']);
+    return { provider, simulated: provider === 'mock', maximumSeconds: provider === 'openai' ? liveEvaluationMaximumSeconds : 1800 };
+  });
   app.post('/api/evaluations', async (request, reply) => {
     const input = createInput.safeParse(request.body);
     if (!input.success) throw new EvaluationError(400, 'Confira a gravação e o cenário de avaliação.');
     const { recordingId, clientKey } = input.data;
     const queued = await studentMutation(request, async (client, actor) => {
-      const existing = await client.query<{ id: string; recording_id: string; scenario: string; status: string; credits: number }>(
-        'SELECT id,recording_id,scenario,status,credits FROM evaluation_requests WHERE org_id=$1 AND student_id=$2 AND client_key=$3',
+      const existing = await client.query<{ id: string; recording_id: string; scenario: string; status: string; credits: number; provider: string }>(
+        'SELECT id,recording_id,scenario,status,credits,provider FROM evaluation_requests WHERE org_id=$1 AND student_id=$2 AND client_key=$3',
         [actor.org.id, actor.user.id, clientKey],
       );
       const previous = existing.rows[0];
       if (previous) {
         if (previous.recording_id !== recordingId || (input.data.scenario && previous.scenario !== input.data.scenario)) throw new EvaluationError(409, 'A chave do pedido já está associada a outra avaliação.');
-        return { id: previous.id, status: previous.status, credits: previous.credits, simulated: true };
+        return { id: previous.id, status: previous.status, credits: previous.credits, simulated: previous.provider === 'mock' };
       }
+      if (input.data.expectedProvider && input.data.expectedProvider !== provider) throw new EvaluationError(409, 'O provedor mudou. Atualize a página antes de solicitar a avaliação.');
+      if (provider === 'openai' && input.data.scenario) throw new EvaluationError(400, 'Cenários simulados não estão disponíveis na avaliação real.');
       const found = await client.query<Recording>(
         `SELECT id,duration_us,has_audio,has_video,objective,purpose,enrollment_id,version_id,unit_id,scenario
          FROM recordings WHERE id=$1 AND org_id=$2 AND student_id=$3 FOR SHARE`,
         [recordingId, actor.org.id, actor.user.id],
       );
       if (!found.rows[0]) throw new EvaluationError(404, 'Gravação não encontrada.');
+      if (provider === 'openai' && Number(found.rows[0].duration_us) > liveEvaluationMaximumSeconds * 1_000_000) {
+        throw new EvaluationError(400, 'A avaliação real aceita gravações de até cinco minutos neste piloto. Nenhum crédito foi reservado.');
+      }
       const running = await client.query<{ recording_id: string }>(
         "SELECT recording_id FROM evaluation_requests WHERE org_id=$1 AND student_id=$2 AND status IN ('queued','processing')",
         [actor.org.id, actor.user.id],
@@ -173,22 +187,22 @@ export async function registerEvaluations(app: FastifyInstance) {
         [actor.org.id, actor.user.id],
       );
       if (frequency.rows[0].total >= config.maxEvaluationsPerHour) throw new EvaluationError(429, 'O limite de avaliações por hora foi atingido.');
-      const scenario = input.data.scenario ?? config.evaluationScenario;
+      const scenario = provider === 'openai' ? 'success' : input.data.scenario ?? config.evaluationScenario;
       const id = randomUUID();
-      const context = await contextFor(client, actor, found.rows[0], id);
+      const context = await contextFor(client, actor, found.rows[0], id, provider);
       const reservation = await reserveCreditsInTransaction(client, {
         orgId: actor.org.id, userId: actor.user.id, requestId: id,
         durationMicroseconds: context.recording.durationMicroseconds,
       });
       if (reservation.status !== 'reserved') throw new EvaluationError(409, 'A reserva desta avaliação não está disponível.');
       await client.query(
-        `INSERT INTO evaluation_requests(id,org_id,student_id,recording_id,client_key,scenario,context,credits)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [id, actor.org.id, actor.user.id, recordingId, clientKey, scenario, context, reservation.amount],
+        `INSERT INTO evaluation_requests(id,org_id,student_id,recording_id,client_key,scenario,context,credits,provider)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [id, actor.org.id, actor.user.id, recordingId, clientKey, scenario, context, reservation.amount, provider],
       );
       await client.query('INSERT INTO evaluation_jobs(request_id) VALUES ($1)', [id]);
       await client.query("INSERT INTO evaluation_outbox(request_id,event_type) VALUES ($1,'queued')", [id]);
-      return { id, status: 'queued', credits: reservation.amount, simulated: true };
+      return { id, status: 'queued', credits: reservation.amount, simulated: provider === 'mock' };
     });
     return reply.code(202).send({ evaluation: queued });
   });

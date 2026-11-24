@@ -1,4 +1,6 @@
-# Avaliação simulada e fila
+# Avaliações e fila
+
+O modo real OpenAI foi autorizado em 24/11/2026 e está descrito em [Integração OpenAI](OPENAI.md). O mock continua disponível e é o padrão dos testes. Provedor e indicação de simulação são persistidos por pedido. Cenários de falha artificiais são aceitos apenas no mock. `GET /api/evaluation-capabilities` informa o modo e a duração máxima; `expectedProvider` permite recusar um pedido de uma tela desatualizada.
 
 A avaliação usa uma gravação privada validada pelo servidor. A API considera a duração em microssegundos, a modalidade observada, o objetivo e a versão matriculada. O simulador recebe rubrica, perfil educacional e até cinco resultados recentes do mesmo aluno e organização. Notas e trechos são ilustrações determinísticas. O custo atribuído ao provedor simulado é zero.
 
@@ -9,8 +11,8 @@ A avaliação usa uma gravação privada validada pelo servidor. A API considera
 
 Pedido, reserva, job e evento de outbox entram juntos na mesma transação. A chave por aluno e organização protege retries, inclusive após uma resposta perdida. Gravações com avaliação ativa não iniciam outra avaliação simultânea. Cada aluno pode manter até três pedidos em andamento.
 
-O processo local busca tarefas com `FOR UPDATE SKIP LOCKED`. Cada tentativa obtém lease de 30 segundos com token distinto. Depois de vencer, outro processo pode recuperar o trabalho. O provedor tem prazo de oito segundos. Falhas temporárias e timeouts têm até três tentativas, com espera crescente. Uma resposta atrasada de outro lease não pode concluir o pedido.
+O processo local busca tarefas do seu provedor com `FOR UPDATE SKIP LOCKED`. Cada tentativa mock obtém lease de 30 segundos com token distinto. Depois de vencer, outro processo pode recuperar o trabalho. O mock tem prazo de oito segundos; a OpenAI usa 240 segundos e lease de 255 segundos. Falhas temporárias e timeouts têm até três tentativas, com espera crescente. Uma resposta atrasada de outro lease não pode concluir o pedido.
 
 O servidor rejeita resposta incompleta, critério duplicado, duração divergente, evidência fora da gravação e nota em critério incompatível com o formato. As notas são ponderadas no servidor. Resultado, débito, estado final e outbox são confirmados na mesma transação. Falha final ou cancelamento libera a reserva. Se a persistência falhar, o débito reverte e o lease pode ser recuperado.
 
-Testes com PostgreSQL isolado cobrem concorrência, replay, saldo insuficiente, escopo, falha definitiva, payload inválido, timeout, cancelamento durante processamento e recuperação após falha de persistência. Cenários de simulação ficam disponíveis no portal local. Nenhuma chave de IA externa é necessária.
+Testes com PostgreSQL isolado cobrem concorrência, replay, saldo insuficiente, escopo, falha definitiva, payload inválido, timeout, cancelamento durante processamento e recuperação após falha de persistência. Cenários de simulação ficam disponíveis no portal em modo mock, que não exige chave externa. O modo OpenAI exige credencial acessível ao servidor.

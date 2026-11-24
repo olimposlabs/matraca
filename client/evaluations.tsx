@@ -8,6 +8,7 @@ import './evaluations.css';
 
 type EvaluationStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 interface EvaluationSummary {
+  simulated: boolean;
   id: string;
   recordingId: string;
   status: EvaluationStatus;
@@ -69,17 +70,24 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
   const [error, setError] = useState('');
   const pending = useRef(false);
   const sessionKeys = useRef(new Map<string, string>());
+  const [capabilities, setCapabilities] = useState<{ provider: 'mock' | 'openai'; maximumSeconds: number } | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    apiJson<{ provider: 'mock' | 'openai'; maximumSeconds: number }>('/api/evaluation-capabilities', { signal: controller.signal })
+      .then(setCapabilities).catch(cause => { if (!controller.signal.aborted) setError(errorText(cause)); });
+    return () => controller.abort();
+  }, []);
   const singular = recording.estimatedCredits === 1;
   const customLabel = singular ? org?.branding.creditSingular : org?.branding.creditPlural;
   const label = typeof customLabel === 'string' ? customLabel : singular ? 'crédito' : 'créditos';
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || !capabilities) return;
     pending.current = true;
     setBusy(true);
     setError('');
-    const key = `matraca-evaluation:${org?.id}:${user?.id}:${recording.id}:${scenario}`;
+    const key = `matraca-evaluation:${org?.id}:${user?.id}:${recording.id}:${capabilities.provider}:${scenario}`;
     let clientKey = sessionKeys.current.get(key) ?? crypto.randomUUID();
     try {
       clientKey = sessionStorage.getItem(key) ?? clientKey;
@@ -88,7 +96,8 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
     sessionKeys.current.set(key, clientKey);
     try {
       const { evaluation } = await apiJson<{ evaluation: { id: string } }>('/api/evaluations', {
-        method: 'POST', body: { recordingId: recording.id, clientKey, ...(scenario === 'configured' ? {} : { scenario }) },
+        method: 'POST', body: { recordingId: recording.id, clientKey, expectedProvider: capabilities.provider,
+          ...(capabilities.provider === 'mock' && scenario !== 'configured' ? { scenario } : {}) },
       });
       sessionKeys.current.delete(key);
       try { sessionStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
@@ -103,17 +112,18 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
 
   return <form className="evaluation-action" onSubmit={submit}>
     <div>
-      <h3>Avaliação simulada</h3>
+      <h3>{!capabilities ? 'Preparando avaliação…' : capabilities.provider === 'mock' ? 'Avaliação simulada' : 'Avaliação com OpenAI'}</h3>
       <p>Esta solicitação reserva {recording.estimatedCredits} {label}. O saldo é debitado quando o relatório fica pronto.</p>
+      {capabilities?.provider === 'openai' && <p>Ao solicitar, o áudio, quadros do vídeo e o contexto da sua prática serão enviados à OpenAI para gerar o feedback. Limite de cinco minutos; a análise visual usa quadros amostrados.</p>}
     </div>
-    <label>Cenário do simulador
+    {capabilities?.provider === 'mock' && <label>Cenário do simulador
       <select value={scenario} onChange={event => setScenario(event.target.value as EvaluationScenario | 'configured')} disabled={busy}>
         <option value="configured">Padrão da organização</option>
         {scenarios.map(([value, title]) => <option key={value} value={value}>{title}</option>)}
       </select>
-    </label>
+    </label>}
     {error && <p className="evaluation-error" role="alert">{error}</p>}
-    <button type="submit" className="button button-primary" disabled={busy}>
+    <button type="submit" className="button button-primary" disabled={busy || !capabilities}>
       {busy ? 'Enviando…' : 'Solicitar avaliação'} <ArrowRight size={16} aria-hidden="true" />
     </button>
   </form>;
@@ -148,7 +158,7 @@ function EvaluationHistory() {
 
   return <section className="container evaluation-page">
     <header className="evaluation-heading">
-      <div><h1>Minhas avaliações</h1><p>Acompanhe o andamento e consulte seus relatórios simulados.</p></div>
+      <div><h1>Minhas avaliações</h1><p>Acompanhe o andamento e consulte seus relatórios.</p></div>
       <Link className="button button-primary" to="/app/recordings">Gravar ou enviar <ArrowRight size={16} aria-hidden="true" /></Link>
     </header>
     {state.error && <div role="alert" className="evaluation-panel"><p>{state.error}</p><button className="button button-secondary" onClick={() => setReload(value => value + 1)}>Tentar novamente</button></div>}
@@ -159,7 +169,7 @@ function EvaluationHistory() {
         {state.data.items.map(item => <li key={item.id}>
           <Link to={`/app/evaluations/${item.id}`}>
             <span className="evaluation-list-icon"><ClipboardList size={21} aria-hidden="true" /></span>
-            <span className="evaluation-list-title"><strong>{item.objective}</strong><small>{dateLabel(item.createdAt)} · {clock(item.durationMicroseconds)}</small></span>
+            <span className="evaluation-list-title"><strong>{item.objective}</strong><small>{dateLabel(item.createdAt)} · {clock(item.durationMicroseconds)} · {item.simulated ? 'Simulação' : 'OpenAI'}</small></span>
             <span className={`evaluation-status evaluation-status-${item.status}`}>{statusLabels[item.status]}</span>
             <ArrowRight size={17} aria-hidden="true" />
           </Link>
@@ -230,7 +240,7 @@ function EvaluationDetailPage({ id }: { id: string }) {
       <header className="evaluation-heading">
         <div>
           <h1>{detail.objective}</h1>
-          <p>Simulação local · {clock(detail.durationMicroseconds)} · {dateLabel(detail.createdAt)}</p>
+          <p>{detail.simulated ? 'Simulação local' : 'Avaliação com OpenAI'} · {clock(detail.durationMicroseconds)} · {dateLabel(detail.createdAt)}</p>
           {detail.activity && <p>Atividade do curso: {detail.activity.title}</p>}
           {detail.audienceScenario && <p>Cenário: {audienceLabels[detail.audienceScenario]}</p>}
         </div>
@@ -238,7 +248,7 @@ function EvaluationDetailPage({ id }: { id: string }) {
       </header>
       {isActive(detail.status) && <div className="evaluation-panel evaluation-progress">
         <Clock3 size={22} aria-hidden="true" />
-        <div><h2>{detail.status === 'queued' ? 'Aguardando processamento' : 'Gerando relatório simulado'}</h2>
+        <div><h2>{detail.status === 'queued' ? 'Aguardando processamento' : 'Gerando relatório'}</h2>
           <p>{detail.credits} {detail.credits === 1 ? 'crédito reservado' : 'créditos reservados'}.{detail.attempts > 0 ? ` Tentativa ${detail.attempts} de 3.` : ''}</p>
           {cancelError && <p role="alert" className="evaluation-error">{cancelError}</p>}
         </div>
@@ -264,10 +274,11 @@ function EvaluationReportContent({ detail, onSeek }: { detail: EvaluationDetail;
   return <div className="evaluation-report">
     <div className="evaluation-panel evaluation-summary">
       <div>
-        <h2>Relatório simulado</h2>
+        <h2>{report.simulated ? 'Relatório simulado' : 'Relatório de oratória'}</h2>
         <p>{report.summary}</p>
         <p>{detail.activity ? `Rubrica da atividade · versão ${report.rubricVersion.match(/:v(\d+)$/)?.[1] ?? 'registrada'}` : 'Rubrica Matraca · versão 1'}</p>
-        {report.overallLevel !== null && <p><strong>Nível simulado {report.overallLevel.toLocaleString('pt-BR')}</strong> de 4</p>}
+        {report.overallLevel !== null && <p><strong>{report.simulated ? 'Nível simulado' : 'Nível observado'} {report.overallLevel.toLocaleString('pt-BR')}</strong> de 4</p>}
+        {report.provider === 'openai' && <ul>{report.limitations.map(item => <li key={item}>{item}</li>)}</ul>}
       </div>
       <button className="button button-secondary evaluation-print" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Imprimir</button>
     </div>
@@ -291,7 +302,7 @@ function EvaluationReportContent({ detail, onSeek }: { detail: EvaluationDetail;
       </ul>
     </section>
     {report.strengths.length > 0 && <section className="evaluation-panel">
-      <h2>Destaques simulados</h2><ul>{report.strengths.map(item => <li key={item}>{item}</li>)}</ul>
+      <h2>{report.simulated ? 'Destaques simulados' : 'Destaques'}</h2><ul>{report.strengths.map(item => <li key={item}>{item}</li>)}</ul>
     </section>}
     <section className="evaluation-panel">
       <h2>Plano de prática</h2><ol>{report.practicePlan.map(item => <li key={item}>{item}</li>)}</ol>

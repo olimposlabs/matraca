@@ -1,5 +1,6 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { startLocalDatabase } from './db-start.js';
+if (process.argv.includes('--openai')) process.env.EVALUATION_PROVIDER = 'openai';
 try {
   if (!process.env.DATABASE_URL) startLocalDatabase();
   for (const script of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', script], { stdio: 'inherit' });

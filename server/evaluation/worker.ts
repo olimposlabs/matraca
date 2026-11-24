@@ -20,16 +20,17 @@ interface Job {
   exhausted: boolean;
 }
 
-async function claim(db: Database, requestId?: string): Promise<Job | null> {
+async function claim(db: Database, provider: EvaluationProvider, timeoutMs: number, requestId?: string): Promise<Job | null> {
   return db.transaction(async client => {
     const candidate = await client.query<Omit<Job, 'leaseToken' | 'exhausted'>>(
       `SELECT j.request_id,j.attempts,r.org_id,r.student_id,r.context,r.scenario
        FROM evaluation_jobs j JOIN evaluation_requests r ON r.id=j.request_id
        WHERE ($1::uuid IS NULL OR j.request_id=$1)
+         AND r.provider=$2
          AND ((j.state='queued' AND j.available_at<=clock_timestamp())
            OR (j.state='leased' AND j.lease_until<=clock_timestamp()))
        ORDER BY j.available_at,j.request_id FOR UPDATE OF j SKIP LOCKED LIMIT 1`,
-      [requestId ?? null],
+      [requestId ?? null, provider.kind ?? 'mock'],
     );
     const row = candidate.rows[0];
     if (!row) return null;
@@ -39,7 +40,7 @@ async function claim(db: Database, requestId?: string): Promise<Job | null> {
     await client.query(
       `UPDATE evaluation_jobs SET state='leased',attempts=$2,lease_token=$3,
        lease_until=clock_timestamp()+$4*interval '1 second' WHERE request_id=$1`,
-      [row.request_id, attempts, leaseToken, leaseSeconds],
+      [row.request_id, attempts, leaseToken, Math.max(leaseSeconds, Math.ceil(timeoutMs / 1000) + 15)],
     );
     await client.query("UPDATE evaluation_requests SET status='processing',updated_at=clock_timestamp() WHERE id=$1", [row.request_id]);
     return { ...row, attempts, leaseToken, exhausted };
@@ -123,7 +124,9 @@ async function evaluate(job: Job, provider: EvaluationProvider, timeoutMs: numbe
       provider.evaluate(job.context, { attempt: job.attempts, signal: controller.signal, scenario: job.scenario }),
       timedOut,
     ]);
-    return validateEvaluationReport(raw, job.context);
+    const report = validateEvaluationReport(raw, job.context);
+    if (report.provider !== (provider.kind ?? 'mock')) throw new EvaluationProviderError('invalid', false);
+    return report;
   } catch (error) {
     return error instanceof EvaluationProviderError ? error : new EvaluationProviderError('temporary', true);
   } finally {
@@ -134,9 +137,9 @@ async function evaluate(job: Job, provider: EvaluationProvider, timeoutMs: numbe
 export async function runEvaluationJob(
   db: Database,
   provider: EvaluationProvider,
-  { timeoutMs = defaultTimeoutMs, requestId }: { timeoutMs?: number; requestId?: string } = {},
+  { timeoutMs = provider.timeoutMs ?? defaultTimeoutMs, requestId }: { timeoutMs?: number; requestId?: string } = {},
 ): Promise<boolean> {
-  const job = await claim(db, requestId);
+  const job = await claim(db, provider, timeoutMs, requestId);
   if (!job) return false;
   const result = await evaluate(job, provider, timeoutMs);
   await settle(db, job, result);

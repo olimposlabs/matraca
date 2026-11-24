@@ -12,6 +12,10 @@ Em 16 de novembro de 2026, o fundador reafirmou a concentração de suas valida�
 
 Fontes de requisitos são o [plano de ensino](PLANO_DE_ENSINO.md), as regras de [créditos e cobrança](CREDITOS_E_COBRANCA.md) e as decisões do fundador. Os padrões abaixo preenchem pendências para permitir execução autônoma. Foram aprovados com o plano, sujeitos às alterações explícitas posteriores do fundador.
 
+## Ampliação posterior autorizada
+
+Em 24/11/2026, após o SPI original, o fundador autorizou conectar a OpenAI real no ambiente local. As fronteiras abaixo registram o plano original. A exceção vigente para avaliação está descrita em [Integração OpenAI](technical/OPENAI.md); os demais provedores externos continuam simulados e não há deploy AWS.
+
 ## Fronteira entre aplicação e simulação
 
 | Área | Funcionará no piloto | Fronteira externa simulada |

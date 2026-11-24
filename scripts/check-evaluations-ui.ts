@@ -75,7 +75,7 @@ try {
     await page.getByRole('button', { name: 'Solicitar avaliação' }).click();
   }
   await submit('permanent');
-  await expect(page.getByText('A avaliação simulada falhou. Os créditos reservados foram liberados.')).toBeVisible();
+  await expect(page.getByText('A avaliação falhou. Os créditos reservados foram liberados.')).toBeVisible();
   assert.deepEqual(await getWallet(db, { orgId, userId }), { balance: 4, reserved: 0, available: 4 });
   await submit('delay');
   await page.getByRole('button', { name: 'Cancelar avaliação' }).click();

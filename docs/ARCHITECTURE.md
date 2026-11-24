@@ -11,7 +11,7 @@ O fundador aprovou o plano em 10 de novembro de 2026 e definiu AWS como destino 
 | Dados | PostgreSQL 17 local em Docker, acesso pg e migrações SQL versionadas |
 | Objetos | Filesystem privado em .data/objects com streaming e leitura por faixas |
 | Processamento | Jobs e outbox duráveis no banco, worker local com lease e recuperação |
-| Avaliação | Provedor sintético, separado das regras de crédito e persistência |
+| Avaliação | Adaptadores mock e OpenAI, selecionados no servidor e persistidos por pedido, separados de crédito e persistência |
 | E-mail e pagamento | Caixa de e-mail local e eventos idempotentes de pagamento simulado |
 | Testes | Vitest, Playwright e verificações de tipos, lint e build |
 
@@ -26,3 +26,5 @@ O arquivo de mídia é real. O servidor verifica formato e duração e autoriza 
 Versões publicadas de cursos e snapshots de faturas preservam as condições aplicadas. Eventos de aprendizado mantêm o grupo vigente no momento da atividade. Créditos, compras e fechamento têm chaves idempotentes. A composição de eventos e adaptadores locais preserva pontos de integração para o futuro desenho serverless na AWS.
 
 Consulte o [plano aprovado](PLANO_DE_EXECUCAO_PILOTO.md), o [registro SPI](EXECUCAO_SPI.md) e as [operações](OPERATIONS.md) para separar o que está previsto do que já foi validado.
+
+Em 24/11/2026, foi autorizada a integração real da OpenAI. O adaptador usa FFmpeg para derivados privados, Chat Completions para áudio e Responses com saída estruturada para relatório e imagens. A chave fica somente no servidor. Jobs são selecionados pelo provedor persistido, sem converter exemplos antigos em avaliações reais. A migração 014 adiciona provedor e telemetria de chamadas. [Contrato e limites](technical/OPENAI.md).

@@ -10,6 +10,9 @@ import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
+import { privateEvaluationMedia } from '../server/evaluation/openai-media.js';
+import { isOpenAIAttemptActive } from '../server/evaluation/openai-runtime.js';
+import { EvaluationProviderError } from '../server/evaluation/provider.js';
 import { getWallet, grantCredits } from '../server/wallet.js';
 
 interface Student {
@@ -101,6 +104,60 @@ describe('fila, relatórios e reserva atômica', () => {
     expect(response.statusCode, response.body).toBe(200);
     return response.json().evaluation;
   }
+
+  it('isola filas por provedor, mantém lease real e não cobra sem relatório válido', async () => {
+    const live = await createApp({ databaseUrl: url.toString(), storageRoot, evaluationProvider: 'openai' });
+    const actor = await student(4);
+    const media = await recording(actor);
+    const headers = { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' };
+    const post = (payload: object) => live.inject({ method: 'POST', url: '/api/evaluations', headers, payload });
+    try {
+      expect((await live.inject({ method: 'GET', url: '/api/evaluation-capabilities', headers })).json()).toMatchObject({ provider: 'openai', simulated: false, maximumSeconds: 300 });
+      expect((await post({ recordingId: media, clientKey: randomUUID(), expectedProvider: 'mock' })).statusCode).toBe(409);
+      expect((await post({ recordingId: media, clientKey: randomUUID(), scenario: 'success' })).statusCode).toBe(400);
+      expect(await getWallet(db, actor)).toMatchObject({ reserved: 0 });
+      const key = randomUUID();
+      const submitted = await post({ recordingId: media, clientKey: key, expectedProvider: 'openai' });
+      expect(submitted.statusCode).toBe(202);
+      const id = submitted.json().evaluation.id;
+      expect(await isOpenAIAttemptActive(db, id, 1)).toBe(false);
+      expect(submitted.json().evaluation.simulated).toBe(false);
+      expect(await runEvaluationJob(db, provider, { requestId: id })).toBe(false);
+      const liveProvider: EvaluationProvider = { kind: 'openai', timeoutMs: 240_000, evaluate: async (context, options) => {
+        expect(await isOpenAIAttemptActive(db, id, options.attempt)).toBe(true);
+        expect(await isOpenAIAttemptActive(db, id, options.attempt + 1)).toBe(false);
+        const lease = await db.query('SELECT lease_until>clock_timestamp()+interval \'240 seconds\' AS extended FROM evaluation_jobs WHERE request_id=$1', [id]);
+        expect(lease.rows[0].extended).toBe(true);
+        const foreign = await student();
+        const otherRecording = await recording(foreign);
+        await expect(privateEvaluationMedia(db, live.storage)({ ...context, recording: { ...context.recording, id: otherRecording } }, options.signal)).rejects.toMatchObject({ code: 'media' });
+        throw new EvaluationProviderError('credentials', false);
+      } };
+      expect(await runEvaluationJob(db, liveProvider, { requestId: id })).toBe(true);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 4, reserved: 0 });
+      expect(await read(actor, id)).toMatchObject({ status: 'failed', simulated: false, errorCode: 'credentials', attempts: 1 });
+      expect(await isOpenAIAttemptActive(db, id, 1)).toBe(false);
+      expect((await post({ recordingId: media, clientKey: key })).json().evaluation.id).toBe(id);
+
+      const next = (await post({ recordingId: media, clientKey: randomUUID() })).json().evaluation.id;
+      // A provider mismatch is rejected rather than spending credits on a mock result.
+      expect(await runEvaluationJob(db, { kind: 'openai', evaluate: provider.evaluate.bind(provider) }, { requestId: next })).toBe(true);
+      expect(await read(actor, next)).toMatchObject({ status: 'failed', errorCode: 'invalid' });
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 4, reserved: 0 });
+    } finally { await live.close(); }
+  });
+
+  it('recusa mídia acima de cinco minutos antes de reservar no modo real', async () => {
+    const live = await createApp({ databaseUrl: url.toString(), storageRoot, evaluationProvider: 'openai' });
+    const actor = await student(10);
+    const media = await recording(actor, 300_000_000);
+    await db.query('UPDATE recordings SET maximum_seconds=301,duration_us=300000001 WHERE id=$1', [media]);
+    try {
+      const response = await live.inject({ method: 'POST', url: '/api/evaluations', headers: { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' }, payload: { recordingId: media, clientKey: randomUUID() } });
+      expect(response.statusCode).toBe(400);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 10, reserved: 0 });
+    } finally { await live.close(); }
+  });
 
   it('reserva antes do processamento e conclui uma vez mesmo com workers e replays concorrentes', async () => {
     const actor = await student(2);
