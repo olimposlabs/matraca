@@ -140,6 +140,15 @@ async function metrics(client: PoolClient, orgId: string, input: z.infer<typeof 
      WHERE a.org_id=$1 AND ${eventScope('w.user_id','w.created_at')}`, args,
   );
   const { config, revision } = await readOperationPolicy(client, orgId);
+  const providerUsage = await client.query(
+    `SELECT c.metadata->>'model' AS model,count(*)::int AS calls,
+       count(*) FILTER (WHERE c.metadata->>'inputTokens' IS NULL)::int AS "unreportedCalls",
+       COALESCE(sum((c.metadata->>'inputTokens')::bigint),0)::double precision AS "inputTokens",
+       COALESCE(sum((c.metadata->>'outputTokens')::bigint),0)::double precision AS "outputTokens"
+     FROM evaluation_provider_calls c JOIN evaluation_requests e ON e.id=c.request_id
+     WHERE e.org_id=$1 AND ${eventScope('e.student_id', 'c.created_at')}
+     GROUP BY c.metadata->>'model' ORDER BY model`, args,
+  );
   const microseconds = BigInt(processed.rows[0].durationUs);
   const estimatedCents = (microseconds * BigInt(config.simulatedCentsPerMinute) + 59_999_999n) / 60_000_000n;
   const flags = await client.query(
@@ -161,6 +170,7 @@ async function metrics(client: PoolClient, orgId: string, input: z.infer<typeof 
     usage: { ...upload.rows[0], ...evaluation.rows[0], evaluatedMicroseconds: Number(microseconds), processed: processed.rows[0].processed },
     credits: { ...credits.rows[0], ...current.rows[0] },
     estimatedCost: { cents: Number(estimatedCents), centsPerMinute: config.simulatedCentsPerMinute },
+    providerUsage: providerUsage.rows,
     purchases: { ...purchases.rows[0], ...settledPurchases.rows[0] },
     billing: { ...invoices.rows[0], ...ratedUsage.rows[0] },
     flags: flags.rows,
