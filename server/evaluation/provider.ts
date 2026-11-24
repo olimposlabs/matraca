@@ -32,6 +32,8 @@ export interface EvaluationContext {
 }
 
 export interface EvaluationProvider {
+  readonly kind?: 'mock' | 'openai';
+  readonly timeoutMs?: number;
   evaluate(context: EvaluationContext, options: {
     attempt: number;
     signal: AbortSignal;
@@ -52,15 +54,40 @@ const observation = z.object({
   recommendation: shortText,
 }).strict();
 
-const reportSchema = z.object({
-  provider: z.literal('mock'),
-  simulated: z.literal(true),
+export const reportContentSchema = z.object({
   summary: shortText,
   strengths: z.array(shortText).max(12),
   practicePlan: z.array(shortText).min(1).max(12),
   observations: z.array(observation).min(1).max(40),
-  usage: z.object({ mediaMicroseconds: z.number().int().positive(), estimatedProviderCostCents: z.literal(0) }).strict(),
 }).strict();
+
+export const providerCallSchema = z.object({
+  stage: z.enum(['audio', 'report']),
+  model: z.string().min(1).max(100),
+  requestId: z.string().max(200).nullable(),
+  httpStatus: z.number().int().min(100).max(599).nullable(),
+  inputTokens: z.number().int().nonnegative().nullable(),
+  outputTokens: z.number().int().nonnegative().nullable(),
+  audioInputTokens: z.number().int().nonnegative().nullable(),
+  cachedInputTokens: z.number().int().nonnegative().nullable(),
+  durationMs: z.number().int().nonnegative(),
+}).strict();
+export type ProviderCall = z.infer<typeof providerCallSchema>;
+
+const reportSchema = z.discriminatedUnion('provider', [
+  reportContentSchema.extend({
+    provider: z.literal('mock'), simulated: z.literal(true),
+    usage: z.object({ mediaMicroseconds: z.number().int().positive(), estimatedProviderCostCents: z.literal(0) }).strict(),
+  }).strict(),
+  reportContentSchema.extend({
+    provider: z.literal('openai'), simulated: z.literal(false),
+    limitations: z.array(shortText).min(1).max(8),
+    usage: z.object({
+      mediaMicroseconds: z.number().int().positive(), estimatedProviderCostCents: z.null(),
+      calls: z.array(providerCallSchema).min(1).max(6),
+    }).strict(),
+  }).strict(),
+]);
 
 export type EvaluationReport = z.infer<typeof reportSchema> & {
   overallLevel: number | null;
@@ -69,7 +96,7 @@ export type EvaluationReport = z.infer<typeof reportSchema> & {
 
 export class EvaluationProviderError extends Error {
   constructor(
-    readonly code: 'temporary' | 'permanent' | 'timeout' | 'invalid',
+    readonly code: 'temporary' | 'permanent' | 'timeout' | 'invalid' | 'credentials' | 'quota' | 'media',
     readonly retryable: boolean,
   ) {
     super(code);

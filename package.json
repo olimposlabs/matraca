@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsx scripts/dev.ts",
+    "dev:openai": "tsx scripts/dev.ts --openai",
     "dev:api": "tsx watch server/start.ts",
     "dev:web": "vite --host 127.0.0.1",
     "db:start": "tsx scripts/db-start.ts",
@@ -16,6 +17,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:openai": "tsx scripts/check-openai.ts",
     "test:e2e": "tsx scripts/check-recordings-ui.ts && tsx scripts/check-evaluations-ui.ts && tsx scripts/check-gamification-ui.ts && tsx scripts/check-commerce-ui.ts && tsx scripts/check-billing-ui.ts && tsx scripts/check-registration-ui.ts && tsx scripts/check-partner-ui.ts && tsx scripts/check-recovery-ui.ts && tsx scripts/check-complete-course-ui.ts && tsx scripts/check-sandbox-ui.ts",
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/start.ts",
@@ -28,6 +30,7 @@
     "@fastify/cookie": "11.1.5",
     "@fastify/multipart": "10.1.8",
     "@fastify/static": "10.1.10",
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
     "fastify": "5.12.8",
     "lucide-react": "1.71.0",
     "mediabunny": "1.65.2",
@@ -40,7 +43,6 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@ffmpeg-installer/ffmpeg": "1.1.0",
     "@playwright/test": "1.65.0",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",

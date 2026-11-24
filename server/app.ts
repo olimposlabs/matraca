@@ -27,6 +27,7 @@ export interface AppOptions {
   databaseUrl?: string;
   storageRoot?: string;
   clientRoot?: string;
+  evaluationProvider?: 'mock' | 'openai';
   /** Trusted server-side clock for the local financial simulator. */
   billingNow?: (orgId: string) => Date | Promise<Date>;
 }
@@ -74,7 +75,7 @@ export async function createApp(options: AppOptions = {}) {
   await registerCourseAssets(app);
   await registerCourseManagementReads(app);
   await registerRecordings(app);
-  await registerEvaluations(app);
+  await registerEvaluations(app, options.evaluationProvider ?? 'mock');
   await registerJourney(app);
   await registerMentoring(app);
   await registerGamification(app);
