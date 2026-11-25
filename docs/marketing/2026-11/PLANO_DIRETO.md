@@ -20,7 +20,7 @@ O calendário começa na data escolhida para a campanha. Não pressupõe que a f
 
 ## 2. Posicionamento e mensagem
 
-**Proposta central:** “Pratique a fala que importa para você.”
+**Assinatura principal:** “Pratique a fala que você precisa usar.” A formulação “a fala que importa para você” é uma variação de apoio, sem substituir a assinatura nas peças de apresentação.
 
 **Explicação curta para o estágio atual:** “O Matraca está desenvolvendo uma jornada de prática de oratória com avaliação por IA. Conheça o piloto e comece por um objetivo de fala.”
 
@@ -86,7 +86,7 @@ Página de oferta futura deve informar: conteúdo liberado, duração/limite de 
 | Retenção | “Qual é o próximo passo?” | Uma prioridade, repetição comparável, reflexão | Retomar treino com objetivo | Retorno no período combinado |
 | Receita futura | “Quero continuar” | Oferta transparente e compatível com uso | Comprar quando disponível | Compra, custo, suporte, recompra |
 
-**Perfil proposto, a verificar disponibilidade de nome:** nome exibido “Matraca | prática de oratória”. Bio no estágio atual: “Pratique a fala que importa. Oratória para situações reais. Conheça o piloto em desenvolvimento. Envie TREINO.” Não usar domínio como destino até confirmar registro e página publicada.
+**Perfil proposto, a verificar disponibilidade de nome:** nome exibido “Matraca | prática de oratória”. Bio no estágio atual: “Pratique a fala que você precisa usar. Oratória para situações reais. Conheça o piloto em desenvolvimento. Envie TREINO.” Não usar domínio como destino até confirmar registro e página publicada.
 
 Três fixados: apresentação honesta do Matraca, exercício que a pessoa pode executar, explicação do piloto. Destaques: Comece aqui; Exercícios; Como funciona; Piloto; Dúvidas; Para empresas. Identificar cenas encenadas e demonstrações no próprio conteúdo, não apenas no último slide.
 

@@ -67,7 +67,7 @@ O roteiro abaixo escolhe o modo simulado para explicar o fluxo. Se a sessão usa
 
 ### Piloto delimitado
 
-Proposta inicial para discussão: uma organização, uma turma pequena, uma habilidade de comunicação, um responsável, duração de quatro semanas após disponibilidade técnica e duas tentativas comparáveis por participante. Quantidade de participantes e créditos depende da capacidade real; não prometer automaticamente o escopo a qualquer interessado.
+Proposta inicial para discussão: uma organização, uma turma pequena, uma habilidade de comunicação, um responsável, preparação na semana 0 e quatro semanas de execução após disponibilidade técnica, com duas tentativas comparáveis por participante. Quantidade de participantes e créditos depende da capacidade real; não prometer automaticamente o escopo a qualquer interessado.
 
 Semana 0: configurar objetivos, marca, participantes e critérios. Semana 1: tarefa inicial e leitura da experiência. Semana 2: prática com uma ação específica. Semana 3: nova tentativa e revisão humana. Semana 4: reunião de resultados, limites, custos e decisão. Em sessões com mock, medir usabilidade do fluxo e compreensão do processo. Em sessões reais OpenAI, avaliar também a qualidade do feedback com revisão humana e critérios definidos; um teste técnico anterior não comprova eficácia pedagógica para a turma.
 
