@@ -1,5 +1,5 @@
-import { createHash, randomBytes } from 'node:crypto';
-import { closeSync, constants, existsSync, fstatSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { closeSync, constants, existsSync, fstatSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 
@@ -27,8 +27,16 @@ function credentialPath(role: Role, profile: string) {
 function privatePassword(path: string, create: boolean) {
   if (create) {
     mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
-    try { writeFileSync(path, `${randomBytes(32).toString('hex')}\n`, { flag: 'wx', mode: 0o600 }); }
-    catch (cause) { if ((cause as NodeJS.ErrnoException).code !== 'EEXIST') throw cause; }
+    if (!existsSync(path)) {
+      const temporary = `${path}.${randomUUID()}`;
+      try {
+        writeFileSync(temporary, `${randomBytes(32).toString('hex')}\n`, { flag: 'wx', mode: 0o600, flush: true });
+        linkSync(temporary, path);
+      } catch (cause) { if ((cause as NodeJS.ErrnoException).code !== 'EEXIST') throw cause; }
+      finally {
+        try { unlinkSync(temporary); } catch { /* A temporary password stays inside the private profile directory. */ }
+      }
+    }
   }
   try {
     const descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
@@ -52,10 +60,10 @@ export function localDatabaseConnection(role: Role, profile = mainDatabaseProfil
   return `postgresql://${user}:${password}@127.0.0.1:${localPostgresPort}/${database}`;
 }
 
-export function pendingRuntimeRotation(profile: string, requested: boolean) {
-  const current = credentialPath('runtime', profile);
+export function pendingRoleRotation(role: 'migration' | 'runtime', profile: string, requested: boolean) {
+  const current = credentialPath(role, profile);
   const staged = current + '.next';
-  if (!requested && !existsSync(staged)) return null;
+  if (!requested && existsSync(current) && !existsSync(staged)) return null;
   return { password: privatePassword(staged, true), commit: () => renameSync(staged, current) };
 }
 

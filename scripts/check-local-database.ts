@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../server/app.js';
@@ -51,6 +51,9 @@ try {
   const replacement = await provisionLocalDatabase(profiles[1], { rotateRuntime: true });
   const restarted = await provisionLocalDatabase(profiles[1]);
   assert.ok(restarted.runtimeUrl === replacement.runtimeUrl);
+  await unlink(join(profiles[1], 'migration.password'));
+  const recovered = await provisionLocalDatabase(profiles[1]);
+  assert.ok(recovered.migrationUrl !== restarted.migrationUrl);
   const obsolete = createDatabase(migrated.runtimeUrl);
   try { await assert.rejects(() => obsolete.query('SELECT 1'), { code: '28P01' }); }
   finally { await obsolete.close(); }
