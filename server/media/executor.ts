@@ -14,7 +14,7 @@ const dockerEnv = () => ({ PATH: process.env.PATH, HOME: process.env.HOME,
 
 export interface MediaExecutor { image: string; host: string }
 const run = [
-  'run', '--pull=never', '--rm', '--network=none', '--read-only',
+  'run', '--pull=never', '--rm', '--network=none', '--read-only', '--log-driver=none',
   '--user=65534:65534', '--cap-drop=ALL', '--security-opt=no-new-privileges',
   '--pids-limit=32', '--cpus=1', '--memory=512m', '--memory-swap=512m',
   '--tmpfs=/work:rw,noexec,nodev,nosuid,size=224m,mode=0700,uid=65534,gid=65534',

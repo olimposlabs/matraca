@@ -340,10 +340,11 @@ async function processLogo(
     throw new OrganizationError(400, 'Não foi possível validar a imagem.');
   }
   if (encoded.data.length > LOGO_LIMIT) throw new OrganizationError(413, 'Logo normalizado excede 2 MiB.');
-  await app.storage.put(key, Readable.from(encoded.data), { bytes: LOGO_LIMIT, signal: upload.signal });
   await withOrganizationWrite(request, actor, orgId, async client => {
     await requireOrg(client, orgId);
     if (upload.signal.aborted) throw new OrganizationError(400, 'O envio foi interrompido.');
+    await app.uploads.lock(client, [key]);
+    await app.storage.put(key, Readable.from(encoded.data), { bytes: LOGO_LIMIT, signal: upload.signal });
     await client.query('INSERT INTO logo_assets (id,org_id,key,content_type,width,height,bytes,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
       [id, orgId, key, 'image/webp', encoded.info.width, encoded.info.height, encoded.data.length, actor.user.id]);
     await audit(client, actor, orgId, 'logo_uploaded');

@@ -57,6 +57,15 @@ describe('derivados de mídia para OpenAI', () => {
     expect(sample.frames[11].endUs).toBeLessThanOrEqual(300_000_000);
   }, 35_000);
 
+  it.each(['ac3', 'eac3'])('mantém a preparação de gravação MP4 com áudio %s', async codec => {
+    const path = join(directory, `${codec}.mp4`);
+    await execute(ffmpeg.path, ['-nostdin', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440',
+      '-t', '2', '-c:a', codec, path]);
+    const media = await extractEvaluationMedia(executor, path, 'mp4',
+      { id: 'test', durationMicroseconds: 2_000_000, hasAudio: true, hasVideo: false }, AbortSignal.timeout(8000));
+    expect(media.audio).toHaveLength(1);
+  });
+
   it('recusa limite excedido e caminho sem mídia antes de enviar qualquer dado', async () => {
     const recording = { id: 'test', durationMicroseconds: 300_000_001, hasAudio: true, hasVideo: false };
     await expect(extractEvaluationMedia(executor, '/missing', 'wav', recording, new AbortController().signal)).rejects.toMatchObject({ code: 'media', retryable: false });

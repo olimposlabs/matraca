@@ -76,6 +76,7 @@ describe('capacidade de upload persistida', () => {
     await db.query("INSERT INTO logo_assets(org_id,key,content_type,width,height,bytes,created_by) VALUES($1,$2,'image/webp',1,1,17,$3)",
       [target.orgId, kept, target.actorId]);
     await db.query("UPDATE upload_reservations SET expires_at=clock_timestamp()-interval '1 second' WHERE org_id=$1", [target.orgId]);
+    await expect(db.transaction(client => capacity.lock(client, [orphan]))).rejects.toMatchObject({ statusCode: 409 });
     expect(await new UploadCapacity(db, storage).reconcile()).toBe(2);
     await expect(storage.info(orphan)).rejects.toMatchObject({ code: 'ENOENT' });
     await expect(readFile(`${storage.path(orphan)}.uploading`)).rejects.toMatchObject({ code: 'ENOENT' });

@@ -13,7 +13,7 @@ case "$duration" in ''|*[!0-9]*) exit 2 ;; esac
 [ "$duration" -gt 0 ] && [ "$duration" -le 300000000 ] || exit 2
 cat > input
 chmod 400 input
-codecs=vorbis,opus,aac,mp3,mp3float,alac,flac,h264,hevc,vp8,vp9,av1,mjpeg,mpeg4,pcm_u8,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_f64le,pcm_alaw,pcm_mulaw
+codecs=vorbis,opus,aac,mp3,mp3float,flac,ac3,ac3_fixed,eac3,dca,truehd,h264,hevc,vp8,vp9,av1,libdav1d,prores,pcm_u8,pcm_s8,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_f64be,pcm_alaw,pcm_mulaw
 seconds() { printf '%d.%06d' "$(($1 / 1000000))" "$(($1 % 1000000))"; }
 decode() {
   start=$1

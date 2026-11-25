@@ -92,6 +92,14 @@ export class UploadCapacity {
     });
   }
 
+  async lock(client: PoolClient, keys: string[]) {
+    if (!keys.length) return;
+    const result = await client.query(`SELECT object_key FROM upload_reservations
+      WHERE object_key=ANY($1::text[]) AND expires_at>clock_timestamp()
+      ORDER BY object_key FOR UPDATE`, [keys]);
+    if (result.rowCount !== keys.length) throw new UploadCapacityError(409, 'A reserva de armazenamento expirou.');
+  }
+
   async commit(client: PoolClient, keys: string[]) {
     if (!keys.length) return;
     const result = await client.query(

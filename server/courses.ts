@@ -180,6 +180,7 @@ export async function registerCourses(app:FastifyInstance){
     }
     const created=(await client.query<CourseRow>('INSERT INTO courses(org_id,title,draft,source_course_id,created_by) VALUES($1,$2,$3,$4,$5) RETURNING *',[orgId,input.title,document,source?.course_id??null,actor.user.id])).rows[0];
     if(copy){
+     await app.uploads.lock(client, copiedKeys);
      const mapping=new Map<string,string>();
      for (const asset of copy.assets) {
        const prior = asset.source;
