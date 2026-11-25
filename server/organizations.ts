@@ -94,6 +94,7 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
     const branding = { ...DEFAULT_BRANDING, displayName: data.name.slice(0, 80), _revision: 0 };
     try {
       const result = await app.db.transaction(async (client) => {
+        await operator(request, client);
         await client.query(
           `INSERT INTO orgs (id,slug,name,kind,settings,branding) VALUES ($1,$2,$3,'partner',$4,$5)`,
           [id, data.slug, data.name, DEFAULT_SETTINGS, branding],
@@ -129,11 +130,11 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
   app.patch('/api/org/settings', async (request) => {
     const actor = await requireIdentity(request, ['org_admin']);
     const settings = validate(settingsSchema, request.body);
-    return updateOrganization(app, actor, actor.org.id, { settings }, port);
+    return updateOrganization(request, actor, actor.org.id, { settings }, port);
   });
   app.patch('/api/backoffice/orgs/:id', async (request) => {
     const actor = await operator(request);
-    return updateOrganization(app, actor, targetId(request), validate(updateSchema, request.body), port);
+    return updateOrganization(request, actor, targetId(request), validate(updateSchema, request.body), port);
   });
 
   for (const central of [false, true]) {
@@ -142,13 +143,13 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
       const actor = central ? await operator(request) : await requireIdentity(request, ['org_admin']);
       const id = central ? targetId(request) : actor.org.id;
       const data = validate(publishSchema, request.body);
-      return publishBranding(app, actor, id, data.expectedRevision, data.branding, port);
+      return publishBranding(request, actor, id, data.expectedRevision, data.branding, port);
     });
     app.post(`${prefix}/branding/restore`, async (request) => {
       const actor = central ? await operator(request) : await requireIdentity(request, ['org_admin']);
       const id = central ? targetId(request) : actor.org.id;
       const data = validate(restoreSchema, request.body);
-      return publishBranding(app, actor, id, data.expectedRevision, { restoreRevision: data.revision }, port);
+      return publishBranding(request, actor, id, data.expectedRevision, { restoreRevision: data.revision }, port);
     });
     app.post(`${prefix}/logo`, async (request, reply) => {
       const actor = central ? await operator(request) : await requireIdentity(request, ['org_admin']);
@@ -182,8 +183,8 @@ const orgSelect = `SELECT o.*,
     ORDER BY (d.hostname='matraca.localhost' OR d.hostname LIKE '%.matraca.localhost') DESC, length(d.hostname) DESC, d.hostname LIMIT 1) AS hostname,
   (SELECT count(*)::integer FROM users u WHERE u.org_id=o.id) AS user_count FROM orgs o`;
 
-async function operator(request: FastifyRequest): Promise<AuthIdentity> {
-  const identity = await requireIdentity(request, ['operator']);
+async function operator(request: FastifyRequest, client?: PoolClient): Promise<AuthIdentity> {
+  const identity = await requireIdentity(request, ['operator'], client);
   if (identity.org.kind !== 'backoffice') throw new OrganizationError(403, 'Acesso exclusivo do backoffice.');
   return identity;
 }
@@ -222,11 +223,25 @@ async function manage(client: QueryClient, id: string, port: number) {
   })) };
 }
 
+async function withOrganizationWrite<T>(
+  request: FastifyRequest, actor: AuthIdentity, id: string, write: (client: PoolClient) => Promise<T>,
+) {
+  return request.server.db.transaction(async client => {
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4))', [id]);
+    const current = actor.org.kind === 'backoffice' ? await operator(request, client)
+      : await requireIdentity(request, ['org_admin'], client);
+    if (current.org.id !== actor.org.id || current.user.id !== actor.user.id) {
+      throw new OrganizationError(403, 'A autorização para esta organização mudou.');
+    }
+    return write(client);
+  });
+}
+
 async function updateOrganization(
-  app: FastifyInstance, actor: AuthIdentity, id: string,
+  request: FastifyRequest, actor: AuthIdentity, id: string,
   data: z.infer<typeof updateSchema>, port: number,
 ) {
-  return app.db.transaction(async (client) => {
+  return withOrganizationWrite(request, actor, id, async client => {
     const org = await requireOrg(client, id, true);
     if (org.kind === 'backoffice' && data.status === 'suspended') {
       throw new OrganizationError(400, 'O backoffice não pode suspender o próprio acesso.');
@@ -239,10 +254,10 @@ async function updateOrganization(
 }
 
 async function publishBranding(
-  app: FastifyInstance, actor: AuthIdentity, id: string, expectedRevision: number,
+  request: FastifyRequest, actor: AuthIdentity, id: string, expectedRevision: number,
   action: BrandingInput | { restoreRevision: number }, port: number,
 ) {
-  return app.db.transaction(async (client) => {
+  return withOrganizationWrite(request, actor, id, async client => {
     const org = await requireOrg(client, id, true);
     const previous = normalizedBranding(org);
     if (previous._revision !== expectedRevision) {
@@ -312,7 +327,8 @@ async function uploadLogo(app: FastifyInstance, request: FastifyRequest, actor: 
   const key = `branding/${orgId}/${id}`;
   await app.storage.put(key, Readable.from(encoded.data));
   try {
-    await app.db.transaction(async (client) => {
+    await withOrganizationWrite(request, actor, orgId, async client => {
+      await requireOrg(client, orgId);
       await client.query('INSERT INTO logo_assets (id,org_id,key,content_type,width,height,bytes,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
         [id, orgId, key, 'image/webp', encoded.info.width, encoded.info.height, encoded.data.length, actor.user.id]);
       await audit(client, actor, orgId, 'logo_uploaded');

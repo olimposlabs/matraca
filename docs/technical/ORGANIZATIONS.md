@@ -154,3 +154,5 @@ O domínio é roteado localmente; DNS público, infraestrutura AWS e envio real 
 e-mail não são provisionados por esses endpoints. A validação do logo comprova
 o comportamento no runtime Node local, não compatibilidade automática de builds
 nativos em qualquer ambiente de produção.
+
+A API serializa alterações de configuração e marca com as mutações educacionais na organização de destino. Antes do commit, revalida a sessão e o papel do autor. Se a autorização mudar durante a normalização ou a espera pelo lock, a gravação é recusada e o objeto de logo preparado é removido. O histórico de marca mantém a comparação de revisão.

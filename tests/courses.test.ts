@@ -66,7 +66,19 @@ describe('cursos versionados e atribuição',()=>{
  });
  it('isola editor, versões e atribuições entre organizações e papéis',async()=>{const admin=await actor();const stranger=await actor();const school=await actor('school',admin.orgId);const id=await draft(admin);const version=await publish(admin,id);expect((await call(stranger,'GET',`/api/courses/manage/${id}`)).statusCode).toBe(404);expect((await call(school,'POST','/api/courses/manage',{title:'Proibido'})).statusCode).toBe(403);expect((await call(admin,'POST',`/api/courses/manage/${id}/assign`,{versionId:version.id,studentId:stranger.userId})).statusCode).toBe(404);});
  it('permite acompanhamento sem texto de aula e desliga cursos preservando dados',async()=>{const admin=await actor();const student=await actor('student',admin.orgId);const document=example();document.modules[0].units[0].mode='tracking';document.modules[0].units[0].bodyMarkdown='';const id=await draft(admin,document);const version=await publish(admin,id);await call(admin,'POST',`/api/courses/manage/${id}/assign`,{versionId:version.id,studentId:student.userId});await db.query('UPDATE orgs SET settings=$2 WHERE id=$1',[admin.orgId,{coursesEnabled:false}]);expect((await call(student,'GET','/api/courses')).json()).toEqual({enabled:false,courses:[]});expect((await call(student,'GET',`/api/courses/${id}`)).statusCode).toBe(403);expect((await db.query('SELECT id FROM course_enrollments WHERE student_id=$1',[student.userId])).rowCount).toBe(1);});
- it('copia a base sem alterar o original e aceita manutenção pelo backoffice',async()=>{const native=await actor('org_admin',randomUUID(),'matraca');const admin=await actor();const operator=await actor('operator',randomUUID(),'backoffice');const id=await draft(native);await publish(native,id);const copied=await call(admin,'POST','/api/courses/manage',{title:'Curso do parceiro',copyBaseCourseId:id});expect(copied.statusCode).toBe(201);const copyId=copied.json().course.id;expect(copyId).not.toBe(id);expect(copied.json().course.draft.modules).toEqual(example().modules);const view=await call(operator,'GET',`/api/backoffice/courses/${admin.orgId}/${copyId}`);expect(view.statusCode).toBe(200);expect((await call(admin,'GET',`/api/backoffice/courses/${native.orgId}/${id}`)).statusCode).toBe(403);});
+ it('copia a base sem alterar o original e aceita manutenção pelo backoffice',async()=>{const native=await actor('org_admin',randomUUID(),'matraca');const admin=await actor();const operator=await actor('operator',randomUUID(),'backoffice');const id=await draft(native);const v1=await publish(native,id);const sharePath=`/api/backoffice/courses/${native.orgId}/${id}/base-share`;
+  const options={title:'Curso do parceiro',copyBaseCourseId:id};
+  expect((await call(admin,'GET','/api/courses/base')).json().courses).not.toEqual(expect.arrayContaining([expect.objectContaining({id})]));
+  expect((await call(admin,'POST','/api/courses/manage',options)).statusCode).toBe(404);
+  expect((await call(native,'PUT',sharePath,{versionId:v1.id,expectedVersionId:null})).statusCode).toBe(403);
+  expect((await call(operator,'PUT',sharePath,{versionId:v1.id,expectedVersionId:null})).statusCode).toBe(200);
+  const draftV2=example();draftV2.modules[0].units[0].title='Nova aula privada';
+  expect((await call(native,'PUT',`/api/courses/manage/${id}`,{expectedRevision:1,document:draftV2})).statusCode).toBe(200);
+  await publish(native,id,2);
+  expect((await call(admin,'GET','/api/courses/base')).json().courses).toEqual(expect.arrayContaining([expect.objectContaining({id,version:1})]));
+  const copied=await call(admin,'POST','/api/courses/manage',{title:'Curso do parceiro',copyBaseCourseId:id});expect(copied.statusCode).toBe(201);expect((await call(operator,'PUT',sharePath,{versionId:null,expectedVersionId:v1.id})).statusCode).toBe(200);
+  expect((await call(admin,'POST','/api/courses/manage',options)).statusCode).toBe(404);
+  const copyId=copied.json().course.id;expect(copyId).not.toBe(id);expect(copied.json().course.draft.modules).toEqual(example().modules);const view=await call(operator,'GET',`/api/backoffice/courses/${admin.orgId}/${copyId}`);expect(view.statusCode).toBe(200);expect((await call(admin,'GET',`/api/backoffice/courses/${native.orgId}/${id}`)).statusCode).toBe(403);});
 
  it('lista candidatos e materiais somente no curso da organização autorizada',async()=>{
   const admin=await actor();
@@ -120,7 +132,7 @@ describe('cursos versionados e atribuição',()=>{
  });
 
  it('protege anexo staged, transmite ranges e copia objeto para a organização de destino',async()=>{
-  const native=await actor('org_admin',randomUUID(),'matraca');const student=await actor('student',native.orgId);const partner=await actor();const id=await draft(native);
+  const native=await actor('org_admin',randomUUID(),'matraca');const student=await actor('student',native.orgId);const partner=await actor();const id=await draft(native);const operator=await actor('operator',randomUUID(),'backoffice');
   const boundary=`asset-${randomUUID()}`;const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADUlEQVQImWMQkdP4DwAB/gFaYeIFNgAAAABJRU5ErkJggg==','base64');
   const payload=Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="slide.png"\r\nContent-Type: image/png\r\n\r\n`),png,Buffer.from(`\r\n--${boundary}--\r\n`)]);
   const upload=await app.inject({method:'POST',url:`/api/courses/manage/${id}/assets`,headers:{host:native.host,cookie:native.cookie,'x-matraca-request':'1','content-type':`multipart/form-data; boundary=${boundary}`},payload});expect(upload.statusCode).toBe(201);const assetId=upload.json().asset.id;
@@ -132,6 +144,7 @@ describe('cursos versionados e atribuição',()=>{
   const range=await app.inject({method:'GET',url:`/api/course-assets/${assetId}`,headers:{host:student.host,cookie:student.cookie,range:'bytes=0-7'}});expect(range.statusCode).toBe(206);expect(range.rawPayload).toEqual(png.subarray(0,8));expect(range.headers['content-range']).toBe(`bytes 0-7/${png.length}`);
   expect((await app.inject({method:'GET',url:`/api/course-assets/${assetId}`,headers:{host:student.host,cookie:student.cookie,range:'bytes=999999-'}})).statusCode).toBe(416);
   expect((await call(partner,'GET',`/api/course-assets/${assetId}`)).statusCode).toBe(404);
+  expect((await call(operator,'PUT',`/api/backoffice/courses/${native.orgId}/${id}/base-share`,{versionId:version.id,expectedVersionId:null})).statusCode).toBe(200);
   const copy=await call(partner,'POST','/api/courses/manage',{title:'Cópia com material',copyBaseCourseId:id});expect(copy.statusCode).toBe(201);const newAsset=copy.json().course.draft.modules[0].units[0].assetIds[0];expect(newAsset).not.toBe(assetId);const downloaded=await call(partner,'GET',`/api/course-assets/${newAsset}`);expect(downloaded.statusCode).toBe(200);expect(downloaded.rawPayload).toEqual(png);
   await db.query("UPDATE course_enrollments SET status='cancelled' WHERE course_id=$1 AND student_id=$2",[id,student.userId]);
   expect((await call(student,'GET','/api/courses')).json().courses).toEqual([]);

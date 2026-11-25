@@ -3,6 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import { createDatabase } from '../server/db.js';
 import { localDatabaseUrl } from '../server/config.js';
+import { seedId } from '../scripts/seed-id.js';
 
 it('migra pedidos reais antigos sem debitar saldo ou interromper a simulação', async () => {
   const base = process.env.DATABASE_URL ?? localDatabaseUrl;
@@ -45,6 +46,41 @@ it('migra pedidos reais antigos sem debitar saldo ou interromper a simulação',
     ]);
     expect((await db.query('SELECT balance,reserved FROM wallets')).rows[0]).toEqual({ balance: 4, reserved: 1 });
     expect((await db.query('SELECT live_eligible FROM credit_lots')).rows[0].live_eligible).toBe(false);
+  } finally {
+    await db.close();
+    try { await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); } finally { await control.close(); }
+  }
+});
+
+it('preserva os cursos anteriores e compartilha só a primeira versão autoral do seed', async () => {
+  const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const schema = `course_upgrade_test_${randomUUID().replaceAll('-', '')}`;
+  const control = createDatabase(base);
+  const url = new URL(base);
+  url.searchParams.set('options', `-c search_path=${schema}`);
+  const db = createDatabase(url.href);
+  const directory = new URL('../server/migrations/', import.meta.url);
+  try {
+    await control.query(`CREATE SCHEMA ${schema}`);
+    const migrations = (await readdir(directory)).filter(name => name.endsWith('.sql')).sort();
+    for (const name of migrations.filter(name => name < '016')) {
+      await db.query(await readFile(new URL(name, directory), 'utf8'));
+    }
+    const rootOrg = seedId('matraca'), rootCourse = seedId('course:matraca:base');
+    const otherCourse = randomUUID(), partnerOrg = randomUUID(), partnerCourse = randomUUID();
+    await db.query("INSERT INTO orgs(id,slug,name,kind) VALUES($1,'matraca','Matraca','matraca'),($2,'partner','Parceiro','partner')",
+      [rootOrg, partnerOrg]);
+    await db.query(`INSERT INTO courses(id,org_id,title,status,draft,source_course_id) VALUES
+      ($1,$2,'Base','published','{}',NULL),($3,$2,'Outro','published','{}',NULL),($4,$5,'Cópia','draft','{}',$1)`,
+      [rootCourse, rootOrg, otherCourse, partnerCourse, partnerOrg]);
+    const versions = await db.query<{ id: string }>(`INSERT INTO course_versions(org_id,course_id,version,document) VALUES
+      ($1,$2,1,'{}'),($1,$2,2,'{}'),($1,$3,1,'{}') RETURNING id`, [rootOrg, rootCourse, otherCourse]);
+    const phase = migrations.find(name => name.startsWith('016_'))!;
+    await db.query(await readFile(new URL(phase, directory), 'utf8'));
+    expect((await db.query('SELECT course_id,version_id FROM course_base_shares')).rows)
+      .toEqual([{ course_id: rootCourse, version_id: versions.rows[0].id }]);
+    expect((await db.query('SELECT source_course_id FROM courses WHERE id=$1', [partnerCourse])).rows[0])
+      .toEqual({ source_course_id: rootCourse });
   } finally {
     await db.close();
     try { await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); } finally { await control.close(); }

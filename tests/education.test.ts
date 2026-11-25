@@ -216,6 +216,20 @@ describe('gestão escolar e autorização atual do aluno', () => {
     expect(active.rowCount).toBe(1);
   });
 
+  it('separa gestão de pessoas e leitura docente para papéis combinados', async () => {
+    const { admin, location, student, teacher, teacherActor } = await taughtStudent();
+    const other = await school(admin, 'Escola administrada');
+    const ownStudent = await person(admin, ['student'], other.id);
+    expect((await patch(admin, `/people/${teacher.id}`, { roles: ['teacher', 'school'] })).statusCode).toBe(200);
+    expect((await post(admin, `/schools/${other.id}/staff`, { userId: teacher.id, role: 'school' })).statusCode).toBe(201);
+    expect((await get(teacherActor, `/people/${student.id}`)).statusCode).toBe(200);
+    expect((await patch(teacherActor, `/people/${ownStudent.id}`, { name: 'Edição da escola atual' })).statusCode).toBe(200);
+    expect((await patch(teacherActor, `/people/${student.id}`, { status: 'suspended' })).statusCode).toBe(403);
+    expect((await post(teacherActor, `/people/${student.id}/archive`, {})).statusCode).toBe(403);
+    const manager = await schoolActor(admin, location.id);
+    expect((await patch(manager, `/people/${student.id}`, { name: 'Edição autorizada' })).statusCode).toBe(200);
+  });
+
   it.each(['approval', 'assignment', 'school', 'user'] as const)('revogação %s remove imediatamente o acesso do professor', async reason => {
     const fixture = await taughtStudent();
     if (reason === 'approval') expect((await patch(fixture.admin, `/teachers/${fixture.teacher.id}`, { approvalStatus: 'suspended' })).statusCode).toBe(200);
