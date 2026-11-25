@@ -135,7 +135,7 @@ describe('API de créditos, autorização e orçamento escolar', () => {
       expect(added.length).toBe(1);
       const mail = JSON.parse(await readFile(join(inbox, added[0]), 'utf8'));
       const link = new URL(mail.link);
-      const intent = requested.cookies.find(item => item.name === 'matraca_login_intent')!;
+      const intent = requested.cookies.find(item => item.name.startsWith('matraca_login_intent_'))!;
       const consumed = await app.inject({ method: 'POST', url: link.pathname, payload: { token: link.searchParams.get('token') },
         headers: { host: student.host, cookie: `${intent.name}=${intent.value}`, 'x-matraca-request': '1' } });
       expect(consumed.json().destination).toBe('/app');

@@ -3,10 +3,11 @@ import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.js';
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
+import { clientAddressHeader, clientProofHeader, signDevAddress } from '../server/request-origin.js';
 
 const hosts = ['localhost', 'parceiro.localhost', 'empresa.localhost', 'backoffice.localhost'] as const;
 type Host = typeof hosts[number];
@@ -233,7 +234,7 @@ describe('identidade isolada por organização e host', () => {
       expect(opened.headers['set-cookie']).toBeUndefined();
     }
     expect((await session('localhost', signed.cookie)).json().user.id).toBe(former.id);
-    expect((await consume('localhost', issued.token, 'matraca_login_intent=' + randomBytes(32).toString('base64url'))).statusCode).toBe(400);
+    expect((await consume('localhost', issued.token, 'matraca_login_intent_fixture=' + randomBytes(32).toString('base64url'))).statusCode).toBe(400);
     const preview = await app.inject({ method: 'POST', url: '/api/auth/preview',
       headers: { ...headers('localhost'), cookie: cookies }, payload: { token: issued.token } });
     expect(preview.json()).toEqual({ email: next.email });
@@ -381,6 +382,29 @@ describe('identidade isolada por organização e host', () => {
     await db.query("UPDATE auth_rate_limits SET window_started_at=clock_timestamp()-interval '16 minutes' WHERE key_hash=$1", [digest]);
     await requestLink('localhost', first.email, source);
     expect((await db.query('SELECT attempts FROM auth_rate_limits WHERE key_hash=$1', [digest])).rows[0].attempts).toBe(1);
+  });
+
+  it('reconhece a origem assinada pelo proxy local e ignora cabeçalhos sem prova', async () => {
+    const account = await user('localhost');
+    const address = '127.0.0.46';
+    const secret = randomBytes(32).toString('base64url');
+    const saturated = createHash('sha256').update(['host-origin', 'localhost', '127.0.0.1'].join('\0')).digest('hex');
+    const before = (await mailbox('localhost')).files;
+    vi.stubEnv('MATRACA_DEV_PROXY_SECRET', secret);
+    await db.query('INSERT INTO auth_rate_limits(key_hash,attempts) VALUES($1,48) ON CONFLICT(key_hash) DO UPDATE SET attempts=48', [saturated]);
+    try {
+      const request = (proof: string) => app.inject({ method: 'POST', url: '/api/auth/request', remoteAddress: '127.0.0.1',
+        headers: { ...headers('localhost'), [clientAddressHeader]: address, [clientProofHeader]: proof }, payload: { email: account.email } });
+      const untrusted = await request('0'.repeat(64));
+      expect(untrusted.statusCode).toBe(202);
+      expect((await mailbox('localhost')).files).toEqual(before);
+      const trusted = await request(signDevAddress(secret, address, 'localhost'));
+      expect(trusted.statusCode).toBe(202);
+      expect((await mailbox('localhost')).files.length).toBe(before.length + 1);
+    } finally {
+      vi.unstubAllEnvs();
+      await db.query('DELETE FROM auth_rate_limits WHERE key_hash=$1', [saturated]);
+    }
   });
 
   it('repetir pedidos além do limite não produz mais links nem revela o bloqueio', async () => {

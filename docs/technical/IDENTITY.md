@@ -63,7 +63,7 @@ seguintes. Cadastro repetido não altera nome, papéis nem status existentes.
 Tokens e sessões são segredos de 32 bytes aleatórios, codificados em base64url.
 O banco armazena somente SHA-256 desses valores. Tokens expiram após 15 minutos;
 sessões, após sete dias. Host, org, propósito e usuário estão vinculados no banco.
-A solicitação registra uma intenção de 15 minutos em cookie HTTP-only do host. O banco vincula seu hash ao token. A tela de confirmação recebe o token no fragmento da URL. A prévia e a confirmação exigem a intenção do navegador que pediu o link e usam `Referrer-Policy: no-referrer`. A interface oferece um novo pedido quando a confirmação falha.
+Cada solicitação registra uma intenção de 15 minutos em um cookie HTTP-only do host. Pedidos simultâneos mantêm intenções distintas e a limpeza conserva as mais recentes. O banco vincula seu hash ao token. A tela de confirmação recebe o token no fragmento da URL. A prévia e a confirmação exigem a intenção do navegador que pediu o link e usam `Referrer-Policy: no-referrer`. A interface oferece um novo pedido quando a confirmação falha.
 
 O consumo bloqueia usuário e organização e marca o token somente se ainda estiver válido. Marcação de uso,
 ativação do convidado, criação da sessão e auditoria são confirmadas juntas. Dois
@@ -80,7 +80,7 @@ com protocolo e host da requisição. A aplicação não habilita CORS aberto. O
 customizado impede envio de formulário cross-site simples; a checagem de origem
 também bloqueia requisições de outra organização.
 
-As cotas de 15 minutos contabilizam 96 solicitações por origem, 48 por origem e host, 12 cadastros por origem e host e cinco entregas por destinatário conhecido no host. A origem vem do socket da API. Os contadores têm chaves em hash e expiram. Excesso mantém a resposta genérica 202, sem emissão de token nem e-mail.
+As cotas de 15 minutos contabilizam 96 solicitações por origem, 48 por origem e host, 12 cadastros por origem e host e cinco entregas por destinatário conhecido no host. A origem vem do socket. O Vite assina o endereço recebido com uma chave efêmera do processo de desenvolvimento. A API só aceita essa assinatura quando o proxy se conecta pelo loopback. Os contadores têm chaves em hash e expiram. Excesso mantém a resposta genérica 202, sem emissão de token nem e-mail.
 
 ## E-mail simulado privado
 

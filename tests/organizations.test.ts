@@ -134,7 +134,7 @@ describe('organizações, branding e publicação isolada', () => {
     expect(files.length).toBe(1);
     const mail = JSON.parse(await readFile(join(inbox, files[0]), 'utf8'));
     const token = new URL(mail.link).searchParams.get('token');
-    const intent = linkRequest.cookies.find(item => item.name === 'matraca_login_intent')!;
+    const intent = linkRequest.cookies.find(item => item.name.startsWith('matraca_login_intent_'))!;
     const consumed = await app.inject({ method: 'POST', url: '/api/auth/consume', payload: { token },
       headers: { host, 'x-matraca-request': '1', cookie: `${intent.name}=${intent.value}` } });
     expect(consumed.json().destination).toBe('/app');

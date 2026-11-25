@@ -126,7 +126,7 @@ export function LoginPage() {
   const invalidLink = searchParams.get('error') === 'invalid_link';
 
   if (status !== 'ready' || !org) return <AccessState />;
-  if (user) return <Navigate to={sessionHome(org)} replace />;
+  if (user && searchParams.get('switch') !== '1') return <Navigate to={sessionHome(org)} replace />;
 
   const allowRegister = org.kind === 'matraca';
   const registering = allowRegister && mode === 'register';
@@ -202,7 +202,7 @@ const roleNames: Record<string, string> = {
 };
 
 export function LoginConfirmationPage() {
-  const { status, org } = useAuth();
+  const { status, org, user } = useAuth();
   const { hash } = useLocation();
   const token = hash.slice(1);
   const [email, setEmail] = useState<string | null>(null);
@@ -245,7 +245,7 @@ export function LoginConfirmationPage() {
     {email && <form onSubmit={confirm}>
       <button className="button button-primary" disabled={busy}>{busy ? 'Entrando…' : 'Confirmar entrada'}</button>
     </form>}
-    <Link to="/login" className="button button-text">Solicitar novo link</Link>
+    <Link to={user ? '/login?switch=1' : '/login'} className="button button-text">Solicitar novo link</Link>
   </section>;
 }
 

@@ -47,7 +47,7 @@ async function session(org: typeof direct, id: string): Promise<Session> {
   `, [org.id, id, org.host, hash, intentHash]);
   if (!token.rowCount) throw new Error('Persona ativa do seed não encontrada.');
   const login = await app.inject({ method: 'POST', url: '/api/auth/consume',
-    headers: { host: org.host, cookie: `matraca_login_intent=${intent}`, 'x-matraca-request': '1' }, payload: { token: raw } });
+    headers: { host: org.host, cookie: `matraca_login_intent_fixture=${intent}`, 'x-matraca-request': '1' }, payload: { token: raw } });
   const cookie = login.cookies.find(item => item.name === 'matraca_session');
   if (!cookie) throw new Error('Não foi possível iniciar a sessão da persona sintética.');
   const credential = { host: org.host, cookie: `${cookie.name}=${cookie.value}` };

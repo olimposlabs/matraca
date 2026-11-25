@@ -1,12 +1,13 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { chmod, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { z } from 'zod';
 import { grantInitialCreditInTransaction } from './wallet.js';
 import { localHostname } from './config.js';
 import { readOperationPolicy } from './operation-policy.js';
+import { loginRateOrigin } from './request-origin.js';
 
 export type IdentityRole = 'student' | 'teacher' | 'school' | 'org_admin' | 'operator';
 export type OrganizationKind = 'matraca' | 'partner' | 'backoffice';
@@ -59,7 +60,7 @@ export class IdentityError extends Error {
 }
 
 const COOKIE = 'matraca_session';
-const LOGIN_INTENT = 'matraca_login_intent';
+const INTENT_COOKIE_PREFIX = 'matraca_login_intent_';
 const INTENT_SECONDS = 15 * 60;
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -100,11 +101,11 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
     if (current.org.kind !== 'matraca' || current.status !== 'active') {
       throw new IdentityError(403, 'O cadastro desta organização é feito por convite.');
     }
-    const intent = currentLoginIntent(request);
+    const intent = randomBytes(32).toString('base64url');
     let written: string | undefined;
     try {
       await app.db.transaction(async (client) => {
-        if (!await permitRequest(client, current.hostname, request.ip, true)) return;
+        if (!await permitRequest(client, current.hostname, loginRateOrigin(request), true)) return;
         const organization = await client.query(
           "SELECT id FROM orgs WHERE id=$1 AND kind='matraca' AND status='active' FOR SHARE",
           [current.org.id],
@@ -124,7 +125,7 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
       if (written) await unlink(written).catch(() => {});
       throw error;
     }
-    reply.setCookie(LOGIN_INTENT, intent, { ...browserCookie(request), maxAge: INTENT_SECONDS });
+    setLoginIntent(request, reply, intent);
     return reply.code(202).send(ACCEPTED);
   });
 
@@ -133,18 +134,18 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
     const parsed = requestSchema.safeParse(request.body);
     if (!parsed.success) throw new IdentityError(400, 'Informe um e-mail válido.');
     const current = context(request);
-    const intent = currentLoginIntent(request);
+    const intent = randomBytes(32).toString('base64url');
     let written: string | undefined;
     try {
       await app.db.transaction(async (client) => {
-        if (!await permitRequest(client, current.hostname, request.ip, false)) return;
+        if (!await permitRequest(client, current.hostname, loginRateOrigin(request), false)) return;
         written = await issueLink(client, current, parsed.data.email, mailboxRoot(app.storage.root), publicPort, intent);
       });
     } catch (error) {
       if (written) await unlink(written).catch(() => {});
       throw error;
     }
-    reply.setCookie(LOGIN_INTENT, intent, { ...browserCookie(request), maxAge: INTENT_SECONDS });
+    setLoginIntent(request, reply, intent);
     return reply.code(202).send(ACCEPTED);
   });
 
@@ -160,9 +161,9 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
   app.post('/api/auth/preview', async (request, reply) => {
     assertMutation(request);
     reply.header('Referrer-Policy', 'no-referrer');
-    const { token, intent } = loginProof(request);
+    const { token, intents } = loginProof(request);
     const current = context(request);
-    const user = await matchingToken(app.db, current, token, intent);
+    const user = await matchingToken(app.db, current, token, intents);
     if (!user) throw invalidLink();
     return { email: user.email };
   });
@@ -170,11 +171,11 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
   app.post('/api/auth/consume', async (request, reply) => {
     assertMutation(request);
     reply.header('Referrer-Policy', 'no-referrer');
-    const { token, intent } = loginProof(request);
+    const { token, intents } = loginProof(request);
     const current = context(request);
     const sessionToken = randomBytes(32).toString('base64url');
     const accepted = await app.db.transaction(async (client) => {
-      const user = await matchingToken(client, current, token, intent, true);
+      const user = await matchingToken(client, current, token, intents, true);
       if (!user) return false;
       const consumed = await client.query(
         'UPDATE auth_tokens SET used_at=clock_timestamp() WHERE id=$1 AND used_at IS NULL AND expires_at>clock_timestamp() RETURNING id',
@@ -198,12 +199,12 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
         );
       }
       await audit(client, current.org.id, user.id, 'session_started', current.hostname);
-      return true;
+      return user.intent_hash;
     });
     if (!accepted) throw invalidLink();
     const options = browserCookie(request);
     reply.setCookie(COOKIE, sessionToken, { ...options, maxAge: SESSION_SECONDS });
-    reply.clearCookie(LOGIN_INTENT, options);
+    reply.clearCookie(intents.get(accepted)!, options);
     return { destination: current.org.kind === 'backoffice' ? '/backoffice' : '/app' };
   });
 
@@ -316,9 +317,19 @@ function browserCookie(request: FastifyRequest) {
   return { path: '/', httpOnly: true, sameSite: 'lax' as const, secure: request.protocol === 'https' };
 }
 
-function currentLoginIntent(request: FastifyRequest) {
-  const intent = request.cookies[LOGIN_INTENT];
-  return intent && TOKEN_PATTERN.test(intent) ? intent : randomBytes(32).toString('base64url');
+function intentCookies(request: FastifyRequest) {
+  return Object.entries(request.cookies).filter((entry): entry is [string, string] => {
+    const [name, value] = entry;
+    return name.startsWith(INTENT_COOKIE_PREFIX) && typeof value === 'string' && TOKEN_PATTERN.test(value);
+  });
+}
+
+function setLoginIntent(request: FastifyRequest, reply: FastifyReply, intent: string) {
+  const name = INTENT_COOKIE_PREFIX + hash(intent).slice(0, 12);
+  const options = browserCookie(request);
+  reply.setCookie(name, intent, { ...options, maxAge: INTENT_SECONDS });
+  const prior = intentCookies(request);
+  for (const [expired] of prior.slice(0, Math.max(0, prior.length - 7))) reply.clearCookie(expired, options);
 }
 
 function invalidLink() {
@@ -327,25 +338,25 @@ function invalidLink() {
 
 function loginProof(request: FastifyRequest) {
   const parsed = tokenSchema.safeParse(request.body);
-  const intent = request.cookies[LOGIN_INTENT];
-  if (!parsed.success || !intent || !TOKEN_PATTERN.test(intent)) throw invalidLink();
-  return { token: parsed.data.token, intent };
+  const intents = new Map(intentCookies(request).slice(-48).map(([name, value]) => [hash(value), name]));
+  if (!parsed.success || intents.size === 0) throw invalidLink();
+  return { token: parsed.data.token, intents };
 }
 
 interface TokenClient {
   query<T extends QueryResultRow>(sql: string, values: unknown[]): Promise<QueryResult<T>>;
 }
-async function matchingToken(client: TokenClient, current: IdentityContext, token: string, intent: string, lock = false) {
-  const matched = await client.query<UserRow & { token_id: string }>(
-    `SELECT u.id,u.email,u.name,u.roles,u.status,t.id AS token_id
+async function matchingToken(client: TokenClient, current: IdentityContext, token: string, intents: Map<string, string>, lock = false) {
+  const matched = await client.query<UserRow & { token_id: string; intent_hash: string }>(
+    `SELECT u.id,u.email,u.name,u.roles,u.status,t.id AS token_id,t.intent_hash
      FROM auth_tokens t JOIN users u ON u.id=t.user_id AND u.org_id=t.org_id
      JOIN orgs o ON o.id=t.org_id
      JOIN domains d ON d.hostname=t.hostname AND d.org_id=t.org_id
-     WHERE t.token_hash=$1 AND t.intent_hash=$2 AND t.org_id=$3 AND t.hostname=$4
+     WHERE t.token_hash=$1 AND t.intent_hash=ANY($2::text[]) AND t.org_id=$3 AND t.hostname=$4
        AND t.used_at IS NULL AND t.expires_at>clock_timestamp() AND t.purpose IN ('login','invite')
        AND u.status IN ('invited','active') AND u.archived_at IS NULL AND o.status='active'
      ${lock ? 'FOR SHARE OF o FOR UPDATE OF u' : ''}`,
-    [hash(token), hash(intent), current.org.id, current.hostname],
+    [hash(token), [...intents.keys()], current.org.id, current.hostname],
   );
   const user = matched.rows[0];
   return user && realmAllows(current.org.kind, user.roles) ? user : null;
@@ -366,10 +377,9 @@ async function takeAuthBudget(client: PoolClient, scope: string, key: string, ma
 }
 
 async function permitRequest(client: PoolClient, hostname: string, source: string, signup: boolean): Promise<boolean> {
-  const origin = source.startsWith('::ffff:') ? source.slice(7) : source;
-  return await takeAuthBudget(client, 'origin', origin, 96)
-    && await takeAuthBudget(client, 'host-origin', `${hostname}\0${origin}`, 48)
-    && (!signup || await takeAuthBudget(client, 'signup-origin', `${hostname}\0${origin}`, 12));
+  return await takeAuthBudget(client, 'origin', source, 96)
+    && await takeAuthBudget(client, 'host-origin', `${hostname}\0${source}`, 48)
+    && (!signup || await takeAuthBudget(client, 'signup-origin', `${hostname}\0${source}`, 12));
 }
 
 async function issueLink(
