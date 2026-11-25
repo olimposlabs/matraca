@@ -6,6 +6,7 @@ import type { PoolClient } from 'pg';
 import { mailboxRoot } from './auth.js';
 import type { Database } from './db.js';
 import { cancelEvaluationInTransaction } from './evaluation/worker.js';
+import { subjectOfSensitiveEvent } from './sensitive-access.js';
 import type { LocalStorage } from './storage.js';
 
 export type PrivacyScope = { orgId?: string; studentId?: string };
@@ -100,8 +101,10 @@ async function snapshot(client: PoolClient, storage: LocalStorage, scope: Privac
     AND ($1::uuid IS NULL OR org_id=$1) AND ($2::uuid IS NULL OR user_id=$2) ORDER BY id`);
   const sessions = scope.orgId
     ? await ids('SELECT id FROM sessions WHERE org_id=$1 AND ($2::uuid IS NULL OR user_id=$2) ORDER BY id') : [];
-  const access = await ids(`SELECT id::text AS id FROM sensitive_access_events WHERE occurred_at<=now()-interval '90 days'
-    AND ($1::uuid IS NULL OR org_id=$1) AND ($2::uuid IS NULL OR actor_id=$2) ORDER BY id`);
+  const access = await ids(`SELECT id::text AS id FROM sensitive_access_events a
+    WHERE ($1::uuid IS NOT NULL OR occurred_at<=now()-interval '90 days') AND ($1::uuid IS NULL OR a.org_id=$1)
+      AND ($2::uuid IS NULL OR a.actor_id=$2 OR (${subjectOfSensitiveEvent})=$2)
+    ORDER BY id`);
   const mentoring = await ids(`SELECT id FROM mentoring_sessions WHERE ${scopeSql} AND ${reportAge}
     AND (guidance<>'Conteúdo removido' OR difficulties<>'[]' OR actions<>'[]') ORDER BY id`);
   const reviews = await ids(`SELECT id FROM human_reviews WHERE ${scopeSql} AND ${reportAge}

@@ -634,8 +634,8 @@ describe('fila, relatórios e reserva atômica', () => {
   });
 
 
-  async function privacyMedia(actor: Student) {
-    const id = await recording(actor);
+  async function privacyMedia(actor: Student, purpose: 'free' | 'diagnostic' = 'free') {
+    const id = await recording(actor, 30_000_000, purpose);
     await app.storage.put(`recordings/${id}`, Readable.from([Buffer.alloc(100, 42)]));
     return id;
   }
@@ -654,7 +654,7 @@ describe('fila, relatórios e reserva atômica', () => {
 
   it('aplica os prazos globais sem remover mídia em uso nem mudar o razão', async () => {
     const actor = await student(2);
-    const media = await privacyMedia(actor), active = await privacyMedia(actor);
+    const media = await privacyMedia(actor, 'diagnostic'), active = await privacyMedia(actor);
     const old = await submit(actor, media);
     await runEvaluationJob(db, provider, { requestId: old.id });
     const pending = await submit(actor, active);
@@ -670,6 +670,9 @@ describe('fila, relatórios e reserva atômica', () => {
     await expect(readFile(expired)).rejects.toMatchObject({ code: 'ENOENT' });
     expect((await readFile(recent)).length).toBeGreaterThan(0);
     expect(await read(actor, old.id)).toMatchObject({ status: 'completed', report: null, mediaAvailable: false });
+    expect((await call(actor, 'GET', '/api/journey')).json().diagnostic).toMatchObject({
+      evaluationId: old.id, status: 'completed', reportAvailable: false, priorities: [],
+    });
     expect((await db.query('SELECT report,consumption_entry_id,report_removed_at FROM evaluation_results WHERE request_id=$1', [old.id])).rows[0])
       .toMatchObject({ report: {}, consumption_entry_id: expect.any(String), report_removed_at: expect.any(Date) });
     expect(await read(actor, pending.id)).toMatchObject({ status: 'queued', mediaAvailable: true });
@@ -685,6 +688,8 @@ describe('fila, relatórios e reserva atômica', () => {
     const pending = await submit(removed, media);
     const mailboxFile = await privacyMail(removed, false);
     const keptFile = await privacyMail(kept, false);
+    expect((await call(kept, 'GET', `/api/recordings/${media}/media`)).statusCode).toBe(403);
+    expect((await call(kept, 'GET', `/api/recordings/${otherMedia}/media`)).statusCode).toBe(200);
     const scope = { orgId: removed.orgId, studentId: removed.userId };
     const teacherId = randomUUID();
     await db.query("INSERT INTO users(id,org_id,email,name,roles,status) VALUES($1,$2,'professor@example.test','Professor sintético',ARRAY['teacher'],'active')", [teacherId, removed.orgId]);
@@ -696,7 +701,7 @@ describe('fila, relatórios e reserva atômica', () => {
     await expect(applyPrivacy(db, app.storage, scope, mismatched.fingerprint)).rejects.toThrow('A seleção mudou');
     await expect(privacyPlan(db, app.storage, { orgId: other.orgId, studentId: removed.userId })).rejects.toThrow('Aluno não encontrado');
     const preview = await privacyPlan(db, app.storage, scope);
-    expect(preview).toMatchObject({ accounts: 1, recordings: 1, mailboxFiles: 1, mentoringSessions: 1, pendingRequests: 1 });
+    expect(preview).toMatchObject({ accounts: 1, recordings: 1, mailboxFiles: 1, mentoringSessions: 1, pendingRequests: 1, accessEvents: 1 });
     const simulatedFailure = new LocalStorage(app.storage.root);
     simulatedFailure.removeUploadObject = async () => { throw new Error('Disco sintético indisponível'); };
     await expect(applyPrivacy(db, simulatedFailure, scope, preview.fingerprint)).rejects.toThrow('Disco sintético indisponível');
@@ -711,6 +716,8 @@ describe('fila, relatórios e reserva atômica', () => {
     expect((await db.query('SELECT status,context FROM evaluation_requests WHERE id=$1', [pending.id])).rows[0])
       .toEqual({ status: 'cancelled', context: {} });
     expect(await getWallet(db, removed)).toMatchObject({ balance: 1, reserved: 0 });
+    expect((await db.query('SELECT target_id FROM sensitive_access_events WHERE org_id=$1', [kept.orgId])).rows)
+      .toEqual([{ target_id: otherMedia }]);
     await expect(readFile(mailboxFile)).rejects.toMatchObject({ code: 'ENOENT' });
     expect((await readFile(keptFile)).length).toBeGreaterThan(0);
     expect((await call(kept, 'GET', `/api/recordings/${otherMedia}/media`)).statusCode).toBe(200);

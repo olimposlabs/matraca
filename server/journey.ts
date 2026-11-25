@@ -149,6 +149,7 @@ export async function registerJourney(app: FastifyInstance) {
           enabled: actor.org.settings.diagnosticEnabled !== false,
           evaluationId: diagnostic?.id ?? null,
           status: diagnostic?.status ?? null,
+          reportAvailable: !!diagnostic?.report,
           overallLevel: diagnostic?.report?.overallLevel ?? null,
           priorities: suggestedPriorities,
         },
