@@ -11,7 +11,7 @@ A migração 006 e o seed completo foram aplicados à demonstração. A revisão
 - Administrador: GET/POST `/api/courses/manage`, GET/PUT `/:id`, POST `/:id/publish`, `/:id/archive`, `/:id/assign`, GET/POST `/:id/assets`, GET `/:id/assignable` com busca e paginação de alunos e turmas.
 - Escola: GET `/api/courses/school`, GET `/:id`, GET `/:id/assignable` e POST `/:id/assign`. Apenas versões publicadas e alunos ou turmas das escolas ativas que a pessoa administra.
 - Operador: os mesmos endpoints sob `/api/backoffice/courses/:orgId`.
-- Base compartilhada: GET `/api/courses/base` lista versões autorizadas de cursos publicados da organização Matraca ativa. A criação com `copyBaseCourseId` usa a versão compartilhada e cria objetos próprios para seus anexos.
+- Base compartilhada: GET `/api/courses/base` lista versões autorizadas de cursos publicados da organização Matraca ativa. A criação usa `copyBaseCourseId` e confere `copyBaseVersionId` quando informado. O portal envia a versão selecionada. Uma troca concorrente devolve 409. A cópia cria objetos próprios para os anexos.
 - Aluno: GET `/api/courses` e `/api/courses/:id`, com a versão registrada na matrícula. Desativar cursos impede acesso atual, preservando dados.
 - Materiais: GET `/api/course-assets/:id`, autenticado e com suporte a uma faixa de bytes. Aluno só lê anexos citados em sua versão; anexos de rascunho ficam restritos ao editor.
 

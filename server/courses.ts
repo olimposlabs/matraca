@@ -130,7 +130,10 @@ export async function registerCourses(app:FastifyInstance){
   const base=central?'/api/backoffice/courses/:orgId':'/api/courses/manage';
   app.get(base,async request=>{const {orgId}=await target(request,central);const result=await app.db.query('SELECT c.id,c.title,c.status,c.draft_revision AS revision,(SELECT max(version) FROM course_versions v WHERE v.course_id=c.id) AS "publishedVersion" FROM courses c WHERE c.org_id=$1 ORDER BY c.updated_at DESC',[orgId]);return {courses:result.rows};});
   app.post(base,async(request,reply)=>{
-   const input=parse(z.object({title:z.string().trim().min(1).max(160),copyBaseCourseId:uuid.optional()}).strict(),request.body);
+   const input = parse(z.object({
+    title: z.string().trim().min(1).max(160),
+    copyBaseCourseId: uuid.optional(), copyBaseVersionId: uuid.optional(),
+   }).strict().refine(value => !value.copyBaseVersionId || Boolean(value.copyBaseCourseId)), request.body);
    const copiedKeys:string[]=[];
    try{const result=await mutation(request,central,async(client,orgId,actor)=>{
     let document=emptyCourse(input.title);
@@ -146,6 +149,9 @@ export async function registerCourses(app:FastifyInstance){
         `SELECT v.* ${sharedBase} AND c.id=$1 AND c.org_id=$2 FOR SHARE OF s`, [input.copyBaseCourseId, candidate.org_id],
       )).rows[0];
       if (!source) throw new CourseError(404, 'Curso base compartilhado não encontrado.');
+      if (input.copyBaseVersionId && input.copyBaseVersionId !== source.id) {
+        throw new CourseError(409, 'A versão compartilhada mudou. Escolha novamente o curso base.');
+      }
       document={...source.document,title:input.title,catalogVisible:false};
     }
     const created=(await client.query<CourseRow>('INSERT INTO courses(org_id,title,draft,source_course_id,created_by) VALUES($1,$2,$3,$4,$5) RETURNING *',[orgId,input.title,document,source?.course_id??null,actor.user.id])).rows[0];
@@ -230,7 +236,7 @@ export async function registerCourses(app:FastifyInstance){
  });
  app.get('/api/courses/base', async request => {
   await requireIdentity(request, ['org_admin', 'operator']);
-  const result = await app.db.query(`SELECT c.id,v.document->>'title' AS title,v.version ${sharedBase} ORDER BY title,c.id`);
+  const result = await app.db.query(`SELECT c.id,v.document->>'title' AS title,v.id AS "versionId",v.version ${sharedBase} ORDER BY title,c.id`);
   return { courses: result.rows };
  });
  app.get('/api/courses',async request=>{

@@ -12,6 +12,7 @@ import type { CourseDocument, CourseUnit } from '../server/course-model';
 type CourseSummary = { id: string; title: string; status: string; revision: number; publishedVersion: number | null };
 type CourseRecord = { id: string; title: string; status: string; draft_revision: number; draft: CourseDocument };
 type Version = { id: string; version: number; published_at: string };
+type SharedBase = { id: string; title: string; version: number; versionId: string };
 type CourseOrg = { id: string; name: string; kind: string; branding: Record<string, unknown> };
 type StudentCourse = { id: string; enrollmentId: string; title: string; description: string; status: string; version: number };
 type StudentDetail = { enrollmentId: string; versionId: string; version: number; status: string; document: CourseDocument; assets: CourseAsset[] };
@@ -49,10 +50,30 @@ function CourseCatalog({ org, prefix, onEditorChange }: { org: CourseOrg; prefix
   return <><div className="course-catalog-heading"><div><h2>Seus programas de ensino</h2><p>Comece com o plano Matraca ou construa a sua própria trilha.</p></div><button className="button button-primary" type="button" onClick={() => setCreating(true)}><Plus size={17} />Criar curso</button></div>{!courses || error ? <CourseState error={error} retry={() => setVersion(value => value + 1)} /> : <div className="course-catalog-grid">{courses.map(item => <button key={item.id} type="button" className="course-catalog-card" onClick={() => setSelected(item.id)}><span className="feature-icon icon-green"><BookOpen size={25} /></span><span className={`organization-status ${item.status === 'published' ? 'active' : 'suspended'}`}>{courseStatus[item.status] ?? item.status}</span><h3>{item.title}</h3><p>{item.publishedVersion ? `Versão ${item.publishedVersion} publicada` : 'Ainda sem publicação'}<br />Rascunho · revisão {item.revision}</p><span className="course-open-label">Abrir editor<ArrowRight size={17} /></span></button>)}</div>}{courses?.length === 0 && <div className="wallet-selection-empty"><Layers3 size={32} /><h2>Seu primeiro curso começa aqui.</h2><p>Adicione módulos, aulas, revisões e os critérios de cada prática.</p></div>}{creating && <CreateCourse prefix={prefix} close={() => setCreating(false)} created={id => { setCreating(false); setSelected(id); }} />}</>;
 }
 function CreateCourse({ prefix, close, created }: { prefix: string; close: () => void; created: (id: string) => void }) {
-  const [title, setTitle] = useState(''); const [baseId, setBaseId] = useState(''); const [bases, setBases] = useState<{ id: string; title: string }[]>([]); const [pending, setPending] = useState(false); const [error, setError] = useState<string | null>(null);
-  useEffect(() => { const controller = new AbortController(); void apiJson<{ courses: { id: string; title: string }[] }>('/api/courses/base', { signal: controller.signal }).then(result => setBases(result.courses)).catch(loadError => { if (!controller.signal.aborted) setError(failure(loadError)); }); return () => controller.abort(); }, []);
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setPending(true); setError(null); try { const result = await apiJson<{ course: CourseRecord }>(prefix, { method: 'POST', body: { title: title.trim(), ...(baseId ? { copyBaseCourseId: baseId } : {}) } }); created(result.course.id); } catch (saveError) { setError(failure(saveError)); setPending(false); } }
-  return <CourseDialog title="Criar programa de ensino" close={close} pending={pending}><form className="organization-form education-action-form course-form" onSubmit={submit}><label>Nome do curso<input aria-label="Nome do curso" value={title} onChange={event => setTitle(event.target.value)} required maxLength={160} disabled={pending} /></label><label>Ponto de partida<select aria-label="Ponto de partida do curso" value={baseId} onChange={event => setBaseId(event.target.value)} disabled={pending}><option value="">Curso em branco</option>{bases.map(base => <option key={base.id} value={base.id}>Copiar: {base.title}</option>)}</select></label><p className="education-form-description">A cópia mantém conteúdo, referências e critérios do plano publicado. As edições passam a pertencer a esta organização.</p>{error && <p className="form-error" role="alert">{error}</p>}<div className="education-dialog-actions"><button className="button button-primary" type="submit" disabled={pending}>{pending ? 'Criando…' : baseId ? 'Criar cópia independente' : 'Criar curso'}{baseId ? <Copy size={16} /> : <Plus size={16} />}</button></div></form></CourseDialog>;
+  const [title, setTitle] = useState(''); const [baseId, setBaseId] = useState(''); const [bases, setBases] = useState<SharedBase[]>([]); const [attempt, reload] = useState(0); const [pending, setPending] = useState(false); const [error, setError] = useState<string | null>(null);
+  useEffect(() => { const controller = new AbortController(); void apiJson<{ courses: SharedBase[] }>('/api/courses/base', { signal: controller.signal }).then(result => setBases(result.courses)).catch(loadError => { if (!controller.signal.aborted) setError(failure(loadError)); }); return () => controller.abort(); }, [attempt]);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const base = bases.find(item => item.id === baseId);
+    if (baseId && !base) return;
+    setPending(true);
+    setError(null);
+    try {
+      const result = await apiJson<{ course: CourseRecord }>(prefix, {
+        method: 'POST', body: { title: title.trim(), ...(base ? { copyBaseCourseId: base.id, copyBaseVersionId: base.versionId } : {}) },
+      });
+      created(result.course.id);
+    } catch (saveError) {
+      if (base && saveError instanceof ApiError && [404, 409].includes(saveError.status)) {
+        setBaseId('');
+        setBases([]);
+        reload(value => value + 1);
+      }
+      setError(failure(saveError));
+      setPending(false);
+    }
+  }
+  return <CourseDialog title="Criar programa de ensino" close={close} pending={pending}><form className="organization-form education-action-form course-form" onSubmit={submit}><label>Nome do curso<input aria-label="Nome do curso" value={title} onChange={event => setTitle(event.target.value)} required maxLength={160} disabled={pending} /></label><label>Ponto de partida<select aria-label="Ponto de partida do curso" value={baseId} onChange={event => setBaseId(event.target.value)} disabled={pending}><option value="">Curso em branco</option>{bases.map(base => <option key={base.id} value={base.id}>Copiar: {base.title} · versão {base.version}</option>)}</select></label><p className="education-form-description">A cópia mantém conteúdo, referências e critérios do plano publicado. As edições passam a pertencer a esta organização.</p>{error && <p className="form-error" role="alert">{error}</p>}<div className="education-dialog-actions"><button className="button button-primary" type="submit" disabled={pending}>{pending ? 'Criando…' : baseId ? 'Criar cópia independente' : 'Criar curso'}{baseId ? <Copy size={16} /> : <Plus size={16} />}</button></div></form></CourseDialog>;
 }
 
 function CourseEditor({ id, prefix, org, back }: { id: string; prefix: string; org: CourseOrg; back: () => void }) {
