@@ -215,7 +215,7 @@ export async function registerOperations(app: FastifyInstance, instance: LiveLim
       ) : await client.query(
         `UPDATE live_evaluation_policies SET enabled=$2,organization_limits=$3,student_limits=$4,
            include_experience=COALESCE($5::boolean,include_experience),revision=revision+1
-         WHERE org_id=$1 AND revision=$6`,
+         WHERE org_id=$1 AND revision=$6::bigint`,
         [...fields, input.expectedRevision],
       );
       if (!updated.rowCount) throw new OperationsError(409, 'A política mudou. Recarregue antes de salvar.');

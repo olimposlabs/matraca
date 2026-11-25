@@ -141,6 +141,10 @@ describe('controles operacionais e reconciliação', () => {
       expect(accepted.revision).toBe(expectedRevision + 1);
       expect((await call(operator, 'GET', lower)).json().policy).toEqual(accepted);
     }
+    const stale = await call(operator, 'PUT', lower, {
+      enabled: true, organization: limits, student: limits, expectedRevision: 2_147_483_648,
+    });
+    expect(stale.statusCode).toBe(409);
   });
 
   it('salva política com CAS, aplica frequência e cenário padrão, preserva replay e custo separado', async () => {
