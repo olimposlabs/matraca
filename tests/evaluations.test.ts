@@ -207,6 +207,8 @@ describe('fila, relatórios e reserva atômica', () => {
       } };
       expect(await runEvaluationJob(db, liveProvider, { requestId: id })).toBe(true);
       expect(calls).toBe(1);
+      expect((await db.query('SELECT release_reason FROM credit_reservations WHERE request_id=$1', [id])).rows[0].release_reason)
+        .toBe('Avaliação encerrada ao voltar para o modo simulado');
       expect((await db.query('SELECT request_id FROM live_evaluation_dispatches WHERE request_id=$1', [id])).rowCount).toBe(1);
       expect(await getWallet(db, actor)).toMatchObject({ balance: 2, reserved: 0 });
     } finally { await live.close(); }

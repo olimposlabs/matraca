@@ -59,7 +59,9 @@ async function finishJob(client: PoolClient, requestId: string, status: 'complet
   await client.query('INSERT INTO evaluation_outbox(request_id,event_type) VALUES ($1,$2) ON CONFLICT DO NOTHING', [requestId, status]);
 }
 
-export async function cancelEvaluationInTransaction(client: PoolClient, target: { orgId: string; studentId: string; requestId: string }) {
+export async function cancelEvaluationInTransaction(client: PoolClient, target: { orgId: string; studentId: string; requestId: string },
+  reason = 'Avaliação cancelada pelo aluno',
+) {
   const found = await client.query<{ status: string }>(
     `SELECT r.status FROM evaluation_requests r JOIN evaluation_jobs j ON j.request_id=r.id
      WHERE r.id=$1 AND r.org_id=$2 AND r.student_id=$3 FOR UPDATE OF j`,
@@ -71,7 +73,7 @@ export async function cancelEvaluationInTransaction(client: PoolClient, target: 
   const current = await client.query<{ status: string }>('SELECT status FROM evaluation_requests WHERE id=$1', [target.requestId]);
   const status = current.rows[0].status;
   if (status !== 'queued' && status !== 'processing') return status;
-  await releaseReservationInTransaction(client, { ...target, userId: target.studentId, reason: 'Avaliação cancelada pelo aluno' });
+  await releaseReservationInTransaction(client, { ...target, userId: target.studentId, reason });
   await finishJob(client, target.requestId, 'cancelled');
   return 'cancelled';
 }
@@ -85,7 +87,7 @@ export async function drainLiveEvaluations(db: Database) {
   for (const item of pending.rows) {
     const status = await db.transaction(client => cancelEvaluationInTransaction(client, {
       orgId: item.org_id, studentId: item.student_id, requestId: item.id,
-    }));
+    }, 'Avaliação encerrada ao voltar para o modo simulado'));
     if (status === 'cancelled') cancelled++;
   }
   return cancelled;
