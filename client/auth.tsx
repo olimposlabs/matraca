@@ -205,16 +205,17 @@ export function LoginConfirmationPage() {
   const { status, org, user } = useAuth();
   const { hash } = useLocation();
   const token = hash.slice(1);
-  const [email, setEmail] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ token: string; email: string } | null>(null);
+  const email = preview?.token === token ? preview.email : null;
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    setEmail(null);
+    setPreview(null);
     setError(null);
     void apiJson<{ email: string }>('/api/auth/preview', {
       method: 'POST', body: { token }, signal: controller.signal,
-    }).then(result => setEmail(result.email)).catch(cause => {
+    }).then(result => setPreview({ token, email: result.email })).catch(cause => {
       if (!controller.signal.aborted) setError(messageFrom(cause));
     });
     return () => controller.abort();

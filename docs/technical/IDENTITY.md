@@ -63,7 +63,7 @@ seguintes. Cadastro repetido não altera nome, papéis nem status existentes.
 Tokens e sessões são segredos de 32 bytes aleatórios, codificados em base64url.
 O banco armazena somente SHA-256 desses valores. Tokens expiram após 15 minutos;
 sessões, após sete dias. Host, org, propósito e usuário estão vinculados no banco.
-Cada solicitação registra uma intenção de 15 minutos em um cookie HTTP-only do host. Pedidos simultâneos mantêm intenções distintas e a limpeza conserva as mais recentes. O banco vincula seu hash ao token. A tela de confirmação recebe o token no fragmento da URL. A prévia e a confirmação exigem a intenção do navegador que pediu o link e usam `Referrer-Policy: no-referrer`. A interface oferece um novo pedido quando a confirmação falha.
+Cada solicitação registra uma intenção de 15 minutos em um cookie HTTP-only do host. Pedidos simultâneos mantêm intenções distintas até a confirmação ou expiração. Solicitações acima da cota da origem recebem a resposta genérica sem emitir outra intenção. O banco vincula seu hash ao token. A tela de confirmação recebe o token no fragmento da URL. A prévia e a confirmação exigem a intenção do navegador que pediu o link e usam `Referrer-Policy: no-referrer`. A interface oferece um novo pedido quando a confirmação falha.
 
 O consumo bloqueia usuário e organização e marca o token somente se ainda estiver válido. Marcação de uso,
 ativação do convidado, criação da sessão e auditoria são confirmadas juntas. Dois

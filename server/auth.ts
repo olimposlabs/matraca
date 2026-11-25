@@ -102,10 +102,12 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
       throw new IdentityError(403, 'O cadastro desta organização é feito por convite.');
     }
     const intent = randomBytes(32).toString('base64url');
+    let admitted = false;
     let written: string | undefined;
     try {
       await app.db.transaction(async (client) => {
         if (!await permitRequest(client, current.hostname, loginRateOrigin(request), true)) return;
+        admitted = true;
         const organization = await client.query(
           "SELECT id FROM orgs WHERE id=$1 AND kind='matraca' AND status='active' FOR SHARE",
           [current.org.id],
@@ -125,7 +127,7 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
       if (written) await unlink(written).catch(() => {});
       throw error;
     }
-    setLoginIntent(request, reply, intent);
+    if (admitted) setLoginIntent(request, reply, intent);
     return reply.code(202).send(ACCEPTED);
   });
 
@@ -135,17 +137,19 @@ export async function registerIdentity(app: FastifyInstance): Promise<void> {
     if (!parsed.success) throw new IdentityError(400, 'Informe um e-mail válido.');
     const current = context(request);
     const intent = randomBytes(32).toString('base64url');
+    let admitted = false;
     let written: string | undefined;
     try {
       await app.db.transaction(async (client) => {
         if (!await permitRequest(client, current.hostname, loginRateOrigin(request), false)) return;
+        admitted = true;
         written = await issueLink(client, current, parsed.data.email, mailboxRoot(app.storage.root), publicPort, intent);
       });
     } catch (error) {
       if (written) await unlink(written).catch(() => {});
       throw error;
     }
-    setLoginIntent(request, reply, intent);
+    if (admitted) setLoginIntent(request, reply, intent);
     return reply.code(202).send(ACCEPTED);
   });
 
@@ -328,8 +332,6 @@ function setLoginIntent(request: FastifyRequest, reply: FastifyReply, intent: st
   const name = INTENT_COOKIE_PREFIX + hash(intent).slice(0, 12);
   const options = browserCookie(request);
   reply.setCookie(name, intent, { ...options, maxAge: INTENT_SECONDS });
-  const prior = intentCookies(request);
-  for (const [expired] of prior.slice(0, Math.max(0, prior.length - 7))) reply.clearCookie(expired, options);
 }
 
 function invalidLink() {
@@ -338,7 +340,7 @@ function invalidLink() {
 
 function loginProof(request: FastifyRequest) {
   const parsed = tokenSchema.safeParse(request.body);
-  const intents = new Map(intentCookies(request).slice(-48).map(([name, value]) => [hash(value), name]));
+  const intents = new Map(intentCookies(request).slice(-128).map(([name, value]) => [hash(value), name]));
   if (!parsed.success || intents.size === 0) throw invalidLink();
   return { token: parsed.data.token, intents };
 }
