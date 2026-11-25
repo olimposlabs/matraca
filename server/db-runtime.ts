@@ -11,7 +11,7 @@ export async function requireRuntimeDatabase(db: Database, databaseUrl: string) 
     throw new Error('A credencial antiga de demonstração precisa ser substituída antes de iniciar a API.');
   }
   const result = await db.query<{ restricted: boolean }>(`
-    SELECT NOT EXISTS (
+    SELECT current_user=session_user AND NOT EXISTS (
       SELECT 1 FROM pg_roles r
       WHERE pg_has_role(current_user,r.oid,'MEMBER') AND
         (r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls OR

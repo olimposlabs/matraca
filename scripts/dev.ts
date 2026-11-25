@@ -4,7 +4,7 @@ import { startLocalDatabase } from './db-start.js';
 import { configuration } from '../server/config.js';
 if (process.argv.includes('--openai')) process.env.EVALUATION_PROVIDER = 'openai';
 try {
-  if (process.env.EVALUATION_PROVIDER !== 'openai') {
+  if (process.env.EVALUATION_PROVIDER !== 'openai' && (!process.env.DATABASE_URL || process.env.MATRACA_MIGRATION_DATABASE_URL)) {
     if (!process.env.DATABASE_URL) await startLocalDatabase();
     for (const script of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', script], { stdio: 'inherit' });
   }
@@ -12,6 +12,7 @@ try {
 process.env.MATRACA_DEV_PROXY_SECRET = randomBytes(32).toString('base64url');
 const runtimeEnvironment: NodeJS.ProcessEnv = { ...process.env, DATABASE_URL: configuration().databaseUrl };
 delete runtimeEnvironment.MATRACA_MIGRATION_DATABASE_URL;
+delete runtimeEnvironment.TEST_DATABASE_URL;
 const webEnvironment: NodeJS.ProcessEnv = { ...runtimeEnvironment };
 delete webEnvironment.DATABASE_URL;
 delete webEnvironment.OPENAI_API_KEY;

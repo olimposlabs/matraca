@@ -53,6 +53,7 @@ try {
       APP_PARTNER_DOMAIN_SUFFIX: domainSuffix,
     };
     delete env.MATRACA_MIGRATION_DATABASE_URL;
+    delete env.TEST_DATABASE_URL;
     for (const task of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', task], {
       env: { ...env, MATRACA_MIGRATION_DATABASE_URL: migrationUrl }, stdio: 'inherit',
     });

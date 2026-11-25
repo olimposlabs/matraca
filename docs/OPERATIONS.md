@@ -4,7 +4,7 @@ O remoto é olimposlabs/matraca no GitHub. Integração usa main e trabalho usa 
 
 ## Ambiente local
 
-Node 24 LTS é a referência. `npm ci` instala versões fixadas. `npm run dev` prepara PostgreSQL via Docker Compose, migra e confere o seed antes de iniciar API e Vite. Uma `DATABASE_URL` explícita configura o papel de runtime para a API. `MATRACA_MIGRATION_DATABASE_URL` configura a conexão da CLI de migração e seed. A suíte de teste usa o banco separado do projeto ou a conexão de serviço do CI.
+Node 24 LTS é a referência. `npm ci` instala versões fixadas. `npm run dev` prepara PostgreSQL via Docker Compose, migra e confere o seed antes de iniciar API e Vite. Uma `DATABASE_URL` explícita configura o papel de runtime para a API. `MATRACA_MIGRATION_DATABASE_URL` configura a conexão da CLI de migração e seed. A suíte usa `TEST_DATABASE_URL` ou o banco descartável do projeto. O CI define a conexão de testes e a de migração para seu serviço PostgreSQL efêmero.
 
 O volume matraca-postgres persiste entre reinícios. Os arquivos locais ficam em .data/objects. Não executar down com remoção de volumes para resolver problemas comuns. Migrações usam transação, lock e checksum para detectar alteração indevida de migração já aplicada.
 

@@ -47,9 +47,9 @@ export function localDatabaseConnection(role: Role, profile = mainDatabaseProfil
 }
 
 export function testDatabaseUrl() {
-  return process.env.DATABASE_URL ?? localDatabaseConnection('migration', testDatabaseProfile);
+  return process.env.TEST_DATABASE_URL ?? localDatabaseConnection('migration', testDatabaseProfile);
 }
 
 export function migrationDatabaseUrl() {
-  return process.env.MATRACA_MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL ?? localDatabaseConnection('migration');
+  return process.env.MATRACA_MIGRATION_DATABASE_URL ?? localDatabaseConnection('migration');
 }

@@ -8,6 +8,7 @@ Em 24/11/2026, o fundador autorizou conectar a OpenAI real no ambiente local. E-
 npm ci
 npm run db:start
 npm run db:migrate
+npm run db:seed
 npm run media:build
 npm run media:verify
 npm run dev:openai

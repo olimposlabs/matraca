@@ -56,6 +56,12 @@ try {
   try {
     await requireRuntimeDatabase(app.db, primary.runtimeUrl);
     await assert.rejects(() => requireRuntimeDatabase(owner, primary.migrationUrl), /papel de runtime/u);
+    const alteredRole = new URL(localDatabaseConnection('bootstrap'));
+    alteredRole.pathname = new URL(primary.runtimeUrl).pathname;
+    alteredRole.searchParams.set('options', `-c role=${primary.runtimeRole}`);
+    const privilegedSession = createDatabase(alteredRole.href);
+    try { await assert.rejects(() => requireRuntimeDatabase(privilegedSession, alteredRole.href), /papel de runtime/u); }
+    finally { await privilegedSession.close(); }
     assert.equal((await app.inject({ method: 'GET', url: '/api/context', headers: { host: 'localhost' } })).statusCode, 200);
     await assert.rejects(() => app.db.query('CREATE SCHEMA synthetic_restricted_check'), { code: '42501' });
     await assert.rejects(() => app.db.query('SELECT name FROM schema_migrations LIMIT 1'), { code: '42501' });
