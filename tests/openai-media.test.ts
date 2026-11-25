@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -64,6 +64,15 @@ describe('derivados de mídia para OpenAI', () => {
     const media = await extractEvaluationMedia(executor, path, 'mp4',
       { id: 'test', durationMicroseconds: 2_000_000, hasAudio: true, hasVideo: false }, AbortSignal.timeout(8000));
     expect(media.audio).toHaveLength(1);
+  });
+
+  it('mantém indisponibilidade temporária do executor como falha recuperável', async () => {
+    const path = join(directory, 'test-input.wav');
+    await writeFile(path, 'entrada sintética');
+    const offline = { ...executor, host: `--host=unix://${join(directory, 'engine.sock')}` };
+    await expect(extractEvaluationMedia(offline, path, 'wav',
+      { id: 'test', durationMicroseconds: 1000, hasAudio: true, hasVideo: false }, AbortSignal.timeout(5000)))
+      .rejects.toMatchObject({ code: 'temporary', retryable: true });
   });
 
   it('recusa limite excedido e caminho sem mídia antes de enviar qualquer dado', async () => {

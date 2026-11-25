@@ -13,8 +13,11 @@ const dockerEnv = () => ({ PATH: process.env.PATH, HOME: process.env.HOME,
   XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR, LANG: 'C' });
 
 export interface MediaExecutor { image: string; host: string }
+export class MediaExecutorError extends Error {
+  constructor(readonly kind: 'temporary' | 'timeout') { super(kind); }
+}
 const run = [
-  'run', '--pull=never', '--rm', '--network=none', '--read-only', '--log-driver=none',
+  'run', '--pull=never', '--rm', '--init', '--network=none', '--read-only', '--log-driver=none',
   '--user=65534:65534', '--cap-drop=ALL', '--security-opt=no-new-privileges',
   '--pids-limit=32', '--cpus=1', '--memory=512m', '--memory-swap=512m',
   '--tmpfs=/work:rw,noexec,nodev,nosuid,size=224m,mode=0700,uid=65534,gid=65534',
@@ -57,8 +60,19 @@ export async function runMediaDecoder(executor: MediaExecutor, path: string, arg
     });
     try {
       const source = input.createReadStream({ autoClose: false, start: 0, end: data.size - 1 });
-      const [finished] = await Promise.all([result, pipeline(source, result.child.stdin!, { signal })]);
-      return finished.stdout;
+      const [finished, sent] = await Promise.allSettled([result, pipeline(source, result.child.stdin!, { signal })]);
+      if (finished.status === 'rejected') {
+        const error = finished.reason as { code?: string | number; killed?: boolean };
+        if (signal.aborted || error.killed || error.code === 124 || error.code === 137) throw new MediaExecutorError('timeout');
+        if (error.code === 125 || error.code === 126 || error.code === 127 || error.code === 'ENOENT') throw new MediaExecutorError('temporary');
+        const available = await execute('docker', [host, 'info', '--format={{.ServerVersion}}'], {
+          env, signal, timeout: 2500, maxBuffer: 4096,
+        }).then(() => true, () => false);
+        if (!available) throw new MediaExecutorError('temporary');
+        throw new Error('Could not decode media');
+      }
+      if (sent.status === 'rejected') throw new Error('Could not read media');
+      return finished.value.stdout;
     } finally {
       await execute('docker', [host, 'container', 'rm', '--force', name], { env, timeout: 5000 }).catch(() => {});
     }

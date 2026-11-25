@@ -113,7 +113,7 @@ export class UploadCapacity {
     return this.db.transaction(async client => {
       const items = await client.query<{ object_key: string }>(`SELECT object_key FROM upload_reservations
         WHERE ${keys ? 'object_key=ANY($1::text[])' : 'expires_at<=clock_timestamp()'}
-        ORDER BY expires_at,object_key LIMIT 100 FOR UPDATE SKIP LOCKED`, keys ? [keys] : []);
+        ORDER BY expires_at,object_key ${keys ? '' : 'LIMIT 100'} FOR UPDATE SKIP LOCKED`, keys ? [keys] : []);
       for (const { object_key: key } of items.rows) {
         await this.storage.removeUploadTemporary(key);
         const reference = await client.query('SELECT 1 FROM stored_uploads WHERE object_key=$1 LIMIT 1', [key]);

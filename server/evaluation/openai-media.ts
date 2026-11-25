@@ -1,6 +1,6 @@
 import type { Database } from '../db.js';
 import type { LocalStorage } from '../storage.js';
-import { runMediaDecoder, type MediaExecutor } from '../media/executor.js';
+import { MediaExecutorError, runMediaDecoder, type MediaExecutor } from '../media/executor.js';
 import { EvaluationProviderError, type EvaluationContext } from './provider.js';
 import { liveEvaluationMaximumSeconds } from './openai-config.js';
 
@@ -85,8 +85,9 @@ export async function extractEvaluationMedia(
       container, String(duration), recording.hasAudio ? '1' : '0', recording.hasVideo ? '1' : '0',
     ], signal);
     return parseMedia(output, duration, recording.hasAudio, recording.hasVideo);
-  } catch {
+  } catch (error) {
     if (signal.aborted) throw new EvaluationProviderError('timeout', true);
+    if (error instanceof MediaExecutorError) throw new EvaluationProviderError(error.kind, true);
     throw new EvaluationProviderError('media', false);
   }
 }

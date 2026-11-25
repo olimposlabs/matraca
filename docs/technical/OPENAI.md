@@ -30,7 +30,7 @@ Os limites contabilizam admissões e minutos arredondados na janela móvel de 24
 
 A autorização é verificada antes da preparação da mídia, antes de cada despacho e antes de gravar um resultado real. Suspensão, revogação do participante ou perda de acesso à atividade pode encerrar o pedido. Um despacho autorizado já registrado pode gerar custo, mesmo quando a autorização é revogada logo depois.
 
-O prazo por tentativa real é de 240 segundos, com lease de 255 segundos; o mock conserva 8/30 segundos. Rate limit, indisponibilidade e timeout permitem até três tentativas. Credenciais inválidas, cota esgotada, mídia não decodificável ou relatório inválido encerram sem debitar créditos. O lease com token continua impedindo commits tardios e débito duplicado.
+A preparação local é encerrada pelo executor em até 55 segundos e tem um limite adicional no processo da API. Timeout ou indisponibilidade temporária pode ser reprocessado. O prazo por tentativa real é de 240 segundos, com lease de 255 segundos; o mock conserva 8/30 segundos. Rate limit, indisponibilidade e timeout permitem até três tentativas. Credenciais inválidas, cota esgotada, mídia não decodificável ou relatório inválido encerram sem debitar créditos. O lease com token continua impedindo commits tardios e débito duplicado.
 
 ## Uso, custo e limitações
 

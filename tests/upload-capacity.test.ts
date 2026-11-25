@@ -83,6 +83,15 @@ describe('capacidade de upload persistida', () => {
     expect(await readFile(storage.path(kept), 'utf8')).toBe('imagem sintética');
   });
 
+  it('solta todas as reservas de uma cópia cancelada em lote', async () => {
+    const target = await actor();
+    const capacity = new UploadCapacity(db, storage);
+    const staged = Array.from({ length: 105 }, () => ({ key: `course-assets/${target.orgId}/${randomUUID()}`, bytes: 10 }));
+    await capacity.reserve(target, staged);
+    expect(await capacity.reconcile(staged.map(item => item.key))).toBe(105);
+    expect((await db.query('SELECT object_key FROM upload_reservations WHERE org_id=$1', [target.orgId])).rowCount).toBe(0);
+  });
+
   it('remove um arquivo parcial quando o sinal de recepção é interrompido', async () => {
     const target = await actor();
     const capacity = new UploadCapacity(db, storage);
