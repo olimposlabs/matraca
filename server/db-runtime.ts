@@ -22,8 +22,7 @@ export async function requireRuntimeDatabase(db: Database, databaseUrl: string) 
     ) AND to_regclass('schema_migrations') IS NOT NULL AND NOT has_database_privilege(current_database(),'CREATE')
       AND NOT has_schema_privilege(current_schema(),'CREATE')
       AND NOT EXISTS (
-        SELECT 1 FROM pg_class c WHERE c.relname='schema_migrations'
-        AND c.relnamespace=current_schema()::regnamespace
+        SELECT 1 FROM pg_class c WHERE c.oid=to_regclass('schema_migrations')
         AND has_table_privilege(c.oid,'INSERT,UPDATE,DELETE,TRUNCATE')
       ) AS restricted
   `);

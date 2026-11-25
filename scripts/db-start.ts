@@ -2,10 +2,11 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { clusterSecret, localDatabaseConnection, mainDatabaseProfile, testDatabaseProfile } from '../server/local-database-config.js';
+import { assertLocalAppMode, clusterSecret, localDatabaseConnection, mainDatabaseProfile, testDatabaseProfile } from '../server/local-database-config.js';
 import { provisionLocalDatabase } from './provision-local-db.js';
 
 export function startPostgresCluster() {
+  assertLocalAppMode();
   localDatabaseConnection('bootstrap', mainDatabaseProfile, true);
   const environment = { PATH: process.env.PATH, HOME: process.env.HOME, XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR };
   const endpoint = process.env.DOCKER_HOST ?? execFileSync('docker', ['context', 'inspect',

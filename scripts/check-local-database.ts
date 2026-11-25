@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,6 +29,14 @@ try {
     env: { ...process.env, DATABASE_URL: primary.runtimeUrl, MATRACA_MIGRATION_DATABASE_URL: primary.migrationUrl },
     stdio: 'inherit', timeout: 30000,
   });
+  for (const task of ['db:migrate', 'db:seed']) {
+    const rejected = spawnSync('npm', ['run', task], {
+      env: { ...process.env, APP_MODE: 'nonlocal-validation', MATRACA_MIGRATION_DATABASE_URL: primary.migrationUrl },
+      encoding: 'utf8', timeout: 10000,
+    });
+    assert.equal(rejected.status, 1);
+    assert.ok(rejected.stderr.includes('APP_MODE=local'));
+  }
   const previous = createDatabase(primary.migrationUrl);
   try {
     await previous.query("UPDATE orgs SET name='Histórico sintético a preservar' WHERE slug='matraca'");

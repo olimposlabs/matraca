@@ -6,7 +6,7 @@ O remoto é olimposlabs/matraca no GitHub. Integração usa main e trabalho usa 
 
 Node 24 LTS é a referência. `npm ci` instala versões fixadas. `npm run dev` prepara PostgreSQL via Docker Compose, migra e confere o seed antes de iniciar API e Vite. Uma `DATABASE_URL` explícita configura o papel de runtime para a API. `MATRACA_MIGRATION_DATABASE_URL` configura a conexão da CLI de migração e seed. A suíte usa `TEST_DATABASE_URL` ou o banco descartável do projeto. O CI define a conexão de testes e a de migração para seu serviço PostgreSQL efêmero.
 
-O volume matraca-postgres persiste entre reinícios. Os arquivos locais ficam em .data/objects. Não executar down com remoção de volumes para resolver problemas comuns. Migrações usam transação, lock e checksum para detectar alteração indevida de migração já aplicada.
+O volume matraca-postgres persiste entre reinícios. Os arquivos da instância nova ficam em `.data/local/objects`. Não executar down com remoção de volumes para resolver problemas comuns. Migrações usam transação, lock e checksum para detectar alteração indevida de migração já aplicada.
 
 `npm run db:start`, `npm run db:migrate` e `npm run db:seed` permitem executar as etapas separadamente. O Compose prepara uma nova instância em `127.0.0.1:54339`. `npm run db:start` cria a senha de bootstrap em arquivo privado e concede ao banco escolhido papéis distintos de migração e execução. O processo de inicialização da API recebe a conexão de execução. A CLI de migração é executada separadamente e preserva o registro de checksums. O modo de execução rejeita APP_MODE diferente de local até existir configuração produtiva explícita.
 
@@ -34,7 +34,7 @@ npm run pilot:sandbox -- start --name revisao --port 5174 --examples
 O sandbox cria um banco com credenciais próprias e uma pasta privada para mídia, mailbox e build. O terminal mostra os endereços, que incluem um identificador do diretório de trabalho para separar sessões entre checkouts. Use o host mostrado para solicitar o link e a pasta do sandbox na consulta.
 
 ```sh
-STORAGE_ROOT=.data/sandboxes/revisao/objects npm run inbox -- --email ana@exemplo.test
+STORAGE_ROOT=.data/sandboxes-v2/revisao/objects npm run inbox -- --email ana@exemplo.test
 ```
 
 Encerre a execução com Ctrl+C para liberar o lock. O comando abaixo apaga o banco, os papéis e arquivos do sandbox com o nome confirmado. Reiniciar com o mesmo nome retoma os dados existentes.
@@ -51,4 +51,4 @@ Autorizada em 24/11/2026: `npm run dev:openai`, ou `EVALUATION_PROVIDER=openai` 
 
 ## Transição do banco local
 
-A instância nova tem volume e porta próprios. A verificação `npm run test:database` prepara dois bancos sintéticos, restaura um backup, reaplica grants, valida os dados com a conexão restrita e ensaia a rotação. Para dados existentes, preserve o ambiente anterior até validar backup, restauração, migração e acesso com o papel novo. Encerre o acesso antigo após conferir a cópia, conforme o uso autorizado do ambiente. Use somente a conexão restrita durante avaliações reais. O faturamento consulta transações pendentes da API e do worker no mesmo papel.
+A instância nova tem volume e porta próprios. Os sandboxes novos usam `.data/sandboxes-v2`. O código preserva a pasta dos sandboxes legados para que a recuperação possa ser validada antes da transferência. A verificação `npm run test:database` prepara dois bancos sintéticos, restaura um backup, reaplica grants, valida os dados com a conexão restrita e ensaia a rotação. Para dados existentes, preserve o ambiente anterior até validar backup, restauração, migração e acesso com o papel novo. Encerre o acesso antigo após conferir a cópia, conforme o uso autorizado do ambiente. Use somente a conexão restrita durante avaliações reais. O faturamento consulta transações pendentes da API e do worker no mesmo papel.

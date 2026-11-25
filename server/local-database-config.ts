@@ -8,6 +8,12 @@ export const clusterSecret = resolve(homedir(), '.local', 'share', 'matraca-post
 export const mainDatabaseProfile = resolve('.data', 'postgres-main');
 export const testDatabaseProfile = resolve('.data', 'postgres-tests');
 
+export function assertLocalAppMode() {
+  if (process.env.APP_MODE && process.env.APP_MODE !== 'local') {
+    throw new Error('Este piloto permite apenas APP_MODE=local.');
+  }
+}
+
 type Role = 'bootstrap' | 'migration' | 'runtime';
 export function localDatabaseNames(profile: string) {
   const id = createHash('sha256').update(resolve(profile)).digest('hex').slice(0, 20);
@@ -51,5 +57,6 @@ export function testDatabaseUrl() {
 }
 
 export function migrationDatabaseUrl() {
+  assertLocalAppMode();
   return process.env.MATRACA_MIGRATION_DATABASE_URL ?? localDatabaseConnection('migration');
 }
