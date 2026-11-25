@@ -78,6 +78,25 @@ describe('controles operacionais e reconciliação', () => {
     await grantCredits(db, { ...who, amount: 5, source: 'manual', sourceRef: 'fixture', eventKey: randomUUID(), reason: 'Teste operacional' });
   }
 
+  it('só o backoffice controla a autorização e pode retirar vínculo de ex-aluno', async () => {
+    const student = await actor('student');
+    const operator = await actor('operator');
+    const admin = await actor('org_admin', student.orgId);
+    const base = ops(student);
+    const limits = { requests: 2, minutes: 8, calls: 20 };
+    const settings = { enabled: true, organization: limits, student: limits, expectedRevision: 0 };
+    const path = `${base}/live-students/${student.userId}`;
+    expect((await call(admin,'PUT',`${base}/live-policy`,settings)).statusCode).toBe(403);
+    expect((await call(operator,'PUT',`${base}/live-policy`,settings)).statusCode).toBe(200);
+    expect((await call(operator,'PUT',path,{ enabled: true })).json()).toEqual({ enabled: true });
+    await db.query("UPDATE users SET roles=ARRAY['teacher'] WHERE id=$1", [student.userId]);
+    expect((await call(operator,'GET',`${base}/students?live=1`)).json().items).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: student.userId })]),
+    );
+    expect((await call(operator,'PUT',path,{ enabled: true })).statusCode).toBe(404);
+    expect((await call(operator,'PUT',path,{ enabled: false })).json()).toEqual({ enabled: false });
+  });
+
   it('salva política com CAS, aplica frequência e cenário padrão, preserva replay e custo separado', async () => {
     const student = await actor('student');
     const operator = await actor('operator');

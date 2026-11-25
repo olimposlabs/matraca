@@ -232,6 +232,40 @@ describe('fila, relatórios e reserva atômica', () => {
     } finally { await live.close(); }
   });
 
+  it('reaplica a sequência da aula quando a política muda após enfileirar', async () => {
+    const live = await liveApp();
+    try {
+      const actor = await student(0);
+      await admitStudent(actor, 2);
+      const course = randomUUID(), version = randomUUID(), enrollment = randomUUID(), media = randomUUID();
+      const unit = { id: 'second', title: 'Prática', prerequisites: [], activity: { criteria: [
+        { id: 'clarity', enabled: true, weight: 1, title: 'Clareza', modality: 'audio', descriptors: ['A', 'B', 'C', 'D'] },
+      ] } };
+      const document = { ...emptyCourse('Curso de teste'), journey: 'adaptive', modules: [
+        { id: 'module', units: [{ ...unit, id: 'first' }, unit] },
+      ] };
+      await db.query("INSERT INTO courses(id,org_id,title,status,draft) VALUES($1,$2,'Curso','published',$3)", [course,actor.orgId,document]);
+      await db.query('INSERT INTO course_versions(id,org_id,course_id,version,document) VALUES($1,$2,$3,1,$4)', [version,actor.orgId,course,document]);
+      await db.query(`INSERT INTO course_enrollments(id,org_id,course_id,version_id,student_id,source,source_ref)
+        VALUES($1,$2,$3,$4,$5,'demo','fixture')`, [enrollment,actor.orgId,course,version,actor.userId]);
+      await db.query(`INSERT INTO course_unit_progress(enrollment_id,version_id,org_id,student_id,unit_id,studied_at)
+        VALUES($1,$2,$3,$4,'second',now())`, [enrollment,version,actor.orgId,actor.userId]);
+      await db.query(`INSERT INTO recordings(id,org_id,student_id,object_key,filename,mime_type,byte_length,duration_us,has_audio,has_video,
+        container,probe,objective,purpose,enrollment_id,version_id,unit_id,scenario,maximum_seconds,source)
+        VALUES($1,$2,$3,$4,'voz.wav','audio/wav',100,30000000,true,false,'wav','{}','Prática','course',$5,$6,'second','one_on_one',30,'upload')`,
+        [media,actor.orgId,actor.userId,`recordings/${media}`,enrollment,version]);
+      const submitted = await liveRequest(live, actor, media);
+      expect(submitted.statusCode, submitted.body).toBe(202);
+      const id = submitted.json().evaluation.id;
+      await db.query('UPDATE orgs SET settings=$2 WHERE id=$1', [actor.orgId,{ strictJourney: true }]);
+      let prepared = false;
+      await runEvaluationJob(db, { kind: 'openai', async evaluate() { prepared = true; } }, { requestId: id });
+      expect(prepared).toBe(false);
+      expect(await read(actor,id)).toMatchObject({ status: 'failed', errorCode: 'authorization' });
+      expect(await getWallet(db, actor)).toMatchObject({ reserved: 0 });
+    } finally { await live.close(); }
+  });
+
   it('recusa mídia acima de cinco minutos antes de reservar no modo real', async () => {
     const live = await createApp({ databaseUrl: url.toString(), storageRoot, evaluationProvider: 'openai' });
     const actor = await student(10);

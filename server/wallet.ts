@@ -63,7 +63,7 @@ async function freeLots(client: PoolClient, target: CreditTarget, liveOnly = fal
     .rows.filter(lot => lot.remaining > 0);
 }
 
-export async function getLiveCreditAvailable(db: Database, target: CreditTarget) {
+export async function getLiveCreditAvailable(db: Pick<Database, 'query'>, target: CreditTarget) {
   const row = (await db.query<{ available: number }>(`SELECT LEAST(w.balance-w.reserved,
     (SELECT COALESCE(sum(GREATEST(remaining,0)),0) FROM (${freeLotsSql}) lots))::integer AS available
     FROM wallets w WHERE w.org_id=$1 AND w.user_id=$2`, [target.orgId, target.userId, true])).rows[0];

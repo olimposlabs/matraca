@@ -11,7 +11,7 @@ import { getLiveCreditAvailable, reserveCreditsInTransaction } from '../wallet.j
 import { evaluationScenarios, type EvaluationContext, type EvaluationCriterion } from './provider.js';
 import { cancelEvaluationInTransaction } from './worker.js';
 import { liveEvaluationMaximumSeconds } from './openai-config.js';
-import { admitLiveEvaluation, liveEnabledForStudent, lockLiveBudget, noLiveLimits, type LiveLimits } from './live-policy.js';
+import { admitLiveEvaluation, liveEnabledForStudent, noLiveLimits, type LiveLimits } from './live-policy.js';
 
 class EvaluationError extends Error {
   constructor(readonly statusCode: 400 | 403 | 404 | 409 | 429, message: string) {
@@ -137,10 +137,9 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
   };
 }
 
-async function studentMutation<T>(request: FastifyRequest, task: (client: PoolClient, actor: AuthIdentity) => Promise<T>, live = false): Promise<T> {
+async function studentMutation<T>(request: FastifyRequest, task: (client: PoolClient, actor: AuthIdentity) => Promise<T>): Promise<T> {
   const session = await requireIdentity(request, ['student']);
   return request.server.db.transaction(async client => {
-    if (live) await lockLiveBudget(client);
     // Serialize duplicate submissions and capacity checks for the same learner.
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,8))', [session.user.id]);
     const actor = await requireIdentity(request, ['student'], client);
@@ -219,7 +218,7 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
       await client.query('INSERT INTO evaluation_jobs(request_id) VALUES ($1)', [id]);
       await client.query("INSERT INTO evaluation_outbox(request_id,event_type) VALUES ($1,'queued')", [id]);
       return { id, status: 'queued', credits: reservation.amount, simulated: provider === 'mock' };
-    }, provider === 'openai');
+    });
     return reply.code(202).send({ evaluation: queued });
   });
 

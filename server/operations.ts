@@ -222,7 +222,9 @@ export async function registerOperations(app: FastifyInstance, instance: LiveLim
       const input = method === 'PUT' ? parse(z.object({ enabled: z.boolean() }).strict(), request.body) : null;
       return withOperator(request, method === 'PUT', async (client, org, actor) => {
         const found = await client.query(
-          "SELECT 1 FROM users WHERE id=$1 AND org_id=$2 AND 'student'=ANY(roles)", [id, org.id],
+          `SELECT 1 FROM users u WHERE u.id=$1 AND u.org_id=$2 AND ('student'=ANY(u.roles) OR (NOT $3::boolean AND EXISTS(
+            SELECT 1 FROM live_evaluation_members a WHERE a.org_id=u.org_id AND a.student_id=u.id)))`,
+          [id, org.id, input?.enabled === true],
         );
         if (!found.rowCount) throw new OperationsError(404, 'Aluno não encontrado.');
         if (input) {
@@ -255,11 +257,14 @@ export async function registerOperations(app: FastifyInstance, instance: LiveLim
   });
 
   app.get(`${base}/students`, request => {
-    const input = parse(z.object({ ...pagination, search: z.string().trim().max(120).default('') }).strict(), request.query);
+    const input = parse(z.object({ ...pagination, search: z.string().trim().max(120).default(''), live: z.literal('1').optional() }).strict(), request.query);
     return withOperator(request, false, (client, org) => countAndPage(client,
-      `SELECT id,name,email,status FROM users WHERE org_id=$1 AND 'student'=ANY(roles)
-         AND (strpos(lower(name),lower($2))>0 OR strpos(lower(email),lower($2))>0)`,
-      [org.id, input.search], input.page, input.pageSize, 'lower(name),id'));
+      `SELECT u.id,u.name,u.email,u.status FROM users u WHERE u.org_id=$1
+         AND ('student'=ANY(u.roles) OR ($3::boolean AND EXISTS (
+           SELECT 1 FROM live_evaluation_members a WHERE a.org_id=u.org_id AND a.student_id=u.id
+         )))
+         AND (strpos(lower(u.name),lower($2))>0 OR strpos(lower(u.email),lower($2))>0)`,
+      [org.id, input.search, input.live === '1'], input.page, input.pageSize, 'lower(name),id'));
   });
 
   app.put(`${base}/policy`, request => {

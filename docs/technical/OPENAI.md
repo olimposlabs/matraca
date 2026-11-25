@@ -55,6 +55,6 @@ npm run build
 npm run test:openai -- --live
 ```
 
-Cria um schema temporário, envia WAV e MP4 pelo endpoint de upload, executa o provedor real, confere relatório/carteira/replay e a tela desktop/mobile. As evidências ficam em `.data/openai-live-smoke.json` e `.data/openai-live-report*.png`, fora do Git; banco e mídias temporários são removidos. Não roda no CI. A validação manual do fundador continua reservada ao E2E final.
+Requer `OPENAI_SMOKE_API_KEY` de um projeto separado e com cota própria. O smoke não carrega a chave do aplicativo. Cria um schema temporário, envia WAV e MP4 pelo endpoint de upload, executa o provedor real, confere relatório/carteira/replay e a tela desktop/mobile. As evidências ficam em `.data/openai-live-smoke.json` e `.data/openai-live-report*.png`, fora do Git; banco e mídias temporários são removidos. Não roda no CI. A validação manual do fundador continua reservada ao E2E final.
 
 Fontes oficiais consultadas: [áudio em Chat Completions](https://developers.openai.com/api/docs/guides/audio-chat-completions), [GPT Audio 1.5](https://developers.openai.com/api/docs/models/gpt-audio-1.5), [GPT 4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).

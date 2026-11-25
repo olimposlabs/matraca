@@ -1,4 +1,5 @@
 import type { PoolClient } from 'pg';
+import type { EducationQuery } from './permissions.js';
 import type { CourseDocument, CourseUnit } from './course-model.js';
 import { grantCreditsInTransaction } from './wallet.js';
 import { awardLearningEvent } from './gamification-core.js';
@@ -33,7 +34,7 @@ interface Progress {
   evaluation_id: string | null;
 }
 
-async function enrollmentFor(client: PoolClient, target: JourneyTarget, lock: boolean) {
+async function enrollmentFor(client: EducationQuery, target: JourneyTarget, lock: boolean) {
   const result = await client.query<Enrollment>(
     `SELECT e.id,e.course_id,e.version_id,e.org_id,e.student_id,e.status,v.document
      FROM course_enrollments e JOIN course_versions v ON v.id=e.version_id AND v.org_id=e.org_id
@@ -44,7 +45,7 @@ async function enrollmentFor(client: PoolClient, target: JourneyTarget, lock: bo
   return result.rows[0];
 }
 
-async function readProgress(client: PoolClient, enrollmentId: string) {
+async function readProgress(client: EducationQuery, enrollmentId: string) {
   const result = await client.query<Progress>(
     'SELECT unit_id,checked_indices,studied_at,completed_at,evaluation_id FROM course_unit_progress WHERE enrollment_id=$1',
     [enrollmentId],
@@ -206,7 +207,7 @@ export async function updateStudy(
   return progressView({ ...enrollment, status: complete ? 'completed' : enrollment.status }, progressNow, strict);
 }
 
-export async function requireStudyForEvaluation(client: PoolClient, target: JourneyTarget, unitId: string, strict: boolean) {
+export async function requireStudyForEvaluation(client: EducationQuery, target: JourneyTarget, unitId: string, strict: boolean) {
   const enrollment = await enrollmentFor(client, target, false);
   if (!enrollment) throw new JourneyError(404, 'Matrícula não encontrada.');
   const progress = await readProgress(client, enrollment.id);

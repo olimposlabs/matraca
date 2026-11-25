@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { PoolClient } from 'pg';
 import type { EducationQuery } from '../permissions.js';
 import type { Database } from '../db.js';
+import { JourneyError, requireStudyForEvaluation } from '../journey-progress.js';
 import { EvaluationProviderError, maxEvaluationAttempts } from './provider.js';
 
 const limit = z.number().int().min(0).max(100_000);
@@ -67,7 +68,7 @@ async function usage(client: PoolClient, scope: Scope, admission: boolean) {
   )).rows[0];
 }
 
-/** The caller holds the budget lock and inserts the request in this transaction. */
+/** The request and the learner's reservation already exist in this transaction. */
 export async function admitLiveEvaluation(client: PoolClient, input: {
   requestId: string; orgId: string; studentId: string; minutes: number; hasAudio: boolean; instance: LiveLimits;
 }) {
@@ -80,6 +81,7 @@ export async function admitLiveEvaluation(client: PoolClient, input: {
   if (!allowed.rowCount || !liveLimitsEnabled(instance)) throw new LivePolicyError(403, 'Esta conta ainda não tem acesso à avaliação real.');
   const policy = await readLivePolicy(client, orgId);
   const calls = ((input.hasAudio ? minutes : 0) + 1) * maxEvaluationAttempts;
+  await lockLiveBudget(client);
   for (const scope of scopes(orgId, studentId, instance, policy)) {
     const current = await usage(client, scope, true);
     if (current.requests + 1 > scope.limits.requests || current.minutes + minutes > scope.limits.minutes
@@ -96,8 +98,11 @@ export async function admitLiveEvaluation(client: PoolClient, input: {
 export async function authorizedLiveAttempt(
   client: EducationQuery, requestId: string, attempt: number, leaseToken: string, lock = false,
 ) {
-  return (await client.query<{ org_id: string; student_id: string }>(
-    `SELECT r.org_id,r.student_id FROM evaluation_requests r
+  const actor = (await client.query<{
+    org_id: string; student_id: string; purpose: string; enrollment_id: string | null; unit_id: string | null; strict: boolean;
+  }>(
+    `SELECT r.org_id,r.student_id,m.purpose,m.enrollment_id,m.unit_id,
+       (o.settings->>'strictJourney'='true') IS TRUE AS strict FROM evaluation_requests r
      JOIN evaluation_jobs j ON j.request_id=r.id
      JOIN live_evaluation_admissions b ON b.request_id=r.id
      JOIN credit_reservations w ON w.request_id=r.id::text AND w.org_id=r.org_id AND w.user_id=r.student_id
@@ -121,6 +126,18 @@ export async function authorizedLiveAttempt(
        )) ${lock ? 'FOR SHARE OF u,o,p,a' : ''}`,
     [requestId, attempt, leaseToken],
   )).rows[0];
+  if (actor?.purpose === 'course') {
+    if (!actor.enrollment_id || !actor.unit_id) return undefined;
+    try {
+      await requireStudyForEvaluation(client, {
+        orgId: actor.org_id, studentId: actor.student_id, enrollmentId: actor.enrollment_id,
+      }, actor.unit_id, actor.strict);
+    } catch (error) {
+      if (error instanceof JourneyError) return undefined;
+      throw error;
+    }
+  }
+  return actor;
 }
 
 export async function authorizeLiveDispatch(db: Database, input: {
@@ -128,12 +145,12 @@ export async function authorizeLiveDispatch(db: Database, input: {
 }) {
   return db.transaction(async client => {
     if (!liveLimitsEnabled(input.instance)) throw new EvaluationProviderError('authorization', false);
-    await lockLiveBudget(client);
     // Order with cancellation and lease replacement. The receipt is the dispatch boundary.
     await client.query('SELECT request_id FROM evaluation_jobs WHERE request_id=$1 FOR UPDATE', [input.requestId]);
     const actor = await authorizedLiveAttempt(client, input.requestId, input.attempt, input.leaseToken, true);
     if (!actor) throw new EvaluationProviderError('authorization', false);
     const policy = await readLivePolicy(client, actor.org_id);
+    await lockLiveBudget(client);
     for (const scope of scopes(actor.org_id, actor.student_id, input.instance, policy)) {
       if ((await usage(client, scope, false)).calls >= scope.limits.calls) throw new EvaluationProviderError('budget', false);
     }

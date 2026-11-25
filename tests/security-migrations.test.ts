@@ -36,12 +36,12 @@ it('migra pedidos reais antigos sem debitar saldo ou interromper a simulação',
     }
     const phase = migrations.find(name => name.startsWith('015_'))!;
     await db.query(await readFile(new URL(phase, directory), 'utf8'));
-    const result = await db.query(`SELECT r.provider,r.status,j.state,w.status AS reservation
+    const result = await db.query(`SELECT r.provider,r.status,j.state,w.status AS reservation,w.provider AS reservation_provider
       FROM evaluation_requests r JOIN evaluation_jobs j ON j.request_id=r.id
       JOIN credit_reservations w ON w.request_id=r.id::text ORDER BY r.provider`);
     expect(result.rows).toEqual([
-      { provider: 'mock', status: 'queued', state: 'queued', reservation: 'reserved' },
-      { provider: 'openai', status: 'failed', state: 'done', reservation: 'released' },
+      { provider: 'mock', status: 'queued', state: 'queued', reservation: 'reserved', reservation_provider: 'mock' },
+      { provider: 'openai', status: 'failed', state: 'done', reservation: 'released', reservation_provider: 'openai' },
     ]);
     expect((await db.query('SELECT balance,reserved FROM wallets')).rows[0]).toEqual({ balance: 4, reserved: 1 });
     expect((await db.query('SELECT live_eligible FROM credit_lots')).rows[0].live_eligible).toBe(false);

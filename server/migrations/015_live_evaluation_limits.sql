@@ -50,6 +50,10 @@ CREATE TABLE live_evaluation_dispatches (
 );
 CREATE INDEX live_evaluation_dispatches_window ON live_evaluation_dispatches(created_at);
 
+UPDATE credit_reservations w SET provider=r.provider
+FROM evaluation_requests r
+WHERE w.request_id=r.id::text AND w.org_id=r.org_id AND w.user_id=r.student_id AND r.provider='openai';
+
 -- Close in-flight real requests from the previous, unbudgeted runtime.
 WITH released AS (
   UPDATE credit_reservations w SET status='released', settled_at=clock_timestamp(),

@@ -12,7 +12,7 @@ import { chromium, expect, type Browser } from '@playwright/test';
 import { createApp } from '../server/app.js';
 import { createDatabase } from '../server/db.js';
 import { localDatabaseUrl } from '../server/config.js';
-import { evaluationConfiguration, loadOpenAIKey } from '../server/evaluation/openai-config.js';
+import { evaluationConfiguration } from '../server/evaluation/openai-config.js';
 import { createOpenAIProvider } from '../server/evaluation/openai-runtime.js';
 import type { EvaluationReport } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
@@ -20,7 +20,10 @@ import { getWallet, grantCredits } from '../server/wallet.js';
 
 if (!process.argv.includes('--live')) throw new Error('Este teste usa a API paga. Execute com --live para habilitar.');
 if (process.platform !== 'darwin') throw new Error('Este teste sintético usa a voz local do macOS (say).');
-const apiKey = await loadOpenAIKey();
+const apiKey = process.env.OPENAI_SMOKE_API_KEY?.trim();
+if (!apiKey || apiKey === process.env.OPENAI_API_KEY?.trim()) {
+  throw new Error('Configure OPENAI_SMOKE_API_KEY com uma credencial de projeto exclusiva para este smoke.');
+}
 const config = evaluationConfiguration();
 const execute = promisify(execFile);
 const schema = `openai_smoke_${randomUUID().replaceAll('-', '')}`;

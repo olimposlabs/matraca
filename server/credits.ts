@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { requireIdentity, type AuthIdentity, type IdentityOrg, type IdentityRole } from './auth.js';
 import { localHostname } from './config.js';
 import { assertSchoolScope, isOrgAdmin, managedSchoolIds, scopeValues, type EducationQuery } from './permissions.js';
-import { grantCreditsInTransaction, adjustCreditsInTransaction, refundConsumptionInTransaction,
+import { getLiveCreditAvailable, grantCreditsInTransaction, adjustCreditsInTransaction, refundConsumptionInTransaction,
   type WalletEntry, type WalletState, type CreditSource } from './wallet.js';
 
 class CreditsAccessError extends Error {
@@ -255,8 +255,8 @@ async function statement(app:FastifyInstance,request:FastifyRequest,access:Acces
     const limit=bind(query.limit),offset=bind((query.page-1)*query.limit);
     const entries=await client.query<WalletEntry&{actorName:string}>(`SELECT e.*,${actorNameSQL} AS "actorName" FROM wallet_entries e LEFT JOIN users a ON a.id=e.actor_user_id WHERE ${where} ORDER BY e.created_at DESC,e.id DESC LIMIT ${limit} OFFSET ${offset}`,values);
     const reservations=await client.query('SELECT * FROM credit_reservations WHERE org_id=$1 AND user_id=$2 ORDER BY created_at DESC,id DESC LIMIT 100',[current.org.id,userId]);
-    const origins=await client.query('SELECT l.entry_id,e.source,e.source_ref,l.quantity,l.remaining FROM credit_lots l JOIN wallet_entries e ON e.id=l.entry_id AND e.org_id=l.org_id AND e.user_id=l.user_id WHERE l.org_id=$1 AND l.user_id=$2 AND l.remaining>0 ORDER BY l.created_at,l.entry_id',[current.org.id,userId]);
-    return {org:publicOrg(current.org),student,wallet:await wallet(client,current.org.id,userId),entries:entries.rows.map(publicEntry),reservations:reservations.rows,origins:origins.rows,page:query.page,limit:query.limit,total};
+    const origins=await client.query('SELECT l.entry_id,e.source,e.source_ref,l.quantity,l.remaining,l.live_eligible FROM credit_lots l JOIN wallet_entries e ON e.id=l.entry_id AND e.org_id=l.org_id AND e.user_id=l.user_id WHERE l.org_id=$1 AND l.user_id=$2 AND l.remaining>0 ORDER BY l.created_at,l.entry_id',[current.org.id,userId]);
+    return {org:publicOrg(current.org),student,wallet:await wallet(client,current.org.id,userId),liveAvailable:await getLiveCreditAvailable(client,{orgId:current.org.id,userId}),entries:entries.rows.map(publicEntry),reservations:reservations.rows,origins:origins.rows,page:query.page,limit:query.limit,total};
   });
 }
 async function audit(client:PoolClient,access:Access,event:string,metadata:Record<string,unknown>={}){
