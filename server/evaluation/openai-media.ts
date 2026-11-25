@@ -1,21 +1,57 @@
-import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { promisify } from 'node:util';
-import ffmpeg from '@ffmpeg-installer/ffmpeg';
-import sharp from 'sharp';
 import type { Database } from '../db.js';
 import type { LocalStorage } from '../storage.js';
+import { runMediaDecoder, type MediaExecutor } from '../media/executor.js';
 import { EvaluationProviderError, type EvaluationContext } from './provider.js';
 import { liveEvaluationMaximumSeconds } from './openai-config.js';
 
-const execute = promisify(execFile);
 export interface MediaSegment { startUs: number; endUs: number; data: Buffer }
 export interface EvaluationMedia { audio: MediaSegment[]; frames: MediaSegment[] }
 
+const sampleBytes = 32 * 32 * 3;
+function hasVisualDetail(sample: Buffer) {
+  for (let channel = 0; channel < 3; channel++) {
+    let sum = 0, squares = 0;
+    for (let index = channel; index < sample.length; index += 3) {
+      const value = sample[index];
+      sum += value;
+      squares += value * value;
+    }
+    const pixels = sample.length / 3;
+    if (squares / pixels - (sum / pixels) ** 2 >= 4) return true;
+  }
+  return false;
+}
+
+function parseMedia(output: Buffer, duration: number, hasAudio: boolean, hasVideo: boolean): EvaluationMedia {
+  const media: EvaluationMedia = { audio: [], frames: [] };
+  let offset = 0, decodedFrames = 0;
+  while (offset < output.length) {
+    const separator = output.indexOf(10, offset);
+    if (separator < offset || separator - offset > 64) throw new Error('Invalid media packet');
+    const match = /^(audio|frame):(\d{1,9}):(\d{1,9}):(\d{1,7})$/u.exec(output.toString('ascii', offset, separator));
+    if (!match) throw new Error('Invalid media packet');
+    const [, type, start, end, length] = match;
+    const startUs = Number(start), endUs = Number(end), size = Number(length);
+    offset = separator + 1;
+    if (endUs <= startUs || endUs > duration || offset + size > output.length) throw new Error('Invalid media packet');
+    const data = output.subarray(offset, offset + size);
+    offset += size;
+    if (type === 'audio') {
+      if (!hasAudio || media.audio.length >= 5 || size <= 100 || size > 2_000_000
+        || data.toString('ascii', 0, 4) !== 'RIFF' || data.toString('ascii', 8, 12) !== 'WAVE') throw new Error('Invalid audio packet');
+      media.audio.push({ startUs, endUs, data });
+    } else {
+      if (!hasVideo || ++decodedFrames > 12 || size <= sampleBytes + 2 || size > sampleBytes + 512_000
+        || data[sampleBytes] !== 255 || data[sampleBytes + 1] !== 216) throw new Error('Invalid frame packet');
+      if (hasVisualDetail(data.subarray(0, sampleBytes))) media.frames.push({ startUs, endUs, data: data.subarray(sampleBytes) });
+    }
+  }
+  if ((hasAudio && !media.audio.length) || (hasVideo && !decodedFrames)) throw new Error('Missing media');
+  return media;
+}
+
 /** Resolve only a persisted request and its tenant/student-owned recording. */
-export function privateEvaluationMedia(db: Database, storage: LocalStorage) {
+export function privateEvaluationMedia(db: Database, storage: LocalStorage, executor: MediaExecutor) {
   return async (context: EvaluationContext, signal: AbortSignal): Promise<EvaluationMedia> => {
     const found = await db.query<{
       object_key: string; duration_us: string; has_audio: boolean; has_video: boolean; container: string;
@@ -31,71 +67,26 @@ export function privateEvaluationMedia(db: Database, storage: LocalStorage) {
       || row.has_audio !== context.recording.hasAudio || row.has_video !== context.recording.hasVideo) {
       throw new EvaluationProviderError('media', false);
     }
-    return extractEvaluationMedia(storage.path(row.object_key), row.container, context.recording, signal);
+    return extractEvaluationMedia(executor, storage.path(row.object_key), row.container, context.recording, signal);
   };
 }
 
+
 export async function extractEvaluationMedia(
-  path: string, container: string, recording: EvaluationContext['recording'], signal: AbortSignal,
+  executor: MediaExecutor, path: string, container: string, recording: EvaluationContext['recording'], signal: AbortSignal,
 ): Promise<EvaluationMedia> {
   const duration = recording.durationMicroseconds;
-  const demuxer = { mp4: 'mov', webm: 'matroska', wav: 'wav', mp3: 'mp3' }[container];
-  if (!demuxer || duration <= 0 || duration > liveEvaluationMaximumSeconds * 1_000_000) {
+  if (!['mp4', 'webm', 'wav', 'mp3'].includes(container) || !Number.isSafeInteger(duration) || duration <= 0
+    || duration > liveEvaluationMaximumSeconds * 1_000_000 || (!recording.hasAudio && !recording.hasVideo)) {
     throw new EvaluationProviderError('media', false);
   }
-  signal.throwIfAborted();
-  const directory = await mkdtemp(join(tmpdir(), 'matraca-openai-'));
-  const media: EvaluationMedia = { audio: [], frames: [] };
-  const input = ['-nostdin', '-hide_banner', '-loglevel', 'error', '-threads', '1',
-    '-protocol_whitelist', 'file,pipe', '-f', demuxer];
-  const run = async (args: string[]) => {
-    // No shell, remote protocols, subtitles, data tracks or unbounded child lifetime.
-    await execute(process.env.FFMPEG_PATH ?? ffmpeg.path, args, {
-      signal, timeout: 30_000, maxBuffer: 64 * 1024, killSignal: 'SIGKILL',
-    });
-  };
   try {
-    if (recording.hasAudio) {
-      for (let startUs = 0; startUs < duration; startUs += 60_000_000) {
-        const endUs = Math.min(duration, startUs + 60_000_000);
-        const output = join(directory, `audio-${startUs}.wav`);
-        await run([...input, '-ss', String(startUs / 1_000_000), '-i', path,
-          '-t', String((endUs - startUs) / 1_000_000), '-map', '0:a:0', '-vn', '-sn', '-dn',
-          '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', '-threads', '1', output]);
-        const data = await readFile(output);
-        if (data.length > 2_000_000) throw new Error('Audio limit');
-        if (data.length > 100) media.audio.push({ startUs, endUs, data });
-      }
-      if (!media.audio.length) throw new Error('No audio');
-    }
-    if (recording.hasVideo) {
-      let decodedFrames = 0;
-      const count = Math.min(12, Math.max(1, Math.ceil(duration / 5_000_000)));
-      for (let index = 0; index < count; index++) {
-        const startUs = Math.floor(duration * (index + 0.5) / count);
-        const output = join(directory, `frame-${index}.jpg`);
-        await run([...input, '-ss', String(startUs / 1_000_000), '-i', path, '-map', '0:v:0',
-          '-an', '-sn', '-dn', '-frames:v', '1', '-vf', 'scale=512:512:force_original_aspect_ratio=decrease',
-          '-q:v', '4', '-threads', '1', output]);
-        // A video track can finish before its audio track.
-        const data = await readFile(output).catch(() => null);
-        if (data && data.length > 512_000) throw new Error('Image limit');
-        if (data?.length) {
-          decodedFrames++;
-          const stats = await sharp(data, { limitInputPixels: 512 * 512 }).stats();
-          // Uniform/blank frames provide no evidence of posture or gesture.
-          if (stats.channels.slice(0, 3).some(channel => channel.stdev >= 2)) {
-            media.frames.push({ startUs, endUs: Math.min(duration, startUs + 1_000_000), data });
-          }
-        }
-      }
-      if (!decodedFrames) throw new Error('No video');
-    }
-    return media;
+    const output = await runMediaDecoder(executor, path, [
+      container, String(duration), recording.hasAudio ? '1' : '0', recording.hasVideo ? '1' : '0',
+    ], signal);
+    return parseMedia(output, duration, recording.hasAudio, recording.hasVideo);
   } catch {
     if (signal.aborted) throw new EvaluationProviderError('timeout', true);
     throw new EvaluationProviderError('media', false);
-  } finally {
-    await rm(directory, { recursive: true, force: true });
   }
 }

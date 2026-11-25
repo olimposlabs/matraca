@@ -63,3 +63,9 @@ Falhas: campos/multipart inválidos ou mídia truncada400; sessão revogada401; 
 `registerRecordings(app)` registra as rotas. `StoredRecording` representa o registro interno, com campos `snake_case` e BIGINT recebidos como string do PostgreSQL. `loadRecording(client,orgId,id)` faz apenas a busca no tenant; o chamador precisa autorizar o aluno separadamente. `requireRecordingScope(request,id)` valida a sessão e o escopo pedagógico atual, retornando `{actor,recording}`. `publicRecording` remove detalhes de armazenamento e calcula a estimativa.
 
 Os testes de integração da fase usam schema PostgreSQL e diretório temporário isolados. Captura real do Chromium e fixtures de áudio/vídeo verificam o caminho completo, além do parser isolado. A evidência final de testes e limites remanescentes pertence a `PHASE07_REVIEW.md` e aos gates da fase; este documento não declara concluída a interface de captura ou a avaliação por IA.
+
+## Capacidade de armazenamento
+
+A migração 017 contabiliza bytes privados e reservas de gravações, logos, anexos e cópias. Cada solicitação reserva antes de ler multipart. Tentativas admitidas contam por 24 horas, inclusive quando o arquivo falha na validação. Concluir grava o objeto e encerra sua reserva na mesma transação de metadados. Recepção tem limite de dois minutos e reservas vencem em cinco. A API reconcilia expiradas em lotes a cada minuto, verificando referências antes de remover restos.
+
+Limites iniciais por pessoa na organização, organização e instância são 2, 8 e 24 GiB e 120, 600 e 2000 objetos admitidos por 24 horas. A reserva conserva também um piso de 256 MiB livres. Configure `UPLOAD_ACTOR_BYTES`, `UPLOAD_ORG_BYTES`, `UPLOAD_INSTANCE_BYTES`, `UPLOAD_ACTOR_COUNT_24H`, `UPLOAD_ORG_COUNT_24H`, `UPLOAD_INSTANCE_COUNT_24H` e `UPLOAD_FREE_BYTES_FLOOR` antes de iniciar a API. Use uma única base de orçamento para as instâncias que compartilham o mesmo diretório. Mantenha o limite individual por tipo de arquivo.

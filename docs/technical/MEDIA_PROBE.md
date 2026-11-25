@@ -3,8 +3,7 @@
 `server/media/probe.ts` implementa a leitura de mídia finalizada no filesystem do
 servidor Node. Usa somente o pacote base `mediabunny` em runtime; não usa API
 externa, FFmpeg, WebCodecs nem decodificadores nativos para analisar o arquivo.
-FFmpeg é uma dependência **de desenvolvimento** que gera os arquivos sintéticos
-dos testes em um diretório temporário e os remove ao final.
+O pacote FFmpeg das fixtures é uma dependência de desenvolvimento. A preparação de mídia para avaliação real usa outro binário, verificado e executado em contêiner local. [Avaliação real](OPENAI.md)
 
 ## Contrato
 

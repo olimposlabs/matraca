@@ -7,6 +7,7 @@ import { requireIdentity, type AuthIdentity, type IdentityRole } from './auth.js
 import { localHostname } from './config.js';
 import type { CourseDocument, CourseUnit } from './course-model.js';
 import { streamPrivateFile } from './http-media.js';
+import { uploadDeadline } from './upload-capacity.js';
 import { probeMedia, MediaProbeError, type MediaProbeResult } from './media/probe.js';
 import { assertStudentScope, type EducationQuery } from './permissions.js';
 import { creditsForDuration } from './wallet.js';
@@ -150,13 +151,11 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
     const actor = await requireIdentity(request, ['student']);
     const { config } = await readOperationPolicy(app.db, actor.org.id);
     const maximumBytes = config.maxRecordingBytes;
-    const controller = new AbortController();
-    const abort = () => controller.abort();
-    const responseClosed = () => { if (!reply.raw.writableEnded) abort(); };
-    request.raw.once('aborted', abort); reply.raw.once('close', responseClosed);
     const id = randomUUID(), key = `recordings/${actor.org.id}/${actor.user.id}/${id}`;
+    await app.uploads.reserve({ orgId: actor.org.id, actorId: actor.user.id }, [{ key, bytes: maximumBytes }]);
+    const upload = uploadDeadline(request, reply);
     let metadata: UploadMetadata | undefined, initial: CaptureContext | undefined;
-    let filename = '', uploaded = false, persisted = false;
+    let filename = '', uploaded = false;
     try {
       for await (const part of request.parts({ limits: { fileSize: maximumBytes, fieldSize: 16_384, files: 1, fields: 1, parts: 2 } })) {
         if (part.type === 'field') {
@@ -172,15 +171,16 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
         }
         if (part.fieldname !== 'file' || !metadata || !initial || uploaded) throw new RecordingError(400, 'Envie metadata e depois um único arquivo file.');
         filename = cleanFilename(part.filename);
-        const information = await app.storage.put(key, part.file);
+        const information = await app.storage.put(key, part.file, { bytes: maximumBytes, signal: upload.signal });
         uploaded = true;
         if (part.file.truncated || information.size > maximumBytes) throw new RecordingError(413, 'O arquivo excede o limite de tamanho desta organização.');
         if (!information.size) throw new RecordingError(400, 'O arquivo está vazio.');
       }
+      upload.received();
       if (!uploaded || !metadata || !initial) throw new RecordingError(400, 'Selecione uma gravação para enviar.');
       const media = await probeMedia(app.storage.path(key), {
         maxBytes: maximumBytes, maxDurationSeconds: initial.constraints.maximumSeconds,
-        maxPackets: 1_000_000, signal: controller.signal,
+        maxPackets: 1_000_000, signal: upload.signal,
       });
       validateProbe(media, initial);
       const input = metadata;
@@ -190,7 +190,7 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
         const context = await captureContext(client, currentActor, input);
         if (media.byteLength > context.constraints.maximumBytes) throw new RecordingError(413, 'O arquivo excede o limite de tamanho desta organização.');
         validateProbe(media, context);
-        if (controller.signal.aborted) throw new RecordingError(400, 'O envio foi interrompido.');
+        if (upload.signal.aborted) throw new RecordingError(400, 'O envio foi interrompido.');
         const result = await client.query<StoredRecording>(
           `INSERT INTO recordings(id,org_id,student_id,object_key,filename,mime_type,byte_length,duration_us,
            has_audio,has_video,container,probe,objective,purpose,enrollment_id,version_id,unit_id,scenario,maximum_seconds,source)
@@ -202,12 +202,12 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
         );
         await client.query('INSERT INTO audit_events(org_id,actor_user_id,event_type,metadata) VALUES($1,$2,$3,$4)',
           [actor.org.id, actor.user.id, 'recording_uploaded', { recordingId: id, purpose: input.purpose }]);
+        await app.uploads.commit(client, [key]);
         return result.rows[0];
       });
-      persisted = true;
       return reply.code(201).send({ recording: publicRecording(recording) });
     } catch (error) {
-      if (uploaded && !persisted) await app.storage.remove(key).catch(() => {});
+      if (upload.signal.aborted) throw new RecordingError(400, 'O envio foi interrompido ou excedeu o tempo de validação.');
       if (error instanceof MediaProbeError) {
         if (error.code === 'UNSUPPORTED_MEDIA') throw new RecordingError(415, 'Envie uma gravação MP4, WebM, WAV ou MP3 válida.');
         if (error.code === 'LIMIT_EXCEEDED') throw new RecordingError(422, 'A gravação ultrapassa os limites de duração ou complexidade da atividade.');
@@ -215,7 +215,8 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
       }
       throw error;
     } finally {
-      request.raw.removeListener('aborted', abort); reply.raw.removeListener('close', responseClosed);
+      upload.close();
+      await app.uploads.reconcile([key]).catch(() => {});
     }
   });
 

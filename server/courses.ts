@@ -6,6 +6,7 @@ import { requireIdentity,type AuthIdentity,type IdentityRole } from './auth.js';
 import { localHostname } from './config.js';
 import { courseDocumentSchema,emptyCourse,validatePublication,type CourseDocument } from './course-model.js';
 import { assertStudentScope,managedSchoolIds } from './permissions.js';
+import { uploadTimeoutMs } from './upload-capacity.js';
 
 export class CourseError extends Error {constructor(public readonly statusCode:400|401|403|404|409,message:string){super(message);}}
 const uuid=z.uuid().transform(value => value.toLowerCase());
@@ -125,6 +126,26 @@ async function assignCourse(client: PoolClient, orgId: string, actorId: string, 
   return { assignmentId, enrolled: enrolled.rowCount ?? 0 };
 }
 
+type CopyAsset = { id: string; object_key: string; filename: string; mime_type: string; byte_length: string };
+
+async function prepareCourseCopy(request: FastifyRequest, central: boolean, sourceId: string, expectedVersionId?: string) {
+  const { actor, orgId } = await target(request, central);
+  const { db, uploads } = request.server;
+  const version = (await db.query<VersionRow>(`SELECT v.* ${sharedBase} AND c.id=$1`, [sourceId])).rows[0];
+  if (!version) throw new CourseError(404, 'Curso base compartilhado não encontrado.');
+  if (expectedVersionId && expectedVersionId !== version.id) throw new CourseError(409, 'A versão compartilhada mudou. Escolha novamente o curso base.');
+  const ids = [...new Set(version.document.modules.flatMap(module => module.units.flatMap(unit => unit.assetIds)))];
+  const found = await db.query<CopyAsset>(`SELECT id,object_key,filename,mime_type,byte_length
+    FROM course_assets WHERE course_id=$1 AND org_id=$2 AND id=ANY($3::uuid[])`, [version.course_id, version.org_id, ids]);
+  if (found.rows.length !== ids.length) throw new CourseError(409, 'Um anexo da base não está disponível.');
+  const assets = found.rows.map(asset => {
+    const id = randomUUID();
+    return { source: asset, id, key: `course-assets/${orgId}/${id}`, bytes: Number(asset.byte_length) };
+  });
+  await uploads.reserve({ orgId, actorId: actor.user.id }, assets);
+  return { version, assets };
+}
+
 export async function registerCourses(app:FastifyInstance){
  for(const central of [false,true]){
   const base=central?'/api/backoffice/courses/:orgId':'/api/courses/manage';
@@ -134,7 +155,10 @@ export async function registerCourses(app:FastifyInstance){
     title: z.string().trim().min(1).max(160),
     copyBaseCourseId: uuid.optional(), copyBaseVersionId: uuid.optional(),
    }).strict().refine(value => !value.copyBaseVersionId || Boolean(value.copyBaseCourseId)), request.body);
-   const copiedKeys:string[]=[];
+   const copy = input.copyBaseCourseId
+     ? await prepareCourseCopy(request, central, input.copyBaseCourseId, input.copyBaseVersionId) : null;
+   const copiedKeys = copy?.assets.map(asset => asset.key) ?? [];
+   const timeout = AbortSignal.timeout(uploadTimeoutMs);
    try{const result=await mutation(request,central,async(client,orgId,actor)=>{
     let document=emptyCourse(input.title);
     let source: VersionRow | undefined;
@@ -149,23 +173,29 @@ export async function registerCourses(app:FastifyInstance){
         `SELECT v.* ${sharedBase} AND c.id=$1 AND c.org_id=$2 FOR SHARE OF s`, [input.copyBaseCourseId, candidate.org_id],
       )).rows[0];
       if (!source) throw new CourseError(404, 'Curso base compartilhado não encontrado.');
-      if (input.copyBaseVersionId && input.copyBaseVersionId !== source.id) {
+      if (copy?.version.id !== source.id) {
         throw new CourseError(409, 'A versão compartilhada mudou. Escolha novamente o curso base.');
       }
       document={...source.document,title:input.title,catalogVisible:false};
     }
     const created=(await client.query<CourseRow>('INSERT INTO courses(org_id,title,draft,source_course_id,created_by) VALUES($1,$2,$3,$4,$5) RETURNING *',[orgId,input.title,document,source?.course_id??null,actor.user.id])).rows[0];
-    if(source){
-     const assetIds=[...new Set(document.modules.flatMap(module=>module.units.flatMap(unit=>unit.assetIds)))];
-     const assets=await client.query<{id:string;object_key:string;filename:string;mime_type:string;byte_length:string}>('SELECT id,object_key,filename,mime_type,byte_length FROM course_assets WHERE course_id=$1 AND org_id=$2 AND id=ANY($3::uuid[])',[source.course_id,source.org_id,assetIds]);
-     if(assets.rows.length!==assetIds.length)throw new CourseError(409,'Um anexo da base não está disponível.');
+    if(copy){
      const mapping=new Map<string,string>();
-     for(const asset of assets.rows){const id=randomUUID();const key=`course-assets/${orgId}/${id}`;copiedKeys.push(key);await app.storage.put(key,app.storage.read(asset.object_key));await client.query('INSERT INTO course_assets(id,org_id,course_id,object_key,filename,mime_type,byte_length,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[id,orgId,created.id,key,asset.filename,asset.mime_type,asset.byte_length,actor.user.id]);mapping.set(asset.id,id);}
+     for (const asset of copy.assets) {
+       const prior = asset.source;
+       const stored = await app.storage.put(asset.key, app.storage.read(prior.object_key), { bytes: asset.bytes, signal: timeout });
+       if (stored.size !== asset.bytes) throw new CourseError(409, 'Um anexo da base não está disponível.');
+       await client.query(`INSERT INTO course_assets(id,org_id,course_id,object_key,filename,mime_type,byte_length,created_by)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+       [asset.id,orgId,created.id,asset.key,prior.filename,prior.mime_type,asset.bytes,actor.user.id]);
+       mapping.set(prior.id,asset.id);
+     }
+     await app.uploads.commit(client, copiedKeys);
      document={...document,modules:document.modules.map(module=>({...module,units:module.units.map(unit=>({...unit,assetIds:unit.assetIds.map(id=>mapping.get(id)!)}))}))};
      await client.query('UPDATE courses SET draft=$2 WHERE id=$1',[created.id,document]);created.draft=document;
     }
     return {course:created};
-   });return reply.code(201).send(result);}catch(error){await Promise.all(copiedKeys.map(key=>app.storage.remove(key).catch(()=>{})));throw error;}
+   });return reply.code(201).send(result);}finally{await app.uploads.reconcile(copiedKeys).catch(()=>{});}
   });
   app.get(`${base}/:id`,async request=>{const {orgId}=await target(request,central);const found=(await app.db.query<CourseRow>('SELECT * FROM courses WHERE id=$1 AND org_id=$2',[courseId(request),orgId])).rows[0];if(!found)throw new CourseError(404,'Curso não encontrado.');const versions=await app.db.query('SELECT id,version,published_at FROM course_versions WHERE course_id=$1 AND org_id=$2 ORDER BY version DESC',[found.id,orgId]);const share=await app.db.query<{version_id:string}>('SELECT version_id FROM course_base_shares WHERE course_id=$1 AND org_id=$2',[found.id,orgId]);return {course:found,versions:versions.rows,shareVersionId:share.rows[0]?.version_id??null};});
   app.put(`${base}/:id`,async request=>{

@@ -6,6 +6,8 @@ Em 24/11/2026, o fundador autorizou conectar a OpenAI real no ambiente local. E-
 
 ```sh
 npm ci
+npm run media:build
+npm run media:verify
 npm run dev:openai
 ```
 
@@ -19,7 +21,7 @@ Os modelos são configuráveis por `OPENAI_AUDIO_MODEL` (padrão `gpt-audio-1.5`
 
 1. O aluno vê o provedor e o aviso de envio de áudio, quadros e contexto antes de solicitar. A API revalida identidade, organização, duração, limites e carteira. São aceitos até **300 segundos** no modo real, mesmo que um curso configure um limite maior.
 2. A reserva, a admissão no orçamento e o pedido persistem juntos. Avaliação real reserva apenas lotes elegíveis. Compra simulada, concessões comuns e créditos anteriores à S01 seguem no saldo geral. A liquidação e estorno preservam os lotes e a origem do crédito. Workers reais só tomam pedidos `openai`; workers simulados só tomam pedidos `mock`. Replays da mesma chave retornam o pedido original, inclusive após mudar de modo.
-3. O adaptador resolve a gravação pelo pedido persistido e suas chaves de organização/aluno. FFmpeg extrai áudio mono WAV 16 kHz em blocos de até 60 segundos e até 12 quadros JPEG de no máximo 512 pixels. Os derivados ficam em diretório temporário privado, removido ao terminar, inclusive em erro. O processo usa argumentos diretos, protocolos locais e limites de tempo e tamanho. `FFMPEG_PATH` permite um binário explícito; o pacote já utilizado nas fixtures agora é dependência de runtime. Quadros uniformes, sem variação suficiente, não são enviados como evidência visual.
+3. O adaptador resolve a gravação pelo pedido persistido e suas chaves de organização/aluno. FFmpeg extrai áudio mono WAV 16 kHz em blocos de até 60 segundos e até 12 quadros JPEG de no máximo 512 pixels. A entrada é copiada por stdin para o executor local com FFmpeg 8.1.3. A imagem usa Alpine fixada por digest e o binário é conferido por arquitetura. O contêiner tem raiz somente leitura, usuário sem privilégios, rede desativada e área temporária de 224 MiB. O executor recebe somente a mídia do pedido, formato, duração e modalidades. Derivados chegam por stdout com limite de tamanho e a área temporária some com o contêiner. Quadros uniformes, sem variação suficiente, não são enviados como evidência visual.
 4. Chat Completions recebe áudio real e devolve transcrição/análise vocal por bloco. Responses recebe essas observações, imagens, rubrica, objetivo, atividade, perfil educacional e até cinco resultados recentes do mesmo aluno, organização e provedor. IDs internos, e-mails e caminhos não entram no prompt. Conteúdo pessoal eventualmente escrito no objetivo/perfil é transmitido como contexto, conforme informado na interface.
 5. A resposta usa Structured Outputs. O servidor valida critérios, modalidades, intervalos e limites; calcula a nota ponderada e insere metadados de provedor/uso. Intervalos precisam coincidir com os blocos ou quadros enviados. Toda nota real exige evidência. Uma nota visual sem imagem utilizável é recusada. Sem orador observável, o modelo é instruído a deixar critérios visuais sem nota.
 6. A transação final persiste relatório, consumo, progresso e outbox. Falha definitiva/cancelamento libera a reserva. A UI diferencia relatórios reais e históricos simulados, inclusive diagnóstico, mentoria e conjuntos de evolução.

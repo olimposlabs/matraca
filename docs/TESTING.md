@@ -10,7 +10,7 @@ A suíte usa Vitest para contratos, autorização e persistência em PostgreSQL,
 | npm run build | Tipos e build da interface |
 | npm run test:e2e | Jornadas Chromium com API e PostgreSQL locais em schemas descartáveis |
 
-As fixtures de mídia são sintéticas. FFmpeg é usado apenas para gerar amostras de teste. O probe de produção usa mediabunny. Nenhuma pessoa real aparece nas fixtures.
+As fixtures de mídia são sintéticas. O pacote de desenvolvimento gera amostras com FFmpeg. O probe usa mediabunny e a preparação de avaliações reais tem um executor Docker separado. Rode `npm run media:build` e `npm run media:verify` antes de `npm test`. Nenhuma pessoa real aparece nas fixtures.
 
 Prepare as jornadas com `npm run db:start`, `npx playwright install chromium` e `npm run build`. Execute `npm run test:e2e`. Cada roteiro usa armazenamento temporário e portas próprias. Capturas de tela ficam em `.data`. A matriz descreve a cobertura de cada jornada, incluindo verificações manuais e lacunas. [Matriz de aceite](technical/PILOT_ACCEPTANCE.md) · [Registro SPI](EXECUCAO_SPI.md)
 

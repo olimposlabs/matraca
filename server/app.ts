@@ -3,6 +3,7 @@ import cookie from '@fastify/cookie';
 import { configuration, localHostname } from './config.js';
 import { createDatabase } from './db.js';
 import { LocalStorage } from './storage.js';
+import { UploadCapacity } from './upload-capacity.js';
 import { registerIdentity } from './auth.js';
 import { registerOrganizations } from './organizations.js';
 import { registerEducation } from './education.js';
@@ -30,6 +31,7 @@ export interface AppOptions {
   clientRoot?: string;
   evaluationProvider?: 'mock' | 'openai';
   liveLimits?: LiveLimits;
+  uploadLimits?: ConstructorParameters<typeof UploadCapacity>[2];
   /** Trusted server-side clock for the local financial simulator. */
   billingNow?: (orgId: string) => Date | Promise<Date>;
 }
@@ -38,6 +40,7 @@ export async function createApp(options: AppOptions = {}) {
   const config = configuration(options);
   const db = createDatabase(config.databaseUrl);
   const storage = new LocalStorage(config.storageRoot);
+  const uploads = new UploadCapacity(db, storage, options.uploadLimits);
   const app = Fastify({ logger: false, trustProxy: false, bodyLimit: 1024 * 1024 });
   await app.register(cookie);
   app.setErrorHandler((error, _request, reply) => {
@@ -48,7 +51,10 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.decorate('db', db);
   app.decorate('storage', storage);
-  app.addHook('onClose', async () => db.close());
+  app.decorate('uploads', uploads);
+  const cleanup = setInterval(() => { void uploads.reconcile().catch(() => {}); }, 60_000);
+  cleanup.unref();
+  app.addHook('onClose', async () => { clearInterval(cleanup); await db.close(); });
   app.addHook('onRequest', async (request, reply) => {
     if (!localHostname(request.headers.host)) return reply.code(400).send({ error: 'Domínio não permitido' });
     if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers['x-matraca-request'] !== '1') {
@@ -102,5 +108,5 @@ export async function createApp(options: AppOptions = {}) {
 }
 
 declare module 'fastify' {
-  interface FastifyInstance { db: ReturnType<typeof createDatabase>; storage: LocalStorage }
+  interface FastifyInstance { db: ReturnType<typeof createDatabase>; storage: LocalStorage; uploads: UploadCapacity }
 }

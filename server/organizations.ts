@@ -2,11 +2,12 @@ import { localPartnerDomainSuffix } from './config.js';
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import multipart from '@fastify/multipart';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import sharp, { type OutputInfo } from 'sharp';
 import { z } from 'zod';
 import { requireIdentity, type AuthIdentity, type IdentityOrg } from './auth.js';
+import { uploadDeadline } from './upload-capacity.js';
 
 const label = (maximum: number) => z.string().trim().min(1).max(maximum).refine(
   (value) => !/[<>]/u.test(value) && [...value].every((character) => {
@@ -155,7 +156,7 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
       const actor = central ? await operator(request) : await requireIdentity(request, ['org_admin']);
       const id = central ? targetId(request) : actor.org.id;
       await requireOrg(app.db, id);
-      const asset = await uploadLogo(app, request, actor, id);
+      const asset = await uploadLogo(app, request, reply, actor, id);
       return reply.code(201).send(asset);
     });
   }
@@ -290,8 +291,23 @@ async function publishBranding(
   });
 }
 
-async function uploadLogo(app: FastifyInstance, request: FastifyRequest, actor: AuthIdentity, orgId: string) {
+async function uploadLogo(app: FastifyInstance, request: FastifyRequest, reply: FastifyReply, actor: AuthIdentity, orgId: string) {
   if (!request.isMultipart()) throw new OrganizationError(415, 'Envie um arquivo PNG, JPEG ou WebP.');
+  const id = randomUUID(), key = `branding/${orgId}/${id}`;
+  await app.uploads.reserve({ orgId, actorId: actor.user.id }, [{ key, bytes: LOGO_LIMIT }]);
+  const upload = uploadDeadline(request, reply);
+  try {
+    return await processLogo(app, request, actor, orgId, id, key, upload);
+  } finally {
+    upload.close();
+    await app.uploads.reconcile([key]).catch(() => {});
+  }
+}
+
+async function processLogo(
+  app: FastifyInstance, request: FastifyRequest, actor: AuthIdentity, orgId: string, id: string, key: string,
+  upload: ReturnType<typeof uploadDeadline>,
+) {
   let original: Buffer | undefined;
   let declaredType: string | undefined;
   for await (const part of request.parts({ limits: { fileSize: LOGO_LIMIT, files: 1, fields: 0, parts: 1 } })) {
@@ -302,6 +318,7 @@ async function uploadLogo(app: FastifyInstance, request: FastifyRequest, actor: 
     original = await part.toBuffer();
     if (part.file.truncated) throw new OrganizationError(413, 'Logo excede o limite de 2 MiB.');
   }
+  upload.received();
   if (!original || original.length === 0) throw new OrganizationError(400, 'O arquivo de logo está vazio.');
   if (original.length > LOGO_LIMIT) throw new OrganizationError(413, 'Logo excede o limite de 2 MiB.');
   const format = imageFormat(original);
@@ -323,20 +340,15 @@ async function uploadLogo(app: FastifyInstance, request: FastifyRequest, actor: 
     throw new OrganizationError(400, 'Não foi possível validar a imagem.');
   }
   if (encoded.data.length > LOGO_LIMIT) throw new OrganizationError(413, 'Logo normalizado excede 2 MiB.');
-  const id = randomUUID();
-  const key = `branding/${orgId}/${id}`;
-  await app.storage.put(key, Readable.from(encoded.data));
-  try {
-    await withOrganizationWrite(request, actor, orgId, async client => {
-      await requireOrg(client, orgId);
-      await client.query('INSERT INTO logo_assets (id,org_id,key,content_type,width,height,bytes,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
-        [id, orgId, key, 'image/webp', encoded.info.width, encoded.info.height, encoded.data.length, actor.user.id]);
-      await audit(client, actor, orgId, 'logo_uploaded');
-    });
-  } catch (error) {
-    await app.storage.remove(key).catch(() => {});
-    throw error;
-  }
+  await app.storage.put(key, Readable.from(encoded.data), { bytes: LOGO_LIMIT, signal: upload.signal });
+  await withOrganizationWrite(request, actor, orgId, async client => {
+    await requireOrg(client, orgId);
+    if (upload.signal.aborted) throw new OrganizationError(400, 'O envio foi interrompido.');
+    await client.query('INSERT INTO logo_assets (id,org_id,key,content_type,width,height,bytes,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [id, orgId, key, 'image/webp', encoded.info.width, encoded.info.height, encoded.data.length, actor.user.id]);
+    await audit(client, actor, orgId, 'logo_uploaded');
+    await app.uploads.commit(client, [key]);
+  });
   return { logoKey: key, contentType: 'image/webp', width: encoded.info.width, height: encoded.info.height, bytes: encoded.data.length };
 }
 
