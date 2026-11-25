@@ -11,7 +11,7 @@ type Journey = {
   profile: LearnerProfile;
   courses: { courseId: string; enrollmentId: string; title: string; completedUnits: number; totalUnits: number; status: string }[];
   coursesEnabled: boolean; strictJourney: boolean;
-  diagnostic: { simulated: boolean; enabled: boolean; evaluationId: string | null; status: string | null; overallLevel: number | null; priorities: { criterionId: string; level: number; title: string; focus: string; recommendedUnit?: { courseId: string; enrollmentId: string; unitId: string; title: string } | null }[] };
+  diagnostic: { simulated: boolean; enabled: boolean; evaluationId: string | null; status: string | null; reportAvailable: boolean; overallLevel: number | null; priorities: { criterionId: string; level: number; title: string; focus: string; recommendedUnit?: { courseId: string; enrollmentId: string; unitId: string; title: string } | null }[] };
 };
 export type EvolutionAttempt = { provider?: 'mock' | 'openai'; id: string; recordingId: string; completedAt: string; purpose: string; objective: string; rubricVersion?: string; overallLevel?: number | null; scores?: { criterionId: string; title: string; level: number | null }[] };
 const experienceLabels = { beginner: 'Estou começando', intermediate: 'Já tenho alguma prática', advanced: 'Tenho experiência frequente' };
@@ -39,6 +39,11 @@ function ProfileEditor({ profile, diagnosticEnabled, strict, cancel, saved }: { 
 }
 function DiagnosticCard({ diagnostic, mode }: { diagnostic: Journey['diagnostic']; mode: LearnerProfile['mode'] }) {
   const completed = diagnostic.status === 'completed'; const inProgress = diagnostic.status === 'queued' || diagnostic.status === 'processing';
+  if (completed && !diagnostic.reportAvailable) return <article className="journey-diagnostic">
+    <span className="journey-diagnostic-icon"><Target size={28} /></span>
+    <div><h2>Seu relatório de diagnóstico expirou.</h2><p>Grave novamente para avaliar seu momento atual.</p></div>
+    <Link className="button button-primary" to="/app/recordings?purpose=diagnostic">Fazer novo diagnóstico<ArrowRight size={16} /></Link>
+  </article>;
   return <article className="journey-diagnostic"><span className="journey-diagnostic-icon"><Target size={28} /></span><div><span className="eyebrow">{completed ? (diagnostic.simulated ? 'SEU DIAGNÓSTICO SIMULADO' : 'SEU DIAGNÓSTICO') : inProgress ? 'DIAGNÓSTICO EM ANDAMENTO' : 'UMA APRESENTAÇÃO PARA COMEÇAR'}</span><h2>{completed ? 'Um primeiro retrato para orientar a prática.' : inProgress ? 'Sua apresentação está sendo avaliada.' : 'Conte quem você é em 30 segundos.'}</h2><p>{completed ? (diagnostic.simulated ? 'Este diagnóstico é simulado. Explore os critérios para conhecer a plataforma.' : 'Explore os critérios observados e as sugestões para sua próxima fala. Confira as limitações no relatório.') : inProgress ? 'Acompanhe o processamento e abra o relatório quando ele estiver pronto.' : mode === 'diagnostic' ? 'Grave uma apresentação inicial para conhecer o relatório e organizar os pontos de atenção.' : 'Você também pode fazer um diagnóstico inicial para acompanhar seu ponto de partida.'}</p>{completed && <span className="journey-diagnostic-level">{diagnostic.overallLevel === null ? 'Sem nível avaliável' : `Nível ${diagnostic.simulated ? 'simulado ' : ''}${resultLabel(diagnostic.overallLevel)} de 4`}</span>}</div>{diagnostic.evaluationId && (completed || inProgress) ? <Link className="button button-secondary" to={`/app/evaluations/${diagnostic.evaluationId}`}>{inProgress ? 'Acompanhar avaliação' : 'Abrir diagnóstico'}<ArrowRight size={16} /></Link> : <Link className="button button-primary" to="/app/recordings?purpose=diagnostic">{diagnostic.status ? 'Tentar diagnóstico novamente' : 'Fazer diagnóstico'}<ArrowRight size={16} /></Link>}</article>;
 }
 

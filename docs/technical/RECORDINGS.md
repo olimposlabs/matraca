@@ -27,7 +27,9 @@ Erros de upload, truncamento, limite, formato, revalidação ou persistência re
 
 Upload é exclusivo do aluno para si. Listagem, detalhe e download usam o mesmo escopo pedagógico dos relatórios: aluno próprio, administrador da organização, gestor da escola atual ou professor aprovado e atualmente atribuído. Uma transferência de escola revoga o acesso da escola/professor anterior também ao arquivo histórico. Operador não recebe acesso implícito por esses endpoints; ferramentas centrais futuras precisam autorização específica.
 
-Downloads privados usam `streamPrivateFile`, com faixa única, suporte a busca temporal, `Content-Length`, `Content-Range`, `nosniff`, `no-store` e CSP restritiva. A autorização é refeita a cada pedido, inclusive de faixa. Nenhuma URL pública permanente é gerada.
+Downloads privados usam `streamPrivateFile`, com faixa única, suporte a busca temporal, `Content-Length`, `Content-Range`, `nosniff`, `no-store` e CSP restritiva. A autorização é refeita a cada pedido, inclusive de faixa. O acesso ao caminho exige sessão no mesmo domínio.
+
+A rotina local aplica 30 dias à mídia bruta e adia a remoção enquanto houver pedido ativo. Depois de aposentar a mídia no banco, o endpoint encerra a reprodução e a interface preserva o histórico com `mediaAvailable=false`. O objeto é removido em seguida. Se uma execução falhar nesse intervalo, um novo manifesto retoma a remoção. [Retenção local](../OPERATIONS.md#retenção-e-remoção-local)
 
 ## Contrato HTTP
 
@@ -37,7 +39,7 @@ Downloads privados usam `streamPrivateFile`, com faixa única, suporte a busca t
 | `POST /api/recordings` | Multipart `metadata` JSON seguido de `file` | `201 {recording}` |
 | `GET /api/recordings` | `page=1`, `pageSize=20` até100, `purpose?`, `studentId?` | `{items,total,page,pageSize}` |
 | `GET /api/recordings/:id` | Identificador da gravação | `{recording}` |
-| `GET/HEAD /api/recordings/:id/media` | `Range: bytes=...` opcional | Arquivo autorizado,200 ou206; faixa inválida416 |
+| `GET/HEAD /api/recordings/:id/media` | `Range: bytes=...` opcional | 200 ou 206 para mídia disponível, 404 para mídia removida, 416 para faixa inválida |
 
 `metadata` aceita estritamente:
 

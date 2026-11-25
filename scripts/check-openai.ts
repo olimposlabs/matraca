@@ -17,6 +17,7 @@ import { requireRuntimeDatabase } from '../server/db-runtime.js';
 import { provisionLocalDatabase } from './provision-local-db.js';
 import { startPostgresCluster } from './db-start.js';
 import { evaluationConfiguration } from '../server/evaluation/openai-config.js';
+import { evaluationNoticeVersion } from '../server/evaluation/privacy-notice.js';
 import { createOpenAIProvider } from '../server/evaluation/openai-runtime.js';
 import type { EvaluationReport } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
@@ -82,7 +83,7 @@ try {
     assert.equal(upload.statusCode, 201, upload.body);
     const recording = upload.json().recording;
     const clientKey = randomUUID();
-    const post = () => app!.inject({ method: 'POST', url: '/api/evaluations', headers, payload: { recordingId: recording.id, clientKey, expectedProvider: 'openai' } });
+    const post = () => app!.inject({ method: 'POST', url: '/api/evaluations', headers, payload: { recordingId: recording.id, clientKey, expectedProvider: 'openai', consent: { accepted: true, version: evaluationNoticeVersion } } });
     const queued = await post();
     assert.equal(queued.statusCode, 202, queued.body);
     lastId = queued.json().evaluation.id;

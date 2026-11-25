@@ -39,6 +39,7 @@ interface UserRow {
 export interface LocalMail {
   id: string;
   orgId: string;
+  userId?: string;
   hostname: string;
   to: string;
   subject: string;
@@ -414,7 +415,7 @@ async function issueLink(
   );
   const id = randomUUID();
   const mail: LocalMail = {
-    id, orgId: current.org.id, hostname: current.hostname, to: user.email,
+    id, orgId: current.org.id, userId: user.id, hostname: current.hostname, to: user.email,
     subject: `Seu acesso a ${current.org.name}`, purpose,
     createdAt: created.rows[0].created_at.toISOString(), expiresAt: created.rows[0].expires_at.toISOString(),
     link: `http://${current.hostname}:${publicPort}/api/auth/consume?token=${raw}`,

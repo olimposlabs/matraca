@@ -4,6 +4,7 @@ import type { EducationQuery } from '../permissions.js';
 import type { Database } from '../db.js';
 import { JourneyError, requireStudyForEvaluation } from '../journey-progress.js';
 import { EvaluationProviderError, maxEvaluationAttempts } from './provider.js';
+import { evaluationNoticeVersion } from './privacy-notice.js';
 
 const limit = z.number().int().min(0).max(100_000);
 export const liveLimitsSchema = z.object({ requests: limit, minutes: limit, calls: limit }).strict();
@@ -15,12 +16,12 @@ export class LivePolicyError extends Error {
   constructor(readonly statusCode: 403 | 429, message: string) { super(message); }
 }
 
-export async function readLivePolicy(db: EducationQuery, orgId: string) {
-  const row = (await db.query<{ enabled: boolean; organization: unknown; student: unknown; revision: number }>(
-    `SELECT enabled,organization_limits AS organization,student_limits AS student,revision
-     FROM live_evaluation_policies WHERE org_id=$1`, [orgId],
+export async function readLivePolicy(db: EducationQuery, orgId: string, lock = false) {
+  const row = (await db.query<{ enabled: boolean; organization: unknown; student: unknown; revision: number; includeExperience: boolean }>(
+    `SELECT enabled,organization_limits AS organization,student_limits AS student,revision,include_experience AS "includeExperience"
+     FROM live_evaluation_policies WHERE org_id=$1 ${lock ? 'FOR SHARE' : ''}`, [orgId],
   )).rows[0];
-  if (!row) return { enabled: false, organization: noLiveLimits, student: noLiveLimits, revision: 0 };
+  if (!row) return { enabled: false, organization: noLiveLimits, student: noLiveLimits, revision: 0, includeExperience: false };
   return { ...row, organization: liveLimitsSchema.parse(row.organization), student: liveLimitsSchema.parse(row.student) };
 }
 
@@ -105,6 +106,7 @@ export async function authorizedLiveAttempt(
        (o.settings->>'strictJourney'='true') IS TRUE AS strict FROM evaluation_requests r
      JOIN evaluation_jobs j ON j.request_id=r.id
      JOIN live_evaluation_admissions b ON b.request_id=r.id
+     JOIN live_evaluation_consents c ON c.request_id=r.id
      JOIN credit_reservations w ON w.request_id=r.id::text AND w.org_id=r.org_id AND w.user_id=r.student_id
      JOIN orgs o ON o.id=r.org_id
      JOIN users u ON u.id=r.student_id AND u.org_id=r.org_id
@@ -114,6 +116,7 @@ export async function authorizedLiveAttempt(
      WHERE r.id=$1 AND r.provider='openai' AND r.status='processing' AND j.state='leased'
        AND j.attempts=$2 AND j.lease_token=$3 AND j.lease_until>clock_timestamp()
        AND w.provider='openai' AND w.status='reserved'
+       AND c.revoked_at IS NULL AND c.notice_version=$4 AND (NOT c.include_experience OR p.include_experience) AND m.media_retired_at IS NULL
        AND p.enabled AND o.status='active' AND u.status='active' AND u.archived_at IS NULL
        AND 'student'=ANY(u.roles) AND NOT('operator'=ANY(u.roles))
        AND (m.purpose<>'diagnostic' OR o.settings->>'diagnosticEnabled' IS DISTINCT FROM 'false')
@@ -123,8 +126,8 @@ export async function authorizedLiveAttempt(
            WHERE e.id=m.enrollment_id AND e.version_id=m.version_id AND e.org_id=r.org_id
              AND e.student_id=r.student_id AND e.status IN ('active','completed')
          )
-       )) ${lock ? 'FOR SHARE OF u,o,p,a' : ''}`,
-    [requestId, attempt, leaseToken],
+       )) ${lock ? 'FOR SHARE OF u,o,p,a,c,m' : ''}`,
+    [requestId, attempt, leaseToken, evaluationNoticeVersion],
   )).rows[0];
   if (actor?.purpose === 'course') {
     if (!actor.enrollment_id || !actor.unit_id) return undefined;

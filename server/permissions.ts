@@ -74,7 +74,7 @@ export async function requireStudentScope(request: FastifyRequest, studentId: st
   return actor;
 }
 export async function assertStudentScope(client: EducationQuery, actor: AuthIdentity, studentId: string): Promise<void> {
-  const target = await client.query('SELECT id FROM users WHERE id=$1 AND org_id=$2 AND \'student\'=ANY(roles)', [studentId, actor.org.id]);
+  const target = await client.query('SELECT id FROM users WHERE id=$1 AND org_id=$2 AND privacy_erasure_started_at IS NULL AND \'student\'=ANY(roles)', [studentId, actor.org.id]);
   if (!target.rowCount) throw new EducationError(404, 'Aluno não encontrado.');
   const result = await client.query(`SELECT u.id FROM users u WHERE u.org_id=$1 AND u.id=$4 AND ${STUDENT_SCOPE_SQL}`,
     [...scopeValues(actor), studentId]);

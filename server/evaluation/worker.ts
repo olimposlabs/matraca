@@ -74,6 +74,7 @@ export async function cancelEvaluationInTransaction(client: PoolClient, target: 
   const status = current.rows[0].status;
   if (status !== 'queued' && status !== 'processing') return status;
   await releaseReservationInTransaction(client, { ...target, userId: target.studentId, reason });
+  await client.query('UPDATE live_evaluation_consents SET revoked_at=clock_timestamp() WHERE request_id=$1 AND revoked_at IS NULL', [target.requestId]);
   await finishJob(client, target.requestId, 'cancelled');
   return 'cancelled';
 }
@@ -104,6 +105,12 @@ async function settle(db: Database, job: Job, result: EvaluationReport | Evaluat
     if (!(result instanceof EvaluationProviderError) && job.provider === 'openai'
       && !await authorizedLiveAttempt(client, job.request_id, job.attempts, job.leaseToken, true)) {
       result = new EvaluationProviderError('authorization', false);
+    }
+    if (!(result instanceof EvaluationProviderError) && job.provider === 'mock') {
+      const scope = await client.query(`SELECT 1 FROM users u JOIN orgs o ON o.id=u.org_id
+        WHERE u.id=$1 AND u.org_id=$2 AND u.privacy_erasure_started_at IS NULL AND o.privacy_erasure_started_at IS NULL
+        FOR SHARE OF u,o`, [job.student_id, job.org_id]);
+      if (!scope.rowCount) result = new EvaluationProviderError('authorization', false);
     }
     if (result instanceof EvaluationProviderError) {
       if (result.retryable && job.attempts < maxAttempts) {

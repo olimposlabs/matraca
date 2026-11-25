@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { createApp } from '../server/app.js';
 import { createDatabase } from '../server/db.js';
 import { requireRuntimeDatabase } from '../server/db-runtime.js';
+import { applyPrivacy, privacyPlan } from '../server/privacy-retention.js';
 import { startPostgresCluster } from './db-start.js';
 import { localDatabaseConnection, localDatabaseNames } from '../server/local-database-config.js';
 import { provisionLocalDatabase } from './provision-local-db.js';
@@ -79,6 +80,8 @@ try {
     assert.equal((await app.inject({ method: 'GET', url: '/api/context', headers: { host: 'localhost' } })).statusCode, 200);
     await assert.rejects(() => app.db.query('CREATE SCHEMA synthetic_restricted_check'), { code: '42501' });
     await assert.rejects(() => app.db.query('SELECT name FROM schema_migrations LIMIT 1'), { code: '42501' });
+    const privacy = await privacyPlan(owner, app.storage, {});
+    await assert.rejects(() => applyPrivacy(app.db, app.storage, {}, privacy.fingerprint), /papel de migração/u);
     const foreignUrl = new URL(primary.runtimeUrl);
     foreignUrl.pathname = '/' + localDatabaseNames(profiles[1]).name;
     const foreign = createDatabase(foreignUrl.href);

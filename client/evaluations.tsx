@@ -2,9 +2,18 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowRight, ClipboardList, Clock3, Play, Printer } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { EvaluationCriterion, EvaluationReport, EvaluationScenario } from '../server/evaluation/provider';
-import { apiJson } from './api';
+import { ApiError, apiJson } from './api';
 import { AuthenticatedArea, useAuth } from './auth';
 import './evaluations.css';
+
+type EvaluationCapabilities = {
+  provider: 'mock' | 'openai';
+  maximumSeconds: number;
+  enabled: boolean;
+  availableCredits?: number;
+  consent?: { version: string; text: string };
+  includeExperience?: boolean;
+};
 
 type EvaluationStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 interface EvaluationSummary {
@@ -20,11 +29,12 @@ interface EvaluationSummary {
   attempts: number;
   hasAudio: boolean;
   hasVideo: boolean;
+  mediaAvailable: boolean;
   errorMessage: string | null;
   overallLevel: number | null;
 }
 interface EvaluationDetail extends EvaluationSummary {
-  criteria: EvaluationCriterion[];
+  criteria: EvaluationCriterion[] | null;
   activity: { title: string; instructionMarkdown: string } | null;
   audienceScenario: 'one_on_one' | 'executive' | 'audience' | null;
   report: EvaluationReport | null;
@@ -68,14 +78,17 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
   const [scenario, setScenario] = useState<EvaluationScenario | 'configured'>('configured');
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [confirmedNotice, setConfirmedNotice] = useState<string | null>(null);
+  const [approvedExperience, setApprovedExperience] = useState<string | null>(null);
+  const [needsConfirmation, setNeedsConfirmation] = useState<string | null>(null);
   const [error, setError] = useState('');
   const pending = useRef(false);
   const sessionKeys = useRef(new Map<string, string>());
   const [resumable, setResumable] = useState<string | null>(null);
-  const [capabilities, setCapabilities] = useState<{ provider: 'mock' | 'openai'; maximumSeconds: number; enabled: boolean; availableCredits?: number } | null>(null);
+  const [capabilities, setCapabilities] = useState<EvaluationCapabilities | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    apiJson<{ provider: 'mock' | 'openai'; maximumSeconds: number; enabled: boolean; availableCredits?: number }>('/api/evaluation-capabilities', { signal: controller.signal })
+    apiJson<EvaluationCapabilities>('/api/evaluation-capabilities', { signal: controller.signal })
       .then(setCapabilities).catch(cause => { if (!controller.signal.aborted) setError(errorText(cause)); });
     return () => controller.abort();
   }, [refresh]);
@@ -90,11 +103,15 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
     } catch { setResumable(key && sessionKeys.current.has(key) ? key : null); }
   }, [key]);
   const canResume = !!key && resumable === key;
+  const showConsent = capabilities?.provider === 'openai' && (!canResume || needsConfirmation === key);
+  const consentKey = key && capabilities?.consent ? `${key}:${capabilities.consent.version}` : null;
+  const hasConsent = !!consentKey && confirmedNotice === consentKey;
   const creditAvailable = capabilities?.provider !== 'openai' || (capabilities.availableCredits ?? 0) >= recording.estimatedCredits;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (pending.current || !capabilities || !key || (!canResume && (!capabilities.enabled || !creditAvailable))) return;
+    if (pending.current || !capabilities || !key || (!canResume && (!capabilities.enabled || !creditAvailable))
+      || (showConsent && !hasConsent)) return;
     pending.current = true;
     setBusy(true);
     setError('');
@@ -108,6 +125,12 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
     try {
       const { evaluation } = await apiJson<{ evaluation: { id: string } }>('/api/evaluations', {
         method: 'POST', body: { recordingId: recording.id, clientKey, expectedProvider: capabilities.provider,
+          ...(capabilities.provider === 'openai' && capabilities.consent && hasConsent ? {
+            consent: {
+              accepted: true, version: capabilities.consent.version,
+              includeExperience: capabilities.includeExperience === true && approvedExperience === consentKey,
+            },
+          } : {}),
           ...(capabilities.provider === 'mock' && scenario !== 'configured' ? { scenario } : {}) },
       });
       sessionKeys.current.delete(key);
@@ -115,6 +138,12 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       try { sessionStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
       navigate(`/app/evaluations/${evaluation.id}`);
     } catch (cause) {
+      if (cause instanceof ApiError && (cause.status === 428 || cause.status === 412)) {
+        setNeedsConfirmation(key);
+        setConfirmedNotice(null);
+        setApprovedExperience(null);
+        setRefresh(value => value + 1);
+      }
       setError(errorText(cause));
     } finally {
       pending.current = false;
@@ -126,7 +155,7 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
     <div>
       <h3>{!capabilities ? 'Preparando avaliação…' : capabilities.provider === 'mock' ? 'Avaliação simulada' : 'Avaliação com OpenAI'}</h3>
       <p>Esta solicitação reserva {recording.estimatedCredits} {label}. O saldo é debitado quando o relatório fica pronto.</p>
-      {capabilities?.provider === 'openai' && <p>Ao solicitar, o áudio, quadros do vídeo e o contexto da sua prática serão enviados à OpenAI para gerar o feedback. Limite de cinco minutos; a análise visual usa quadros amostrados.</p>}
+      {capabilities?.provider === 'openai' && <p>Limite de cinco minutos. A análise visual usa quadros amostrados.</p>}
     </div>
     {capabilities?.provider === 'openai' && <p role="status">{!capabilities.enabled
       ? 'Esta conta ainda não tem acesso à avaliação real.'
@@ -135,6 +164,11 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       className="button button-secondary" disabled={busy} onClick={() => { setError(''); setRefresh(value => value + 1); }}>
       Atualizar disponibilidade
     </button>}
+    {showConsent && capabilities?.enabled && capabilities.consent && <fieldset disabled={busy}>
+      <label><input type="checkbox" checked={hasConsent} onChange={event => setConfirmedNotice(event.target.checked ? consentKey : null)} /> {capabilities.consent.text}</label>
+      {capabilities.includeExperience && <label><input type="checkbox" checked={!!consentKey && approvedExperience === consentKey}
+        onChange={event => setApprovedExperience(event.target.checked ? consentKey : null)} /> Incluir também o nível de experiência que declarei.</label>}
+    </fieldset>}
     {capabilities?.provider === 'mock' && <label>Cenário do simulador
       <select value={scenario} onChange={event => setScenario(event.target.value as EvaluationScenario | 'configured')} disabled={busy}>
         <option value="configured">Padrão da organização</option>
@@ -142,7 +176,7 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       </select>
     </label>}
     {error && <p className="evaluation-error" role="alert">{error}</p>}
-    <button type="submit" className="button button-primary" disabled={busy || !capabilities || (!canResume && (!capabilities.enabled || !creditAvailable))}>
+    <button type="submit" className="button button-primary" disabled={busy || !capabilities || (!canResume && (!capabilities.enabled || !creditAvailable)) || (showConsent && !hasConsent)}>
       {busy ? 'Enviando…' : canResume ? 'Retomar solicitação' : 'Solicitar avaliação'} <ArrowRight size={16} aria-hidden="true" />
     </button>
   </form>;
@@ -275,12 +309,13 @@ function EvaluationDetailPage({ id }: { id: string }) {
       </div>}
       {detail.status === 'failed' && <div role="alert" className="evaluation-panel"><p>{detail.errorMessage}</p><Link to="/app/recordings">Voltar às gravações</Link></div>}
       {detail.status === 'cancelled' && <div role="status" className="evaluation-panel"><p>A avaliação foi cancelada e a reserva foi liberada.</p><Link to="/app/recordings">Voltar às gravações</Link></div>}
+      {detail.status === 'completed' && !detail.report && <p role="status" className="evaluation-panel">O relatório foi removido pela política de retenção.</p>}
       {detail.report && <>
-        <div className="evaluation-panel evaluation-player">
+        {detail.mediaAvailable ? <div className="evaluation-panel evaluation-player">
           {detail.hasVideo
             ? <video ref={video} src={`/api/recordings/${detail.recordingId}/media`} controls playsInline preload="metadata" aria-label="Gravação avaliada" />
             : <audio ref={audio} src={`/api/recordings/${detail.recordingId}/media`} controls preload="metadata" aria-label="Gravação avaliada" />}
-        </div>
+        </div> : <p role="status" className="evaluation-panel">A gravação foi removida pela política de retenção.</p>}
         <EvaluationReportContent detail={detail} onSeek={seek} />
       </>}
     </>}
@@ -305,7 +340,7 @@ function EvaluationReportContent({ detail, onSeek }: { detail: EvaluationDetail;
       <h2>Critérios avaliados</h2>
       <ul className="evaluation-criteria">
         {report.observations.map(observation => {
-          const criterion = detail.criteria.find(item => item.id === observation.criterionId);
+          const criterion = detail.criteria?.find(item => item.id === observation.criterionId);
           return <li className="evaluation-panel" key={observation.criterionId}>
             <div className="evaluation-criterion-title">
               <h3>{criterion?.title ?? observation.criterionId}</h3>
@@ -313,7 +348,7 @@ function EvaluationReportContent({ detail, onSeek }: { detail: EvaluationDetail;
             </div>
             <p>{observation.rationale}</p>
             <p><strong>Próxima prática</strong> {observation.recommendation}</p>
-            {observation.evidence.map((segment, index) => <button className="button button-secondary evaluation-evidence" key={index} onClick={() => onSeek(segment.startUs)}>
+            {detail.mediaAvailable && observation.evidence.map((segment, index) => <button className="button button-secondary evaluation-evidence" key={index} onClick={() => onSeek(segment.startUs)}>
               <Play size={14} aria-hidden="true" /> {clock(segment.startUs)}–{clock(segment.endUs)} <span>{segment.label}</span>
             </button>)}
           </li>;

@@ -4,6 +4,7 @@ import {
   type EvaluationContext, type EvaluationProvider, type ProviderCall,
 } from './provider.js';
 import type { EvaluationMedia } from './openai-media.js';
+import { declaredExperience } from './privacy-notice.js';
 
 interface OpenAIOptions {
   apiKey: string;
@@ -58,9 +59,14 @@ export class OpenAIEvaluationProvider implements EvaluationProvider {
     } finally {
       const usage = object(body.usage);
       const details = object(usage.prompt_tokens_details ?? usage.input_tokens_details);
+      const returnedModel = body.model;
+      const recognizedModel = typeof returnedModel === 'string' && (
+        returnedModel === model || (returnedModel.startsWith(model + '-') && /^\d{4}-\d{2}-\d{2}$/u.test(returnedModel.slice(model.length + 1)))
+      );
+      const requestId = response?.headers.get('x-request-id');
       const call = providerCallSchema.parse({
-        stage, model: typeof body.model === 'string' ? body.model : model,
-        requestId: response?.headers.get('x-request-id') ?? null,
+        stage, model: recognizedModel ? returnedModel : model,
+        requestId: requestId && /^req[-_]?[A-Za-z0-9_-]{1,115}$/u.test(requestId) && !requestId.includes(this.options.apiKey) ? requestId : null,
         httpStatus: response?.status ?? null,
         inputTokens: tokens(usage.input_tokens ?? usage.prompt_tokens),
         outputTokens: tokens(usage.output_tokens ?? usage.completion_tokens),
@@ -108,7 +114,7 @@ export class OpenAIEvaluationProvider implements EvaluationProvider {
       // Tenant IDs, names, e-mails and object paths are deliberately excluded.
       durationMicroseconds: context.recording.durationMicroseconds,
       objective: context.objective, purpose: context.purpose, audience: context.audienceScenario,
-      activity: context.activity, learner: context.learner, recentResults: context.recentResults,
+      activity: context.activity, ...declaredExperience(context.learner.experience), recentLevels: context.recentResults.map(result => result.score),
       criteria: context.criteria, audioNotes, evidenceIntervals: anchors,
       hasAudio: media.audio.length > 0, hasVideo: media.frames.length > 0,
     }) }];
