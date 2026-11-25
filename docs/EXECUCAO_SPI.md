@@ -265,3 +265,11 @@ A revisão integrada reabriu a S06 para preservar a inicialização após deside
 Base inicial `6b6a66e35cd89c9f430a084789c91c2bbcca9473`, sincronizada com a revalidação da S06 em `724497583f70e59eb9b28dfbc0601847c5b22385`. A política do navegador protege os três portais e mantém o HMR no Vite. A prévia do logo publicado usa a origem do backoffice. O CI fixa Actions e imagens e verifica advisories, arquivos versionados, FFmpeg e os cabeçalhos do navegador. [Operações](OPERATIONS.md#proteção-do-navegador-e-dos-insumos)
 
 A [PR #30](https://github.com/olimposlabs/matraca/pull/30) foi integrada em `6496b7ca1b66346d0df817bb797f4120ab843c73` após revisão independente, correção da instalação nova do PostgreSQL e [CI verde no head final](https://github.com/olimposlabs/matraca/actions/runs/45550319542). Passaram 378 testes, lint, tipos, build, instalação limpa no Node 24.22.3, testes de banco e Chromium de cabeçalhos, cadastro, câmera sintética e marca do parceiro. No commit de merge, passaram novamente a verificação de CSP e Vite e o roteiro do sandbox com três domínios. A integração acionou somente [CI](https://github.com/olimposlabs/matraca/actions/runs/45550600607).
+
+## SPI de segurança · S08
+
+Base verificada `60cebf70a0ee1ed09fd2db267d4e3a8a5e0a56ef`. A conferência incluiu as integrações S01–S07 e a revalidação da S06. As 17 correções da auditoria e três regressões encontradas durante a execução foram incorporadas. A revisão integrada e os testes finais cobriram autorização, gasto, mídia, identidade, papéis, retenção, auditoria e insumos.
+
+O aceite técnico passou no Node 24.22.3 com 378 testes em 27 arquivos, lint, tipos, build, verificação do executor, consulta ao registro npm e varredura dos arquivos versionados. Passaram o teste de cabeçalhos/HMR e os dez roteiros Chromium, com as jornadas J01–J20. Os testes usaram PostgreSQL local, personas e mídia sintéticas e transporte simulado para avaliação. [Run do CI da base integrada](https://github.com/olimposlabs/matraca/actions/runs/45551017517) · [Matriz e roteiro manual](technical/PILOT_ACCEPTANCE.md)
+
+Os merges acionaram apenas CI. O sandbox local de aceite reúne portal direto, parceiro e backoffice com exemplos sintéticos. A homologação do fundador segue pendente em uma rodada única. Os controles da conta do provedor e a captura em dispositivos físicos têm evidências próprias.
