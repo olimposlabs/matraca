@@ -231,3 +231,5 @@ A validação local executou as regressões da carteira e da fila, migração e 
 ## SPI de segurança · S02
 
 Base `c79b3e414bf772698335d80bacf743c659d9c26e`. A gestão escolar usa o vínculo atual para alterar pessoas. Gravações de organização e marca revalidam acesso após a espera pelo lock. A migração 016 fixa a versão que o operador compartilha como modelo de curso e preserva as cópias existentes. [Educação](technical/EDUCATION.md) · [Organizações](technical/ORGANIZATIONS.md) · [Cursos](technical/COURSES.md)
+
+A [PR #20](https://github.com/olimposlabs/matraca/pull/20) foi integrada em `4959b5da2fcb199cf8c2a961dd633c66b384117f`. Duas revisões independentes apontaram ajustes, incorporados e revalidados no [CI do head final](https://github.com/olimposlabs/matraca/actions/runs/45534523467). Após o merge, 75 testes focados e as jornadas J06, J07 e J09 passaram. A integração acionou somente CI.
