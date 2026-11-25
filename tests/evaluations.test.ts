@@ -11,6 +11,7 @@ import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { drainLiveEvaluations, runEvaluationJob } from '../server/evaluation/worker.js';
 import { privateEvaluationMedia } from '../server/evaluation/openai-media.js';
+import { verifiedMediaExecutor } from '../server/media/executor.js';
 import { isOpenAIAttemptActive } from '../server/evaluation/openai-runtime.js';
 import { authorizeLiveDispatch, type LiveLimits } from '../server/evaluation/live-policy.js';
 import { EvaluationProviderError } from '../server/evaluation/provider.js';
@@ -149,7 +150,7 @@ describe('fila, relatórios e reserva atômica', () => {
         expect(lease.rows[0].extended).toBe(true);
         const foreign = await student();
         const otherRecording = await recording(foreign);
-        await expect(privateEvaluationMedia(db, live.storage)({ ...context, recording: { ...context.recording, id: otherRecording } }, options.signal)).rejects.toMatchObject({ code: 'media' });
+        await expect(privateEvaluationMedia(db, live.storage, await verifiedMediaExecutor())({ ...context, recording: { ...context.recording, id: otherRecording } }, options.signal)).rejects.toMatchObject({ code: 'media' });
         throw new EvaluationProviderError('credentials', false);
       } };
       expect(await runEvaluationJob(db, liveProvider, { requestId: id })).toBe(true);

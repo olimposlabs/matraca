@@ -21,7 +21,7 @@ Cursos suportam módulos, unidades, capítulos como agrupamento editorial, ordem
 
 ## Arquivos
 
-Materiais ficam em filesystem privado. PDFs e slides em PDF têm limite20 MB e verificação de cabeçalho/trailer; isso não equivale a validação semântica de cada página. Imagens PNG/JPEG/WebP têm decodificação completa limitada a16 milhões de pixels e uma página, rejeitando arquivos que conservem cabeçalho válido mas pixels truncados. Áudio/vídeo usam o probe de pacotes existente, até200 MB e60 minutos. Não há execução de HTML enviado pelo usuário. Respostas têm CSP restritiva e nosniff. Chaves de objetos não vêm do navegador.
+Materiais ficam em filesystem privado. PDFs e slides em PDF têm limite20 MB e verificação de cabeçalho/trailer; isso não equivale a validação semântica de cada página. Imagens PNG/JPEG/WebP têm decodificação completa limitada a16 milhões de pixels e uma página, rejeitando arquivos que conservem cabeçalho válido mas pixels truncados. Áudio/vídeo usam o probe de pacotes existente, até200 MB e60 minutos. Não há execução de HTML enviado pelo usuário. Respostas têm CSP restritiva e nosniff. PDFs são oferecidos para download. Chaves de objetos não vêm do navegador.
 
 ## Validação e próximos gates
 

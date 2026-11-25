@@ -7,20 +7,24 @@ import {requireIdentity} from './auth.js';
 import {CourseError,courseEditorTarget,courseMutation} from './courses.js';
 import {probeMedia,MediaProbeError} from './media/probe.js';
 import {streamPrivateFile} from './http-media.js';
+import {uploadDeadline} from './upload-capacity.js';
 import type {CourseDocument} from './course-model.js';
 const maxBytes=200*1024*1024;
 export async function registerCourseAssets(app:FastifyInstance){
  for(const central of [false,true]){
   const base=central?'/api/backoffice/courses/:orgId/:id/assets':'/api/courses/manage/:id/assets';
   app.post(base,async(request,reply)=>{
-   const {orgId}=await courseEditorTarget(request,central);const parsed=z.object({id:z.uuid()}).passthrough().safeParse(request.params);if(!parsed.success)throw new CourseError(400,'Curso inválido.');const courseId=parsed.data.id;
+   const {orgId,actor}=await courseEditorTarget(request,central);const parsed=z.object({id:z.uuid()}).passthrough().safeParse(request.params);if(!parsed.success)throw new CourseError(400,'Curso inválido.');const courseId=parsed.data.id;
    if(!(await app.db.query('SELECT id FROM courses WHERE id=$1 AND org_id=$2',[courseId,orgId])).rowCount)throw new CourseError(404,'Curso não encontrado.');
    const id=randomUUID();const key=`course-assets/${orgId}/${id}`;let filename='';let uploaded=false;let size=0;
+   await app.uploads.reserve({orgId,actorId:actor.user.id},[{key,bytes:maxBytes}]);
+   const upload=uploadDeadline(request,reply);
    try{
     for await(const part of request.parts({limits:{fileSize:maxBytes,files:1,fields:0,parts:1}})){
      if(part.type!=='file')throw new CourseError(400,'Envie apenas um arquivo.');filename=[...part.filename].map(character=>character.charCodeAt(0)<32||'/\\'.includes(character)?'_':character).join('').slice(0,180)||'material';
-     const info=await app.storage.put(key,part.file);uploaded=true;size=info.size;if(part.file.truncated||!size)throw new CourseError(400,'Arquivo vazio ou maior que 200 MB.');
+     const info=await app.storage.put(key,part.file,{bytes:maxBytes,signal:upload.signal});uploaded=true;size=info.size;if(part.file.truncated||!size)throw new CourseError(400,'Arquivo vazio ou maior que 200 MB.');
     }
+    upload.received();
     if(!uploaded)throw new CourseError(400,'Selecione um arquivo.');
     const file=await open(app.storage.path(key),'r');const signature=Buffer.alloc(16);try{await file.read(signature,0,16,0);}finally{await file.close();}
     let mimeType:string;
@@ -31,10 +35,11 @@ export async function registerCourseAssets(app:FastifyInstance){
     }
     else if(signature[0]===137||signature.subarray(0,2).equals(Buffer.from([255,216]))||signature.subarray(0,4).toString()==='RIFF'&&signature.subarray(8,12).toString()==='WEBP'){
      try{const decoder=sharp(app.storage.path(key),{limitInputPixels:16_000_000,failOn:'error'});const info=await decoder.metadata();if(!['jpeg','png','webp'].includes(info.format??'')||(info.pages??1)!==1)throw new Error('Formato');await decoder.stats();mimeType=`image/${info.format}`;}catch{throw new CourseError(400,'Imagem inválida ou fora dos limites.');}
-    }else{const media=await probeMedia(app.storage.path(key),{maxBytes,maxDurationSeconds:3600,maxPackets:1_000_000});mimeType=media.mimeType;}
-    const asset=await courseMutation(request,central,async(client,targetOrg,actor)=>{const result=await client.query('INSERT INTO course_assets(id,org_id,course_id,object_key,filename,mime_type,byte_length,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id,filename,mime_type AS "mimeType",byte_length AS size',[id,targetOrg,courseId,key,filename,mimeType,size,actor.user.id]);return result.rows[0];});
+    }else{const media=await probeMedia(app.storage.path(key),{maxBytes,maxDurationSeconds:3600,maxPackets:1_000_000,signal:upload.signal});mimeType=media.mimeType;}
+    const asset=await courseMutation(request,central,async(client,targetOrg,actor)=>{if(upload.signal.aborted)throw new CourseError(400,'O envio foi interrompido.');const result=await client.query('INSERT INTO course_assets(id,org_id,course_id,object_key,filename,mime_type,byte_length,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id,filename,mime_type AS "mimeType",byte_length AS size',[id,targetOrg,courseId,key,filename,mimeType,size,actor.user.id]);await app.uploads.commit(client,[key]);return result.rows[0];});
     return reply.code(201).send({asset});
-   }catch(error){if(uploaded)await app.storage.remove(key).catch(()=>{});if(error instanceof MediaProbeError)throw new CourseError(400,'Mídia inválida ou fora dos limites.');throw error;}
+   }catch(error){if(upload.signal.aborted)throw new CourseError(400,'O envio foi interrompido.');if(error instanceof MediaProbeError)throw new CourseError(400,'Mídia inválida ou fora dos limites.');throw error;}
+   finally{upload.close();await app.uploads.reconcile([key]).catch(()=>{});}
   });
  }
  app.get('/api/course-assets/:id',async(request,reply)=>{

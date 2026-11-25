@@ -1,5 +1,6 @@
 import type { Database } from '../db.js';
 import type { LocalStorage } from '../storage.js';
+import type { MediaExecutor } from '../media/executor.js';
 import { privateEvaluationMedia } from './openai-media.js';
 import { OpenAIEvaluationProvider } from './openai.js';
 import { authorizeLiveDispatch, liveLimitsEnabled, type LiveLimits } from './live-policy.js';
@@ -15,12 +16,12 @@ export async function isOpenAIAttemptActive(db: Database, requestId: string, att
   return result.rowCount === 1;
 }
 
-export function createOpenAIProvider(db: Database, storage: LocalStorage, config: { apiKey: string; audioModel: string; reportModel: string; instance: LiveLimits }) {
+export function createOpenAIProvider(db: Database, storage: LocalStorage, config: { apiKey: string; audioModel: string; reportModel: string; instance: LiveLimits; executor: MediaExecutor }) {
   return new OpenAIEvaluationProvider({
     ...config,
     media: async (context, signal) => {
       if (!liveLimitsEnabled(config.instance)) throw new EvaluationProviderError('authorization', false);
-      return privateEvaluationMedia(db, storage)(context, signal);
+      return privateEvaluationMedia(db, storage, config.executor)(context, signal);
     },
     authorize: (context, attempt, leaseToken, callIndex) => {
       if (!leaseToken) throw new EvaluationProviderError('authorization', false);

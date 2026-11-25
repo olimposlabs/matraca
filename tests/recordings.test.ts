@@ -343,7 +343,7 @@ describe('gravações privadas e upload real', () => {
     try {
       const half = Math.floor(video.length / 2);
       pending.request.write(video.subarray(0, half));
-      await waitFor(async () => (await files(student)).some(name => name.endsWith('.tmp')));
+      await waitFor(async () => (await files(student)).some(name => name.endsWith('.uploading')));
       if (cause === 'logout') expect((await json(student, '/api/auth/logout', {})).statusCode).toBe(204);
       else if (cause === 'suspend') await db.query("UPDATE users SET status='suspended' WHERE id=$1", [student.userId]);
       else if (cause === 'role') await db.query("UPDATE users SET roles=ARRAY['teacher'] WHERE id=$1", [student.userId]);
@@ -359,10 +359,11 @@ describe('gravações privadas e upload real', () => {
   it('interrupção real do cliente remove o arquivo temporário e não cria registro', async () => {
     const student = await actor(), pending = await httpUpload(student);
     pending.request.write(video.subarray(0, Math.floor(video.length / 2)));
-    await waitFor(async () => (await files(student)).some(name => name.endsWith('.tmp')));
+    await waitFor(async () => (await files(student)).some(name => name.endsWith('.uploading')));
     pending.request.destroy();
     await pending.response.catch(() => {});
     await waitFor(async () => (await files(student)).length === 0);
+    await waitFor(async () => (await db.query('SELECT object_key FROM upload_reservations WHERE actor_id=$1', [student.userId])).rowCount === 0);
     await noArtifacts(student);
   });
 

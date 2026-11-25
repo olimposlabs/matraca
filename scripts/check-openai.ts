@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
+import { verifiedMediaExecutor } from '../server/media/executor.js';
 import type { LightMyRequestResponse } from 'fastify';
 import { chromium, expect, type Browser } from '@playwright/test';
 import { createApp } from '../server/app.js';
@@ -53,7 +54,7 @@ try {
   const address = await app.listen({ host: '127.0.0.1', port: 0 });
   const headers = { host: new URL(address).host, cookie: `matraca_session=${token}`, 'x-matraca-request': '1' };
   const provider = createOpenAIProvider(db, app.storage, {
-    apiKey, audioModel: config.audioModel, reportModel: config.reportModel, instance,
+    apiKey, audioModel: config.audioModel, reportModel: config.reportModel, instance, executor: await verifiedMediaExecutor(),
   });
   const aiff = join(directory, 'speech.aiff'), wav = join(directory, 'speech.wav'), video = join(directory, 'presentation.mp4');
   await execute('/usr/bin/say', ['-v', 'Luciana', '-r', '155', '-o', aiff,
