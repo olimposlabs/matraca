@@ -202,11 +202,18 @@ try {
   await guard.query("SELECT pg_advisory_lock(hashtextextended(current_schema() || ':pilot-examples',14))");
   const demo = await guard.query("SELECT 1 FROM app_metadata WHERE key='demo' AND value->>'createdBy'='seed'");
   if (!demo.rowCount) throw new Error('Execute o seed local antes dos exemplos.');
-  const orderId = await seedPurchase(await seedCatalog());
-  const evaluation = await seedEvaluation();
-  const mentoringId = await seedMentoring(evaluation);
-  const invoiceId = await seedBilling();
-  process.stdout.write(JSON.stringify({ orderId, evaluationId: evaluation.id, recordingId: evaluation.recording_id, mentoringId, invoiceId }) + '\n');
+  const erased = await guard.query(`SELECT 1 FROM users WHERE id=ANY($1::uuid[]) AND privacy_erasure_started_at IS NOT NULL
+    UNION ALL SELECT 1 FROM orgs WHERE id=ANY($2::uuid[]) AND privacy_erasure_started_at IS NOT NULL`,
+  [[directStudentId, partnerStudentId, teacherId], [direct.id, partner.id]]);
+  if (erased.rowCount) {
+    process.stdout.write('Exemplos preservados. Uma conta ou organização da demonstração teve os dados removidos.\n');
+  } else {
+    const orderId = await seedPurchase(await seedCatalog());
+    const evaluation = await seedEvaluation();
+    const mentoringId = await seedMentoring(evaluation);
+    const invoiceId = await seedBilling();
+    process.stdout.write(JSON.stringify({ orderId, evaluationId: evaluation.id, recordingId: evaluation.recording_id, mentoringId, invoiceId }) + '\n');
+  }
 } finally {
   try {
     for (const credential of sessions) {

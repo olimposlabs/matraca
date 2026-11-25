@@ -124,6 +124,25 @@ describe('controles operacionais e reconciliação', () => {
     expect((await call(operator,'PUT',path,{ enabled: false })).json()).toEqual({ enabled: false });
   });
 
+  it('aceita uma única alteração por revisão da política em URLs equivalentes', async () => {
+    const student = await actor('student');
+    const operator = await actor('operator');
+    const lower = `${ops(student)}/live-policy`;
+    const upper = `/api/backoffice/ops/${student.orgId.toUpperCase()}/live-policy`;
+    const limits = { requests: 2, minutes: 8, calls: 20 };
+    for (const expectedRevision of [0, 1]) {
+      const common = { enabled: true, organization: limits, student: limits, expectedRevision };
+      const responses = await Promise.all([
+        call(operator, 'PUT', lower, { ...common, includeExperience: true }),
+        call(operator, 'PUT', upper, { ...common, includeExperience: false }),
+      ]);
+      expect(responses.map(response => response.statusCode).sort()).toEqual([200, 409]);
+      const accepted = responses.find(response => response.statusCode === 200)!.json().policy;
+      expect(accepted.revision).toBe(expectedRevision + 1);
+      expect((await call(operator, 'GET', lower)).json().policy).toEqual(accepted);
+    }
+  });
+
   it('salva política com CAS, aplica frequência e cenário padrão, preserva replay e custo separado', async () => {
     const student = await actor('student');
     const operator = await actor('operator');

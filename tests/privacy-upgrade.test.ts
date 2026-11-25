@@ -1,8 +1,15 @@
+import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { expect, it } from 'vitest';
+import { seedId } from '../scripts/seed-id.js';
 import { createDatabase } from '../server/db.js';
 import { testDatabaseUrl } from '../server/local-database-config.js';
+import { applyPrivacy, privacyPlan } from '../server/privacy-retention.js';
+import { LocalStorage } from '../server/storage.js';
 import { getWallet, grantCredits, reserveCredits } from '../server/wallet.js';
 
 it('adota a migração 019 sobre os pedidos antigos preservando mock, saldos e comprovantes', async () => {
@@ -12,6 +19,7 @@ it('adota a migração 019 sobre os pedidos antigos preservando mock, saldos e c
   const url = new URL(base);
   url.searchParams.set('options', `-c search_path=${schema}`);
   const db = createDatabase(url.href);
+  const directoryRoot = await mkdtemp(join(tmpdir(), 'matraca-privacy-upgrade-'));
   try {
     await control.query(`CREATE SCHEMA ${schema}`);
     const directory = new URL('../server/migrations/', import.meta.url);
@@ -53,9 +61,29 @@ it('adota a migração 019 sobre os pedidos antigos preservando mock, saldos e c
     expect((await db.query('SELECT remaining_calls FROM live_evaluation_admissions WHERE request_id=$1', [real])).rows[0].remaining_calls).toBe(0);
     expect((await db.query('SELECT request_id FROM live_evaluation_dispatches WHERE request_id=$1', [real])).rowCount).toBe(1);
     expect(await getWallet(db, { orgId, userId })).toMatchObject({ balance: 3, reserved: 1 });
+
+    const storage = new LocalStorage(join(directoryRoot, 'objects'));
+    const env: NodeJS.ProcessEnv = {
+      ...process.env, APP_MODE: 'local', APP_PARTNER_DOMAIN_SUFFIX: 'matraca.localhost', EVALUATION_PROVIDER: 'mock',
+      DATABASE_URL: url.href, MATRACA_MIGRATION_DATABASE_URL: url.href, STORAGE_ROOT: storage.root,
+    };
+    delete env.OPENAI_API_KEY;
+    const runSeed = (script: string) => promisify(execFile)('npm', ['run', script], { env });
+    await runSeed('db:seed');
+    const erased = { orgId: seedId('parceiro'), studentId: seedId('parceiro:aluno2@parceiro.test') };
+    const preview = await privacyPlan(db, storage, erased);
+    await applyPrivacy(db, storage, erased, preview.fingerprint);
+    await runSeed('db:seed');
+    expect((await runSeed('db:seed:examples')).stdout).toContain('Exemplos preservados');
+    const person = (await db.query(`SELECT status,name,profile,email FROM users
+      WHERE org_id=$1 AND (id=$2 OR email='aluno2@parceiro.test')`, [erased.orgId, erased.studentId])).rows;
+    expect(person).toEqual([{
+      status: 'suspended', name: 'Conta removida', profile: {}, email: expect.stringMatching(/@local\.invalid$/u),
+    }]);
+    expect((await db.query("SELECT id FROM users WHERE org_id=$1 AND email='ana@exemplo.test' AND status='active'", [erased.orgId])).rowCount).toBe(1);
   } finally {
     await db.close();
-    await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-    await control.close();
+    try { await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); }
+    finally { await control.close(); await rm(directoryRoot, { recursive: true, force: true }); }
   }
 });
