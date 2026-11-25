@@ -16,7 +16,7 @@ import { declaredExperience, evaluationNotice, evaluationNoticeVersion } from '.
 import { admitLiveEvaluation, liveEnabledForStudent, noLiveLimits, readLivePolicy, type LiveLimits } from './live-policy.js';
 
 class EvaluationError extends Error {
-  constructor(readonly statusCode: 400 | 403 | 404 | 409 | 428 | 429, message: string) {
+  constructor(readonly statusCode: 400 | 403 | 404 | 409 | 412 | 428 | 429, message: string) {
     super(message);
   }
 }
@@ -207,7 +207,7 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
       const id = randomUUID();
       const includeExperience = provider === 'openai' && input.data.consent?.includeExperience === true;
       if (includeExperience && !(await readLivePolicy(client, actor.org.id, true)).includeExperience) {
-        throw new EvaluationError(409, 'A política de dados mudou. Atualize antes de solicitar a avaliação.');
+        throw new EvaluationError(412, 'A política de dados mudou. Confira o aviso atualizado.');
       }
       const context = await contextFor(client, actor, found.rows[0], id, provider, includeExperience);
       if (provider === 'openai' && !await liveEnabledForStudent(client, actor.org.id, actor.user.id, instance)) {

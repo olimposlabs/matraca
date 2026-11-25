@@ -138,7 +138,7 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       try { sessionStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
       navigate(`/app/evaluations/${evaluation.id}`);
     } catch (cause) {
-      if (cause instanceof ApiError && cause.status === 428) {
+      if (cause instanceof ApiError && (cause.status === 428 || cause.status === 412)) {
         setNeedsConfirmation(key);
         setConfirmedNotice(null);
         setApprovedExperience(null);

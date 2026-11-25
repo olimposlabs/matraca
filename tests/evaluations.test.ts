@@ -208,7 +208,7 @@ describe('fila, relatórios e reserva atômica', () => {
       payload: { recordingId: media, clientKey: randomUUID(), consent: authorization } });
     try {
       expect((await submitLive({ ...consent, version: 'aviso-anterior' })).statusCode).toBe(428);
-      expect((await submitLive({ ...consent, includeExperience: true })).statusCode).toBe(409);
+      expect((await submitLive({ ...consent, includeExperience: true })).statusCode).toBe(412);
       expect(await getWallet(db, actor)).toMatchObject({ balance: 2, reserved: 0 });
       await db.query('UPDATE live_evaluation_policies SET include_experience=true WHERE org_id=$1', [actor.orgId]);
       const response = await submitLive({ ...consent, includeExperience: true });
@@ -688,13 +688,15 @@ describe('fila, relatórios e reserva atômica', () => {
     const scope = { orgId: removed.orgId, studentId: removed.userId };
     const teacherId = randomUUID();
     await db.query("INSERT INTO users(id,org_id,email,name,roles,status) VALUES($1,$2,'professor@example.test','Professor sintético',ARRAY['teacher'],'active')", [teacherId, removed.orgId]);
+    const beforeMentoring = await privacyPlan(db, app.storage, scope);
     await db.query(`INSERT INTO mentoring_sessions(org_id,student_id,teacher_id,client_key,fingerprint,occurred_at,difficulties,guidance,actions)
       VALUES($1,$2,$3,$4,'registro-sintetico',now(),'["Dificuldade de teste"]','Orientação pessoal sintética','[]')`, [removed.orgId, removed.userId, teacherId, randomUUID()]);
+    await expect(applyPrivacy(db, app.storage, scope, beforeMentoring.fingerprint)).rejects.toThrow('A seleção mudou');
     const mismatched = await privacyPlan(db, app.storage, { orgId: kept.orgId, studentId: kept.userId });
     await expect(applyPrivacy(db, app.storage, scope, mismatched.fingerprint)).rejects.toThrow('A seleção mudou');
     await expect(privacyPlan(db, app.storage, { orgId: other.orgId, studentId: removed.userId })).rejects.toThrow('Aluno não encontrado');
     const preview = await privacyPlan(db, app.storage, scope);
-    expect(preview).toMatchObject({ accounts: 1, recordings: 1, mailboxFiles: 1 });
+    expect(preview).toMatchObject({ accounts: 1, recordings: 1, mailboxFiles: 1, mentoringSessions: 1, pendingRequests: 1 });
     const simulatedFailure = new LocalStorage(app.storage.root);
     simulatedFailure.removeUploadObject = async () => { throw new Error('Disco sintético indisponível'); };
     await expect(applyPrivacy(db, simulatedFailure, scope, preview.fingerprint)).rejects.toThrow('Disco sintético indisponível');

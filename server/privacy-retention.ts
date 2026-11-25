@@ -70,21 +70,60 @@ function validateScope(scope: PrivacyScope) {
 
 async function snapshot(client: PoolClient, storage: LocalStorage, scope: PrivacyScope) {
   const users = await targets(client, scope);
-  const namespace = (await client.query('SELECT current_database() AS database,current_schema() AS schema,now() AS time')).rows[0];
+  const namespace = (await client.query<{ database: string; schema: string; time: Date }>(
+    'SELECT current_database() AS database,current_schema() AS schema,now() AS time',
+  )).rows[0];
   const files = await scanMailbox(storage, scope, scope.studentId ? users[0].email : undefined, Number(namespace.time));
-  const media = (await client.query<{ id: string }>(`SELECT id FROM recordings WHERE media_removed_at IS NULL AND ${scopeSql}
+  const parameters = filters(scope);
+  const ids = async (statement: string, values: unknown[] = parameters) =>
+    (await client.query<{ id: string }>(statement, values)).rows.map(row => row.id);
+  const media = await ids(`SELECT id FROM recordings WHERE media_removed_at IS NULL AND ${scopeSql}
     AND ($1::uuid IS NOT NULL OR created_at<=now()-interval '30 days')
     AND ($1::uuid IS NOT NULL OR NOT EXISTS (
       SELECT 1 FROM evaluation_requests WHERE recording_id=recordings.id AND ${activeRequest}
-    )) ORDER BY id`, filters(scope))).rows.map(row => row.id);
-  const reports = (await client.query<{ request_id: string }>(`SELECT request_id FROM evaluation_results
-    WHERE report_removed_at IS NULL AND ${scopeSql} AND ${reportAge} ORDER BY request_id`, filters(scope))).rows.map(row => row.request_id);
+    )) ORDER BY id`);
+  const reports = await ids(`SELECT request_id AS id FROM evaluation_results
+    WHERE report_removed_at IS NULL AND ${scopeSql} AND ${reportAge} ORDER BY request_id`);
+  const pending = scope.orgId ? (await client.query<{ id: string; org_id: string; student_id: string }>(
+    `SELECT id,org_id,student_id FROM evaluation_requests WHERE ${scopeSql} AND ${activeRequest} ORDER BY id`, parameters,
+  )).rows : [];
+  const contexts = await ids(`SELECT id FROM evaluation_requests
+    WHERE ${scopeSql} AND (${reportAge} OR id=ANY($3::uuid[])) AND context<>'{}'
+      AND ($1::uuid IS NOT NULL OR NOT (${activeRequest}))
+      AND NOT EXISTS (SELECT 1 FROM evaluation_results f WHERE f.request_id=evaluation_requests.id
+        AND f.report_removed_at IS NULL AND NOT (f.request_id=ANY($3::uuid[])))
+    ORDER BY id`, [...parameters, reports]);
+  const metadata = await ids(`SELECT id FROM recordings WHERE ${scopeSql} AND ${reportAge}
+    AND (media_removed_at IS NOT NULL OR id=ANY($3::uuid[]))
+    AND (filename<>'midia-removida' OR objective<>'Conteúdo removido' OR probe<>'{}') ORDER BY id`, [...parameters, media]);
+  const tokens = await ids(`SELECT id FROM auth_tokens WHERE ($1::uuid IS NOT NULL OR expires_at<=now()-interval '24 hours')
+    AND ($1::uuid IS NULL OR org_id=$1) AND ($2::uuid IS NULL OR user_id=$2) ORDER BY id`);
+  const sessions = scope.orgId
+    ? await ids('SELECT id FROM sessions WHERE org_id=$1 AND ($2::uuid IS NULL OR user_id=$2) ORDER BY id') : [];
+  const access = await ids(`SELECT id::text AS id FROM sensitive_access_events WHERE occurred_at<=now()-interval '90 days'
+    AND ($1::uuid IS NULL OR org_id=$1) AND ($2::uuid IS NULL OR actor_id=$2) ORDER BY id`);
+  const mentoring = await ids(`SELECT id FROM mentoring_sessions WHERE ${scopeSql} AND ${reportAge}
+    AND (guidance<>'Conteúdo removido' OR difficulties<>'[]' OR actions<>'[]') ORDER BY id`);
+  const reviews = await ids(`SELECT id FROM human_reviews WHERE ${scopeSql} AND ${reportAge}
+    AND (summary<>'Conteúdo removido' OR observations<>'[]') ORDER BY id`);
+  const plans = await ids(`SELECT id FROM individual_plan_items WHERE ${scopeSql} AND ${reportAge}
+    AND (title<>'Conteúdo removido' OR description<>'') ORDER BY id`);
+  const history = await ids(`SELECT item_id::text||':'||revision AS id FROM individual_plan_history
+    WHERE ${scopeSql} AND ${reportAge}
+      AND (response<>'' OR snapshot->>'title' IS DISTINCT FROM 'Conteúdo removido' OR snapshot->>'description' IS DISTINCT FROM '')
+    ORDER BY id`);
+  const selection = { media, reports, files, pending, contexts, metadata, tokens, sessions, access, mentoring, reviews, plans, history };
   const fingerprint = createHash('sha256').update(JSON.stringify([
-    namespace.database, namespace.schema, storage.root, scope.orgId, scope.studentId, users, files, media, reports,
+    namespace.database, namespace.schema, storage.root, scope.orgId, scope.studentId, users, selection,
   ])).digest('hex');
   return {
-    media, reports, files,
-    preview: { fingerprint, accounts: users.length, recordings: media.length, reports: reports.length, mailboxFiles: files.length },
+    ...selection, userIds: users.map(user => user.id),
+    preview: {
+      fingerprint, accounts: users.length, recordings: media.length, reports: reports.length, mailboxFiles: files.length,
+      pendingRequests: pending.length, contexts: contexts.length, recordingMetadata: metadata.length,
+      authTokens: tokens.length, sessions: sessions.length, accessEvents: access.length,
+      mentoringSessions: mentoring.length, humanReviews: reviews.length, planItems: plans.length, planHistory: history.length,
+    },
   };
 }
 
@@ -96,26 +135,24 @@ export async function privacyPlan(db: Database, storage: LocalStorage, scope: Pr
   });
 }
 
-async function redactMentoring(client: PoolClient, scope: PrivacyScope) {
-  const parameters = filters(scope);
-  const eligible = `${scopeSql} AND ${reportAge}`;
+type PrivacyManifest = Awaited<ReturnType<typeof snapshot>>;
+async function redactMentoring(client: PoolClient, manifest: PrivacyManifest) {
   await client.query("SELECT set_config('matraca.privacy_maintenance','on',true)");
   await client.query(`UPDATE mentoring_sessions SET guidance='Conteúdo removido', difficulties='[]', actions='[]'
-    WHERE ${eligible} AND (guidance<>'Conteúdo removido' OR difficulties<>'[]' OR actions<>'[]')`, parameters);
+    WHERE id=ANY($1::uuid[])`, [manifest.mentoring]);
   await client.query(`UPDATE human_reviews SET summary='Conteúdo removido', observations='[]'
-    WHERE ${eligible} AND (summary<>'Conteúdo removido' OR observations<>'[]')`, parameters);
+    WHERE id=ANY($1::uuid[])`, [manifest.reviews]);
   await client.query(`UPDATE individual_plan_items SET title='Conteúdo removido',description=''
-    WHERE ${eligible} AND (title<>'Conteúdo removido' OR description<>'')`, parameters);
+    WHERE id=ANY($1::uuid[])`, [manifest.plans]);
   await client.query(`UPDATE individual_plan_history SET response='',snapshot=snapshot||'{"title":"Conteúdo removido","description":""}'::jsonb
-    WHERE ${eligible} AND (response<>'' OR snapshot->>'title' IS DISTINCT FROM 'Conteúdo removido'
-      OR snapshot->>'description' IS DISTINCT FROM '')`, parameters);
+    WHERE (item_id::text||':'||revision)=ANY($1::text[])`, [manifest.history]);
 }
 
-async function freezeScope(client: PoolClient, scope: PrivacyScope) {
+async function freezeScope(client: PoolClient, scope: PrivacyScope, userIds: string[]) {
   if (!scope.studentId) await client.query(`UPDATE orgs SET status='suspended',
     privacy_erasure_started_at=COALESCE(privacy_erasure_started_at,now()) WHERE id=$1`, [scope.orgId]);
   await client.query(`UPDATE users SET status='suspended',archived_at=COALESCE(archived_at,now()),
-    privacy_erasure_started_at=COALESCE(privacy_erasure_started_at,now()) WHERE ${userScopeSql}`, filters(scope));
+    privacy_erasure_started_at=COALESCE(privacy_erasure_started_at,now()) WHERE id=ANY($1::uuid[])`, [userIds]);
 }
 
 async function retireMedia(db: Database, media: string[], storage: LocalStorage) {
@@ -148,38 +185,31 @@ async function applyManifest(db: Database, storage: LocalStorage, scope: Privacy
     }
     const plan = await snapshot(client, storage, scope);
     if (plan.preview.fingerprint !== confirmed) throw new Error('A seleção mudou. Emita uma nova simulação antes de aplicar.');
-    if (scope.orgId) await freezeScope(client, scope);
+    if (scope.orgId) await freezeScope(client, scope, plan.userIds);
     return plan;
   });
-  if (scope.orgId) {
-    const pending = (await db.query<{ id: string; org_id: string; student_id: string }>(`
-      SELECT id,org_id,student_id FROM evaluation_requests WHERE ${scopeSql} AND ${activeRequest}`, filters(scope))).rows;
-    for (const item of pending) await db.transaction(client => cancelEvaluationInTransaction(client,
-      { requestId: item.id, orgId: item.org_id, studentId: item.student_id }, 'Retenção da gravação'));
-  }
+  for (const item of manifest.pending) await db.transaction(client => cancelEvaluationInTransaction(client,
+    { requestId: item.id, orgId: item.org_id, studentId: item.student_id }, 'Retenção da gravação'));
   const recordingsRemoved = await retireMedia(db, manifest.media, storage);
   for (const path of manifest.files) {
     await unlink(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== 'ENOENT') throw error; });
   }
   await db.transaction(async client => {
-    const parameters = filters(scope);
     await client.query(`UPDATE evaluation_results SET report='{}',report_removed_at=now()
       WHERE request_id=ANY($1::uuid[]) AND report_removed_at IS NULL`, [manifest.reports]);
     await client.query(`UPDATE evaluation_requests SET context='{}'
-      WHERE ${scopeSql} AND ${reportAge} AND NOT (${activeRequest}) AND context<>'{}'
+      WHERE id=ANY($1::uuid[]) AND NOT (${activeRequest})
         AND NOT EXISTS(SELECT 1 FROM evaluation_results f
-          WHERE f.request_id=evaluation_requests.id AND f.report_removed_at IS NULL)`, parameters);
-    await client.query(`DELETE FROM auth_tokens WHERE ($1::uuid IS NOT NULL OR expires_at<=now()-interval '24 hours')
-      AND ($1::uuid IS NULL OR org_id=$1) AND ($2::uuid IS NULL OR user_id=$2)`, parameters);
-    await client.query('DELETE FROM sensitive_access_events WHERE occurred_at<=now()-interval \'90 days\' AND ($1::uuid IS NULL OR org_id=$1)', [scope.orgId ?? null]);
-    await redactMentoring(client, scope);
+          WHERE f.request_id=evaluation_requests.id AND f.report_removed_at IS NULL)`, [manifest.contexts]);
+    await client.query('DELETE FROM auth_tokens WHERE id=ANY($1::uuid[])', [manifest.tokens]);
+    await client.query('DELETE FROM sensitive_access_events WHERE id=ANY($1::bigint[])', [manifest.access]);
+    await redactMentoring(client, manifest);
     await client.query(`UPDATE recordings SET filename='midia-removida',objective='Conteúdo removido',probe='{}'
-      WHERE ${scopeSql} AND ${reportAge} AND media_removed_at IS NOT NULL
-        AND (filename<>'midia-removida' OR objective<>'Conteúdo removido' OR probe<>'{}')`, parameters);
+      WHERE id=ANY($1::uuid[]) AND media_removed_at IS NOT NULL`, [manifest.metadata]);
     if (scope.orgId) {
-      await client.query(`DELETE FROM sessions WHERE org_id=$1 AND ($2::uuid IS NULL OR user_id=$2)`, parameters);
+      await client.query('DELETE FROM sessions WHERE id=ANY($1::uuid[])', [manifest.sessions]);
       await client.query(`UPDATE users SET email='erased-'||gen_random_uuid()||'@local.invalid',name='Conta removida',
-        profile='{}',privacy_erased_at=now() WHERE ${userScopeSql} AND privacy_erased_at IS NULL`, parameters);
+        profile='{}',privacy_erased_at=now() WHERE id=ANY($1::uuid[]) AND privacy_erased_at IS NULL`, [manifest.userIds]);
     }
   });
   return { recordingsRemoved };
@@ -187,8 +217,12 @@ async function applyManifest(db: Database, storage: LocalStorage, scope: Privacy
 
 export async function applyPrivacy(db: Database, storage: LocalStorage, scope: PrivacyScope, confirmed: string) {
   validateScope(scope);
+  if (!/^[a-f0-9]{64}$/u.test(confirmed)) throw new Error('Informe o hash exibido pela simulação.');
   const guard = await db.pool.connect();
   try {
+    const administrator = await guard.query<{ owner: boolean }>(`SELECT current_user=pg_get_userbyid(relowner) AS owner
+      FROM pg_class WHERE oid=to_regclass('mentoring_sessions')`);
+    if (!administrator.rows[0]?.owner) throw new Error('A retenção exige o papel de migração deste ambiente.');
     const locked = await guard.query<{ acquired: boolean }>(`SELECT pg_try_advisory_lock(
       hashtextextended(current_schema()||':privacy-retention',27)) AS acquired`);
     if (!locked.rows[0].acquired) throw new Error('Já existe uma execução de retenção neste ambiente.');

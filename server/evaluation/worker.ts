@@ -106,6 +106,12 @@ async function settle(db: Database, job: Job, result: EvaluationReport | Evaluat
       && !await authorizedLiveAttempt(client, job.request_id, job.attempts, job.leaseToken, true)) {
       result = new EvaluationProviderError('authorization', false);
     }
+    if (!(result instanceof EvaluationProviderError) && job.provider === 'mock') {
+      const scope = await client.query(`SELECT 1 FROM users u JOIN orgs o ON o.id=u.org_id
+        WHERE u.id=$1 AND u.org_id=$2 AND u.privacy_erasure_started_at IS NULL AND o.privacy_erasure_started_at IS NULL
+        FOR SHARE OF u,o`, [job.student_id, job.org_id]);
+      if (!scope.rowCount) result = new EvaluationProviderError('authorization', false);
+    }
     if (result instanceof EvaluationProviderError) {
       if (result.retryable && job.attempts < maxAttempts) {
         await client.query(

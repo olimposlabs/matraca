@@ -12,8 +12,17 @@ const { values } = parseArgs({ options: {
 const id = z.uuid().transform(value => value.toLowerCase());
 const scope = { orgId: id.optional().parse(values.org), studentId: id.optional().parse(values.student) };
 if (scope.studentId && !scope.orgId) throw new Error('Informe também a organização do aluno.');
-const runtime = new URL(configuration().databaseUrl);
-const administrative = new URL(migrationDatabaseUrl());
+function localConnection(value: string) {
+  let url: URL;
+  try { url = new URL(value); } catch { throw new Error('A conexão PostgreSQL local é inválida.'); }
+  if (!['postgresql:', 'postgres:'].includes(url.protocol) || !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)
+    || [...url.searchParams.keys()].some(key => key !== 'options')) {
+    throw new Error('A retenção aceita apenas conexões PostgreSQL de loopback.');
+  }
+  return url;
+}
+const runtime = localConnection(configuration().databaseUrl);
+const administrative = localConnection(migrationDatabaseUrl());
 const namespace = (url: URL) => [url.hostname, url.port || '5432', url.pathname, url.searchParams.get('options')].join('|');
 if (namespace(runtime) !== namespace(administrative)) throw new Error('Confira se a administração e o runtime apontam para o mesmo ambiente.');
 const db = createDatabase(administrative.href);

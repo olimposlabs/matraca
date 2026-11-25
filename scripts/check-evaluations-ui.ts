@@ -102,17 +102,25 @@ try {
   await page.goto(`${base}/app/recordings`);
   await page.getByRole('button', { name: new RegExp(objective.replace('.', '\\.')) }).click();
   const confirm = page.getByRole('checkbox', { name: /Autorizo o envio/ });
+  const experience = page.getByRole('checkbox', { name: /Incluir também o nível/ });
   await expect(confirm).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: /Incluir também o nível/ })).not.toBeChecked();
+  await expect(experience).not.toBeChecked();
   await expect(page.getByRole('button', { name: 'Solicitar avaliação' })).toBeDisabled();
   await confirm.check();
+  await experience.check();
+  await db.query('UPDATE live_evaluation_policies SET include_experience=false WHERE org_id=$1', [orgId]);
   await page.getByRole('button', { name: 'Solicitar avaliação' }).click();
+  await expect(experience).not.toBeVisible();
+  await expect(confirm).not.toBeChecked();
+  await expect(page.getByRole('button', { name: 'Retomar solicitação' })).toBeDisabled();
+  await confirm.check();
+  await page.getByRole('button', { name: 'Retomar solicitação' }).click();
   await expect(page.getByRole('heading', { name: 'Aguardando processamento' })).toBeVisible();
   await page.getByRole('button', { name: 'Cancelar avaliação' }).click();
   await expect(page.getByText('A avaliação foi cancelada e a reserva foi liberada.')).toBeVisible();
   assert.deepEqual(await getWallet(db, { orgId, userId }), { balance: 4, reserved: 0, available: 4 });
   assert.deepEqual(errors, []);
-  process.stdout.write('F08 UI: upload, relatório simulado, mídia por faixa, saldo, retries e histórico passaram. S06: consentimento e cancelamento sem chamadas externas.\n');
+  process.stdout.write('F08 UI: upload, relatório simulado, mídia por faixa, saldo, retries e histórico passaram. S06: consentimento, mudança de política e cancelamento sem chamadas externas.\n');
 } finally {
   await browser?.close();
   await stopWorker?.();
