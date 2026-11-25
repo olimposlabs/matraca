@@ -237,3 +237,5 @@ A [PR #20](https://github.com/olimposlabs/matraca/pull/20) foi integrada em `495
 ## SPI de segurança · S03
 
 Base `72338690564d1a2426a18bf4dcdac7cd5ebc189f`. A mídia para análise real passa pelo FFmpeg verificado em executor local isolado. A migração 017 controla capacidade de uploads e impede o acúmulo de reservas abandonadas. PDFs ficam disponíveis para download. [Avaliações reais](technical/OPENAI.md) · [Gravações e capacidade](technical/RECORDINGS.md)
+
+A [PR #22](https://github.com/olimposlabs/matraca/pull/22) foi integrada em `12830beacee7f4ac51a44bb38ba87770dc712e3c`. A revisão independente confirmou o fechamento dos P1. O [CI do head final](https://github.com/olimposlabs/matraca/actions/runs/45539185242) passou. Em seguida, a verificação do executor, 39 testes focados e a jornada Chromium de gravação passaram no commit de merge. A integração acionou somente CI.
