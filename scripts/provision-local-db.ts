@@ -1,20 +1,20 @@
 import type { PoolClient } from 'pg';
 import { createDatabase } from '../server/db.js';
-import { localDatabaseConnection, localDatabaseNames } from '../server/local-database-config.js';
+import { localDatabaseConnection, localDatabaseNames, pendingRuntimeRotation } from '../server/local-database-config.js';
 
 async function ensureRole(client: PoolClient, role: string, url: string) {
   // Profile role names and passwords come from hex strings generated locally.
   const { password } = new URL(url);
   const exists = await client.query('SELECT 1 FROM pg_roles WHERE rolname=$1', [role]);
-  const command = exists.rowCount ? 'ALTER ROLE' : 'CREATE ROLE';
-  await client.query(`${command} ${role} LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE
+  if (exists.rowCount) return;
+  await client.query(`CREATE ROLE ${role} LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE
     NOREPLICATION NOBYPASSRLS PASSWORD '${password}'`);
 }
 
-export async function provisionLocalDatabase(profile: string) {
+export async function provisionLocalDatabase(profile: string, { rotateRuntime = false } = {}) {
   const { name, migration, runtime } = localDatabaseNames(profile);
   const migrationUrl = localDatabaseConnection('migration', profile, true);
-  const runtimeUrl = localDatabaseConnection('runtime', profile, true);
+  let runtimeUrl = localDatabaseConnection('runtime', profile, true);
   const bootstrap = localDatabaseConnection('bootstrap');
   const control = createDatabase(bootstrap);
   const client = await control.pool.connect();
@@ -28,6 +28,12 @@ export async function provisionLocalDatabase(profile: string) {
     }
     await client.query(`REVOKE ALL ON DATABASE ${name} FROM PUBLIC`);
     await client.query(`GRANT CONNECT ON DATABASE ${name} TO ${runtime}`);
+    const rotation = pendingRuntimeRotation(profile, rotateRuntime);
+    if (rotation) {
+      await client.query(`ALTER ROLE ${runtime} PASSWORD '${rotation.password}'`);
+      rotation.commit();
+      runtimeUrl = localDatabaseConnection('runtime', profile);
+    }
     const own = createDatabase(migrationUrl);
     try {
       await own.transaction(async client => {

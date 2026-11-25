@@ -14,7 +14,7 @@ services:
       - source: postgres-bootstrap
         target: postgres-bootstrap
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "matraca_bootstrap", "-d", "postgres"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "matraca_bootstrap", "-d", "postgres"]
       interval: 2s
       timeout: 3s
       retries: 30

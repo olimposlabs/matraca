@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { closeSync, constants, fstatSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs';
+import { closeSync, constants, existsSync, fstatSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 
@@ -50,6 +50,13 @@ export function localDatabaseConnection(role: Role, profile = mainDatabaseProfil
   const database = role === 'bootstrap' ? 'postgres' : names.name;
   const password = privatePassword(credentialPath(role, profile), create);
   return `postgresql://${user}:${password}@127.0.0.1:${localPostgresPort}/${database}`;
+}
+
+export function pendingRuntimeRotation(profile: string, requested: boolean) {
+  const current = credentialPath('runtime', profile);
+  const staged = current + '.next';
+  if (!requested && !existsSync(staged)) return null;
+  return { password: privatePassword(staged, true), commit: () => renameSync(staged, current) };
 }
 
 export function testDatabaseUrl() {

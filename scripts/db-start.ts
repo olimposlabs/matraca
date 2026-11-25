@@ -3,6 +3,7 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { assertLocalAppMode, clusterSecret, localDatabaseConnection, mainDatabaseProfile, testDatabaseProfile } from '../server/local-database-config.js';
+import { parseArgs } from 'node:util';
 import { provisionLocalDatabase } from './provision-local-db.js';
 
 export function startPostgresCluster() {
@@ -28,13 +29,16 @@ export function startPostgresCluster() {
   return host;
 }
 
-export async function startLocalDatabase() {
+export async function startLocalDatabase({ rotateRuntime = false } = {}) {
   startPostgresCluster();
-  const main = await provisionLocalDatabase(mainDatabaseProfile);
+  const main = await provisionLocalDatabase(mainDatabaseProfile, { rotateRuntime });
   await provisionLocalDatabase(testDatabaseProfile);
   return main;
 }
 if (process.argv[1]?.endsWith('db-start.ts')) {
-  try { await startLocalDatabase(); }
+  try {
+    const { values } = parseArgs({ options: { 'rotate-runtime': { type: 'boolean' } } });
+    await startLocalDatabase({ rotateRuntime: values['rotate-runtime'] });
+  }
   catch { process.stderr.write('Não foi possível preparar os bancos locais. Confira Docker e as permissões do armazenamento privado.\n'); process.exitCode = 1; }
 }

@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -49,15 +48,14 @@ try {
     await requireRuntimeDatabase(targetDb, migrated.runtimeUrl);
     assert.equal((await targetDb.query("SELECT name FROM orgs WHERE slug='matraca'")).rows[0].name, 'Histórico sintético a preservar');
   } finally { await targetDb.close(); }
-  const nextPassword = randomBytes(32).toString('hex');
-  await bootstrap.query(`ALTER ROLE ${migrated.runtimeRole} PASSWORD '${nextPassword}'`);
+  const replacement = await provisionLocalDatabase(profiles[1], { rotateRuntime: true });
+  const restarted = await provisionLocalDatabase(profiles[1]);
+  assert.ok(restarted.runtimeUrl === replacement.runtimeUrl);
   const obsolete = createDatabase(migrated.runtimeUrl);
   try { await assert.rejects(() => obsolete.query('SELECT 1'), { code: '28P01' }); }
   finally { await obsolete.close(); }
-  const replacement = new URL(migrated.runtimeUrl);
-  replacement.password = nextPassword;
-  const rotated = createDatabase(replacement.href);
-  try { await requireRuntimeDatabase(rotated, replacement.href); } finally { await rotated.close(); }
+  const rotated = createDatabase(replacement.runtimeUrl);
+  try { await requireRuntimeDatabase(rotated, replacement.runtimeUrl); } finally { await rotated.close(); }
   const app = await createApp({ databaseUrl: primary.runtimeUrl, storageRoot: join(temporary, 'objects') });
   const owner = createDatabase(primary.migrationUrl);
   const current = await app.db.pool.connect();
