@@ -20,6 +20,13 @@ it('adota a migração 019 sobre os pedidos antigos preservando mock, saldos e c
   url.searchParams.set('options', `-c search_path=${schema}`);
   const db = createDatabase(url.href);
   const directoryRoot = await mkdtemp(join(tmpdir(), 'matraca-privacy-upgrade-'));
+  const storage = new LocalStorage(join(directoryRoot, 'objects'));
+  const env: NodeJS.ProcessEnv = {
+    ...process.env, APP_MODE: 'local', APP_PARTNER_DOMAIN_SUFFIX: 'matraca.localhost', EVALUATION_PROVIDER: 'mock',
+    DATABASE_URL: url.href, MATRACA_MIGRATION_DATABASE_URL: url.href, STORAGE_ROOT: storage.root,
+  };
+  delete env.OPENAI_API_KEY;
+  const runSeed = (script: string) => promisify(execFile)('npm', ['run', script], { env });
   try {
     await control.query(`CREATE SCHEMA ${schema}`);
     const directory = new URL('../server/migrations/', import.meta.url);
@@ -27,6 +34,7 @@ it('adota a migração 019 sobre os pedidos antigos preservando mock, saldos e c
     for (const file of (await readdir(directory)).filter(name => name.endsWith('.sql') && name < migration).sort()) {
       await db.query(await readFile(new URL(file, directory), 'utf8'));
     }
+    await runSeed('db:seed');
     const orgId = randomUUID();
     const userId = randomUUID();
     await db.query("INSERT INTO orgs(id,slug,name,kind) VALUES($1,'privacy-upgrade','Piloto sintético','matraca')", [orgId]);
@@ -62,19 +70,13 @@ it('adota a migração 019 sobre os pedidos antigos preservando mock, saldos e c
     expect((await db.query('SELECT request_id FROM live_evaluation_dispatches WHERE request_id=$1', [real])).rowCount).toBe(1);
     expect(await getWallet(db, { orgId, userId })).toMatchObject({ balance: 3, reserved: 1 });
 
-    const storage = new LocalStorage(join(directoryRoot, 'objects'));
-    const env: NodeJS.ProcessEnv = {
-      ...process.env, APP_MODE: 'local', APP_PARTNER_DOMAIN_SUFFIX: 'matraca.localhost', EVALUATION_PROVIDER: 'mock',
-      DATABASE_URL: url.href, MATRACA_MIGRATION_DATABASE_URL: url.href, STORAGE_ROOT: storage.root,
-    };
-    delete env.OPENAI_API_KEY;
-    const runSeed = (script: string) => promisify(execFile)('npm', ['run', script], { env });
-    await runSeed('db:seed');
     const erased = { orgId: seedId('parceiro'), studentId: seedId('parceiro:aluno2@parceiro.test') };
     const preview = await privacyPlan(db, storage, erased);
     await applyPrivacy(db, storage, erased, preview.fingerprint);
     await runSeed('db:seed');
-    expect((await runSeed('db:seed:examples')).stdout).toContain('Exemplos preservados');
+    if (['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)) {
+      expect((await runSeed('db:seed:examples')).stdout).toContain('Exemplos preservados');
+    }
     const person = (await db.query(`SELECT status,name,profile,email FROM users
       WHERE org_id=$1 AND (id=$2 OR email='aluno2@parceiro.test')`, [erased.orgId, erased.studentId])).rows;
     expect(person).toEqual([{

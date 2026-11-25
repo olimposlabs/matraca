@@ -25,8 +25,8 @@ try {
     for (const org of organizations) {
       const candidateId = seedId(org.slug);
       await client.query("INSERT INTO orgs (id,slug,name,kind,status,settings,branding) VALUES ($1,$2,$3,$4,'active',$5,$6) ON CONFLICT (slug) DO NOTHING", [candidateId,org.slug,org.name,org.kind,{ coursesEnabled:true, strictJourney:false },{ ...DEFAULT_BRANDING, displayName: org.name, _revision: 0 }]);
-      const { id: orgId, privacy_erasure_started_at: erased } = (await client.query(
-        'SELECT id,privacy_erasure_started_at FROM orgs WHERE slug=$1', [org.slug],
+      const { id: orgId, erased } = (await client.query(
+        "SELECT id,(to_jsonb(o)->>'privacy_erasure_started_at') IS NOT NULL AS erased FROM orgs o WHERE slug=$1", [org.slug],
       )).rows[0];
       if (orgId !== candidateId || erased) continue;
       for (const hostname of org.hosts) await client.query('INSERT INTO domains (hostname,org_id) VALUES ($1,$2) ON CONFLICT (hostname) DO NOTHING',[hostname,orgId]);
