@@ -4,13 +4,47 @@ Esta matriz registra as evidências observadas em 11/11/2026 para o [plano aprov
 
 **UI observada** significa interação com a interface e API/banco reais, com serviços externos simulados. **Parcial** indica que somente parte da jornada ou sua camada de API foi executada. **Pendente** significa que o resultado necessário ainda não está disponível. Dados sintéticos preparados diretamente no banco são identificados como fixtures; não representam funcionalidades que o usuário final precise executar manualmente.
 
+## Regressão técnica do SPI de segurança · 25/11/2026
+
+A execução em `60cebf70a0ee1ed09fd2db267d4e3a8a5e0a56ef` usou Node 24.22.3. Passaram 378 testes em 27 arquivos, lint, tipos, build, verificação do FFmpeg, consulta npm e varredura do índice do Git. O teste de política do navegador verificou os três portais e o HMR. Os dez roteiros de `npm run test:e2e` passaram com API, PostgreSQL e arquivos locais em ambientes sintéticos isolados. [Execução SPI](../EXECUCAO_SPI.md#spi-de-segurança--s08)
+
+- A avaliação verificou o consentimento, a revalidação da política, o cancelamento, a liberação de reservas e a reprodução autorizada. A suíte cobre a remoção por aluno e organização com o razão preservado.
+- A rodada de recuperação verificou uma única reserva na disputa, retomada após o fim do lease e débito único. A fatura sintética fechou em R$ 3,60, incluindo R$ 0,90 relativos à concessão da escola.
+- O roteiro do curso concluiu 48 unidades e 50 avaliações no total. A revisão de 300 segundos teve reprodução e busca temporal. Após as duas práticas livres, a carteira ficou com 63 créditos e zero reservas.
+- O sandbox confirmou sessões e dados separados por domínio, mentoria, persistência após reinício e reset do ambiente de teste. O sandbox de homologação foi iniciado à parte, com os três portais respondendo localmente.
+
+Os logs desta rodada ficam em `.data/reviews/s08-suite-final.log` e `.data/reviews/s08-e2e-final.log` no checkout de validação. A execução técnica usa os simuladores do piloto. O E2E manual inclui a captura em dispositivos físicos.
+
 ## Homologação manual consolidada
 
 **Estado em 16/11/2026: pendente de execução no E2E final pelo fundador.** As 14 fases do piloto local foram implementadas e integradas. Por orientação do fundador, suas validações manuais ficam concentradas em uma única rodada final, sem bloqueios intermediários de desenvolvimento por falta de teste manual.
 
-Na rodada final, percorrer J01–J20 no mesmo build, com os perfis de aluno avulso, aluno parceiro, professor, gestor escolar, administrador da organização e operador do backoffice. Incluir captura e reprodução em câmera e celular físicos. Registrar o SHA, ambiente, navegador, dispositivo, resultado de cada jornada e eventuais correções, repetindo os casos afetados antes do aceite.
+Na rodada final, percorrer J01–J20 no mesmo build, com os perfis de aluno avulso, aluno parceiro, professor, gestor escolar, administrador da organização e operador do backoffice. Incluir captura e reprodução na câmera física do computador. Registrar o SHA, ambiente, navegador, dispositivo, resultado de cada jornada e eventuais correções, repetindo os casos afetados antes do aceite. O caso de celular físico tem um pré-requisito de ambiente descrito no roteiro abaixo.
 
 As evidências técnicas abaixo permanecem históricas e não representam a homologação manual do fundador. IA, e-mail e pagamentos seguem simulados no escopo local. Validação de provedores reais, custo de IA e infraestrutura AWS pertence à etapa futura registrada em [dívida técnica](../TECH_DEBT.md).
+
+### Roteiro do E2E após o SPI de segurança
+
+**Homologação do fundador pendente.** Faça uma rodada no sandbox de aceite, com um único SHA e dados de demonstração. O roteiro técnico da S08 usa Chromium, PostgreSQL e arquivos sintéticos. Registre modelo do dispositivo, navegador, resultado e evidência de cada etapa, mantendo os links de login fora das capturas.
+
+| Etapa | Conferência na interface |
+| --- | --- |
+| Portal direto | Crie uma conta, confirme o link no navegador que o solicitou, preencha o perfil, escolha diagnóstico ou trilha e simule a compra. Confira matrícula e saldo. |
+| Câmera, microfone e relatório | No computador do sandbox, conceda e negue permissões, grave com áudio e vídeo, faça uma prática de 30 s e uma revisão de 5 min. Confira prévia, reprodução, navegação aos trechos, débito e histórico. |
+| Celular físico | **Captura e reprodução obrigatórias para o aceite manual.** Ambas estão bloqueadas neste sandbox, que escuta no loopback do computador e usa domínios `.localhost`. O aceite manual permanece pendente até confirmar as duas no aparelho, em uma origem HTTPS confiável e acessível que preserve o roteamento dos três portais. |
+| Domínios e revogação | Entre em duas abas com o mesmo e-mail nos portais direto e parceiro. Compare progresso, arquivos e carteira. Encerre uma sessão e confirme que a outra permanece ativa. Suspenda uma conta sintética e verifique que ela precisa voltar à tela de acesso. |
+| Escola e curso | Confira marca, nomenclatura, cópia da versão publicada, escola, professor certificado e aluno em duas turmas. Transfira um aluno sintético e confira o acesso da escola de destino e o histórico de turma encerrada. |
+| Professor e aluno | Abra uma evidência autorizada, registre a mentoria, responda a uma ação e compare a nova tentativa no portal do aluno. |
+| Créditos e operação | Confira concessão da escola, entrega do pacote simulado, ranking, prêmios e demonstrativo. Compare a competência encerrada com as licenças do mês seguinte. Veja os estados de falha e retomada. |
+| Consolidação | Percorra as jornadas J01–J20 e registre o SHA, resultado, dispositivo e evidências da rodada. Repita as jornadas afetadas por cada correção. |
+
+O sandbox usa a interface compilada, a API local e os simuladores de avaliação, e-mail e pagamento. A validação de qualidade da IA real e a configuração de retenção junto ao provedor têm evidências próprias.
+
+Para retomar o ambiente de aceite no mesmo checkout, use o nome e a porta desta rodada. O terminal imprime as três origens.
+
+```sh
+EVALUATION_PROVIDER=mock npm run pilot:sandbox -- start --name aceite_seguranca --port 5180 --examples
+```
 
 ## Preparação e registro da reprodução
 
