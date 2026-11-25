@@ -2847,4 +2847,3 @@ SDRs, executivos e pré-vendas podem ter rotinas de prática diferentes. Para di
 **Métrica de decisão:** Conversas com premissas completas e responsável financeiro/enablement; registrar origem W-P50.
 
 **Conferência de produção:** copy completa na arte, leitura em celular, fotografia/licença autorizada, ausência de dados reais, legenda coerente com o piloto e descrição alternativa inserida.
-
