@@ -19,8 +19,16 @@ function pinnedReferences() {
       throw new Error(`Fixe as imagens de ${file} por digest.`);
     }
   }
-  const from = /^FROM\s+(\S+)/mu.exec(readFileSync('infra/media/Dockerfile', 'utf8'));
-  if (!from || !digest.test(from[1]) || !digest.test(gitleaks)) throw new Error('Confira os digests dos executores.');
+  const from = [...readFileSync('infra/media/Dockerfile', 'utf8')
+    .matchAll(/^\s*FROM\s+(?:--platform=\S+\s+)?(\S+)(?:\s+AS\s+([\w.-]+))?/gimu)];
+  const stages = new Set(['scratch']);
+  for (const [, image, alias] of from) {
+    if (!stages.has(image.toLowerCase()) && !digest.test(image)) {
+      throw new Error('Fixe por digest as imagens externas do executor de mídia.');
+    }
+    if (alias) stages.add(alias.toLowerCase());
+  }
+  if (!from.length || !digest.test(gitleaks)) throw new Error('Confira os digests dos executores.');
 }
 
 function advisories() {
@@ -36,17 +44,20 @@ function advisories() {
 }
 
 function scanTrackedFiles() {
+  const uid = process.getuid?.(), gid = process.getgid?.();
+  if (uid === undefined || gid === undefined) throw new Error('Execute a verificação em macOS ou Linux com Docker.');
   const snapshot = mkdtempSync(join(tmpdir(), 'matraca-secret-check-'));
   try {
     const exportIndex = spawnSync('git', ['checkout-index', '--all', `--prefix=${snapshot}${sep}`], { stdio: 'ignore' });
     if (exportIndex.status !== 0) throw new Error('Não foi possível preparar os arquivos versionados.');
     const scan = spawnSync('docker', [
       'run', '--rm', '--network', 'none', '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges',
+      '--user', `${uid}:${gid}`,
       '--mount', `type=bind,src=${snapshot},dst=/src,readonly`,
       gitleaks, 'dir', '--no-banner', '--redact=100', '--log-level=error', '--exit-code=9', '--config=/src/.gitleaks.toml', '/src',
     ], { stdio: 'ignore', timeout: 120000 });
     if (scan.status === 9) throw new Error('O exame encontrou possível segredo em arquivo versionado. Reveja o índice do Git em ambiente privado.');
-    if (scan.status !== 0) throw new Error('Varredura dos arquivos versionados indisponível.');
+    if (scan.status !== 0) throw new Error(`Varredura dos arquivos versionados indisponível (${scan.status ?? 'execução interrompida'}).`);
     process.stdout.write('Arquivos versionados examinados com Gitleaks. Nenhum alerta.\n');
   } finally { rmSync(snapshot, { recursive: true, force: true }); }
 }
