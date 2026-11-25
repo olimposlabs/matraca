@@ -71,6 +71,8 @@ Para pedido de remoção, use `--org <uuid>` nos dois comandos e acrescente `--s
 
 Se a execução for interrompida, gere uma nova simulação para a mesma seleção. A mídia aposentada fica sem acesso e os objetos que faltam podem ser removidos na retomada. Mantenha cópias locais protegidas e teste a restauração sintética. Um backup anterior pode conter dados já removidos. Restaure-o isoladamente, reaplique as remoções registradas e só então retome acesso. O expurgo da mídia no aplicativo abrange o storage selecionado. Cópias legadas e o tratamento do provedor seguem seu próprio ciclo. [Retenção no provedor](technical/OPENAI.md#uso-custo-e-limitações)
 
+O seed preserva o identificador de uma conta desidentificada, e a inicialização do sandbox segue com as demais contas. Quando a demonstração depende de uma conta removida, o comando de exemplos conserva os registros anteriores.
+
 O endpoint de auditoria `GET /api/backoffice/ops/:orgId/sensitive-access` expõe ao operador os 100 eventos recentes do escopo. Registra ação, ator, alvo disponível, motivo fixo, resultado e data. Pedidos repetidos de um mesmo evento compartilham uma janela de dez minutos.
 
 ## Transição do banco local

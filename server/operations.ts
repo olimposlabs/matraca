@@ -40,7 +40,7 @@ interface Org {
 async function withOperator<T>(request: FastifyRequest, write: boolean, task: (client: PoolClient, org: Org, actor: AuthIdentity) => Promise<T>) {
   const session = await requireIdentity(request, ['operator']);
   if (session.org.kind !== 'backoffice') throw new OperationsError(403, 'Acesso exclusivo do backoffice.');
-  const { orgId } = parse(path, request.params);
+  const orgId = parse(path, request.params).orgId.toLowerCase();
   return request.server.db.transaction(async client => {
     if (write) await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4))', [orgId]);
     else await client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
@@ -208,14 +208,17 @@ export async function registerOperations(app: FastifyInstance, instance: LiveLim
   app.put(`${base}/live-policy`, request => {
     const input = parse(livePolicyInput, request.body);
     return withOperator(request, true, async (client, org, actor) => {
-      const previous = await readLivePolicy(client, org.id);
-      if (previous.revision !== input.expectedRevision) throw new OperationsError(409, 'A política mudou. Recarregue antes de salvar.');
-      await client.query(
-        `INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision,include_experience) VALUES($1,$2,$3,$4,1,$5)
-         ON CONFLICT(org_id) DO UPDATE SET enabled=EXCLUDED.enabled,organization_limits=EXCLUDED.organization_limits,
-         student_limits=EXCLUDED.student_limits,include_experience=EXCLUDED.include_experience,revision=live_evaluation_policies.revision+1`,
-        [org.id, input.enabled, input.organization, input.student, input.includeExperience ?? previous.includeExperience],
+      const fields = [org.id, input.enabled, input.organization, input.student, input.includeExperience ?? null];
+      const updated = input.expectedRevision === 0 ? await client.query(
+        `INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision,include_experience)
+         VALUES($1,$2,$3,$4,1,COALESCE($5::boolean,false)) ON CONFLICT(org_id) DO NOTHING`, fields,
+      ) : await client.query(
+        `UPDATE live_evaluation_policies SET enabled=$2,organization_limits=$3,student_limits=$4,
+           include_experience=COALESCE($5::boolean,include_experience),revision=revision+1
+         WHERE org_id=$1 AND revision=$6::bigint`,
+        [...fields, input.expectedRevision],
       );
+      if (!updated.rowCount) throw new OperationsError(409, 'A política mudou. Recarregue antes de salvar.');
       const policy = await readLivePolicy(client, org.id);
       await audit(client, actor, org.id, 'live_evaluation_policy_changed', { revision: policy.revision });
       return { policy, instance };
