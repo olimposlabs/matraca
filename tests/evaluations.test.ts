@@ -9,7 +9,7 @@ import { emptyCourse, validatePublication, type CourseDocument, type CourseUnit 
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
-import { runEvaluationJob } from '../server/evaluation/worker.js';
+import { drainLiveEvaluations, runEvaluationJob } from '../server/evaluation/worker.js';
 import { privateEvaluationMedia } from '../server/evaluation/openai-media.js';
 import { isOpenAIAttemptActive } from '../server/evaluation/openai-runtime.js';
 import { authorizeLiveDispatch, type LiveLimits } from '../server/evaluation/live-policy.js';
@@ -200,8 +200,7 @@ describe('fila, relatórios e reserva atômica', () => {
       const liveProvider: EvaluationProvider = { kind: 'openai', async evaluate(context, options) {
         await authorizeLiveDispatch(db, { requestId: context.requestId, attempt: options.attempt, leaseToken: options.leaseToken!, callIndex: 0, instance });
         calls++;
-        const cancelled = await call(actor, 'POST', `/api/evaluations/${id}/cancel`);
-        expect(cancelled.statusCode).toBe(200);
+        expect(await drainLiveEvaluations(db)).toBe(1);
         await expect(authorizeLiveDispatch(db, { requestId: id, attempt: options.attempt, leaseToken: options.leaseToken!, callIndex: 1, instance }))
           .rejects.toMatchObject({ code: 'authorization' });
         throw new EvaluationProviderError('authorization', false);

@@ -76,6 +76,21 @@ export async function cancelEvaluationInTransaction(client: PoolClient, target: 
   return 'cancelled';
 }
 
+/** For switching a local database to mock after stopping its real workers. */
+export async function drainLiveEvaluations(db: Database) {
+  const pending = await db.query<{ id: string; org_id: string; student_id: string }>(
+    "SELECT id,org_id,student_id FROM evaluation_requests WHERE provider='openai' AND status IN ('queued','processing') ORDER BY id",
+  );
+  let cancelled = 0;
+  for (const item of pending.rows) {
+    const status = await db.transaction(client => cancelEvaluationInTransaction(client, {
+      orgId: item.org_id, studentId: item.student_id, requestId: item.id,
+    }));
+    if (status === 'cancelled') cancelled++;
+  }
+  return cancelled;
+}
+
 async function settle(db: Database, job: Job, result: EvaluationReport | EvaluationProviderError) {
   await db.transaction(async client => {
     const lease = await client.query(

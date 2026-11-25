@@ -42,7 +42,7 @@ A análise visual usa amostras, não vídeo contínuo. Os trechos de áudio têm
 
 ## Migração e reversão
 
-Encerre os workers antigos antes de aplicar a migração 015. Ela mantém os relatórios e saldos históricos e encerra pedidos reais ainda abertos, liberando suas reservas. Os pedidos simulados continuam intactos. Para reverter, mantenha o modo mock e os tetos reais zerados, preserve os registros e concilie reservas antes de reativar um worker real.
+Encerre os workers antigos antes de aplicar a migração 015. Ela mantém os relatórios e saldos históricos e encerra pedidos reais ainda abertos, liberando suas reservas. Os pedidos simulados continuam intactos. Para voltar ao mock, pare as instâncias reais que usam a base e execute `npm run evaluations:drain-live` com a mesma configuração de banco. O comando cancela pedidos reais pendentes, libera suas reservas e preserva recibos de despacho já registrados. Inicie o modo mock após conferir a contagem devolvida.
 
 ## Verificação
 
