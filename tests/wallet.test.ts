@@ -5,7 +5,7 @@ import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
 import {
   adjustCredits, consumeReservation, consumeReservationInTransaction, creditsForDuration,
-  getWallet, grantCredits, grantInitialCredit, grantInitialCreditInTransaction, refundConsumption, releaseReservation,
+  getLiveCreditAvailable, getWallet, grantCredits, grantInitialCredit, grantInitialCreditInTransaction, refundConsumption, releaseReservation,
   reserveCredits, walletStatement, type CreditTarget,
 } from '../server/wallet.js';
 
@@ -42,6 +42,28 @@ describe('carteira transacional e origens de créditos', () => {
   it.each([[30,1],[60,1],[61,2],[119,2],[300,5],[301,6]])('arredonda %is para %i créditos', (seconds,expected) => {
     expect(creditsForDuration(seconds*1_000_000)).toBe(expected);
   });
+  it('liquida e estorna os lotes vinculados ao pedido real sem desviar sua reserva', async () => {
+    const target = await student();
+    const simulated = await grant(target, 3);
+    const live = await grantCredits(db, { ...target, amount: 2, eventKey: randomUUID(), source: 'manual',
+      sourceRef: 'pilot', reason: 'Concessão autorizada', actorUserId: target.userId, liveEligible: true });
+    const requestId = randomUUID();
+    await reserveCredits(db, { ...target, requestId, durationMicroseconds: 61_000_000, provider: 'openai' });
+    expect(await getLiveCreditAvailable(db, target)).toBe(0);
+    const simulatedRequest = randomUUID();
+    await reserve(target, simulatedRequest);
+    await consumeReservation(db, { ...target, requestId: simulatedRequest });
+
+    const consumed = await consumeReservation(db, { ...target, requestId });
+    const lots = () => db.query('SELECT entry_id,remaining FROM credit_lots WHERE org_id=$1 AND user_id=$2', [target.orgId,target.userId]);
+    expect((await lots()).rows).toEqual(expect.arrayContaining([
+      { entry_id: simulated.id, remaining: 2 }, { entry_id: live.id, remaining: 0 },
+    ]));
+    await refundConsumption(db, { ...target, entryId: consumed.consumption_entry_id!, reason: 'Estorno autorizado' });
+    expect(await getLiveCreditAvailable(db, target)).toBe(2);
+    expect(await getWallet(db, target)).toEqual({ balance: 4, reserved: 0, available: 4 });
+  });
+
   it('preserva o limite exato até no primeiro microssegundo seguinte',()=> {
     expect(creditsForDuration(60_000_000)).toBe(1);
     expect(creditsForDuration(60_000_001)).toBe(2);

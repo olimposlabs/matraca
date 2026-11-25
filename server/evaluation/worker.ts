@@ -3,9 +3,11 @@ import type { PoolClient } from 'pg';
 import type { Database } from '../db.js';
 import { applyCourseEvaluation } from '../journey-progress.js';
 import { consumeReservationInTransaction, releaseReservationInTransaction } from '../wallet.js';
-import { EvaluationProviderError, validateEvaluationReport, type EvaluationContext, type EvaluationProvider, type EvaluationReport, type EvaluationScenario } from './provider.js';
+import { EvaluationProviderError, maxEvaluationAttempts, validateEvaluationReport, type EvaluationContext, type EvaluationProvider, type EvaluationReport, type EvaluationScenario } from './provider.js';
 
-const maxAttempts = 3;
+import { authorizedLiveAttempt } from './live-policy.js';
+
+const maxAttempts = maxEvaluationAttempts;
 const leaseSeconds = 30;
 const defaultTimeoutMs = 8000;
 
@@ -18,11 +20,12 @@ interface Job {
   attempts: number;
   leaseToken: string;
   exhausted: boolean;
+  provider: 'mock' | 'openai';
 }
 
 async function claim(db: Database, provider: EvaluationProvider, timeoutMs: number, requestId?: string): Promise<Job | null> {
   return db.transaction(async client => {
-    const candidate = await client.query<Omit<Job, 'leaseToken' | 'exhausted'>>(
+    const candidate = await client.query<Omit<Job, 'leaseToken' | 'exhausted' | 'provider'>>(
       `SELECT j.request_id,j.attempts,r.org_id,r.student_id,r.context,r.scenario
        FROM evaluation_jobs j JOIN evaluation_requests r ON r.id=j.request_id
        WHERE ($1::uuid IS NULL OR j.request_id=$1)
@@ -43,7 +46,7 @@ async function claim(db: Database, provider: EvaluationProvider, timeoutMs: numb
       [row.request_id, attempts, leaseToken, Math.max(leaseSeconds, Math.ceil(timeoutMs / 1000) + 15)],
     );
     await client.query("UPDATE evaluation_requests SET status='processing',updated_at=clock_timestamp() WHERE id=$1", [row.request_id]);
-    return { ...row, attempts, leaseToken, exhausted };
+    return { ...row, attempts, leaseToken, exhausted, provider: provider.kind ?? 'mock' };
   });
 }
 
@@ -56,7 +59,9 @@ async function finishJob(client: PoolClient, requestId: string, status: 'complet
   await client.query('INSERT INTO evaluation_outbox(request_id,event_type) VALUES ($1,$2) ON CONFLICT DO NOTHING', [requestId, status]);
 }
 
-export async function cancelEvaluationInTransaction(client: PoolClient, target: { orgId: string; studentId: string; requestId: string }) {
+export async function cancelEvaluationInTransaction(client: PoolClient, target: { orgId: string; studentId: string; requestId: string },
+  reason = 'Avaliação cancelada pelo aluno',
+) {
   const found = await client.query<{ status: string }>(
     `SELECT r.status FROM evaluation_requests r JOIN evaluation_jobs j ON j.request_id=r.id
      WHERE r.id=$1 AND r.org_id=$2 AND r.student_id=$3 FOR UPDATE OF j`,
@@ -68,9 +73,24 @@ export async function cancelEvaluationInTransaction(client: PoolClient, target: 
   const current = await client.query<{ status: string }>('SELECT status FROM evaluation_requests WHERE id=$1', [target.requestId]);
   const status = current.rows[0].status;
   if (status !== 'queued' && status !== 'processing') return status;
-  await releaseReservationInTransaction(client, { ...target, userId: target.studentId, reason: 'Avaliação cancelada pelo aluno' });
+  await releaseReservationInTransaction(client, { ...target, userId: target.studentId, reason });
   await finishJob(client, target.requestId, 'cancelled');
   return 'cancelled';
+}
+
+/** For switching a local database to mock after stopping its real workers. */
+export async function drainLiveEvaluations(db: Database) {
+  const pending = await db.query<{ id: string; org_id: string; student_id: string }>(
+    "SELECT id,org_id,student_id FROM evaluation_requests WHERE provider='openai' AND status IN ('queued','processing') ORDER BY id",
+  );
+  let cancelled = 0;
+  for (const item of pending.rows) {
+    const status = await db.transaction(client => cancelEvaluationInTransaction(client, {
+      orgId: item.org_id, studentId: item.student_id, requestId: item.id,
+    }, 'Avaliação encerrada ao voltar para o modo simulado'));
+    if (status === 'cancelled') cancelled++;
+  }
+  return cancelled;
 }
 
 async function settle(db: Database, job: Job, result: EvaluationReport | EvaluationProviderError) {
@@ -81,6 +101,10 @@ async function settle(db: Database, job: Job, result: EvaluationReport | Evaluat
     );
     if (!lease.rowCount) return;
     const target = { orgId: job.org_id, userId: job.student_id, requestId: job.request_id };
+    if (!(result instanceof EvaluationProviderError) && job.provider === 'openai'
+      && !await authorizedLiveAttempt(client, job.request_id, job.attempts, job.leaseToken, true)) {
+      result = new EvaluationProviderError('authorization', false);
+    }
     if (result instanceof EvaluationProviderError) {
       if (result.retryable && job.attempts < maxAttempts) {
         await client.query(
@@ -121,7 +145,7 @@ async function evaluate(job: Job, provider: EvaluationProvider, timeoutMs: numbe
       }, timeoutMs);
     });
     const raw = await Promise.race([
-      provider.evaluate(job.context, { attempt: job.attempts, signal: controller.signal, scenario: job.scenario }),
+      provider.evaluate(job.context, { attempt: job.attempts, leaseToken: job.leaseToken, signal: controller.signal, scenario: job.scenario }),
       timedOut,
     ]);
     const report = validateEvaluationReport(raw, job.context);
@@ -141,7 +165,9 @@ export async function runEvaluationJob(
 ): Promise<boolean> {
   const job = await claim(db, provider, timeoutMs, requestId);
   if (!job) return false;
-  const result = await evaluate(job, provider, timeoutMs);
+  const result = job.provider === 'openai' && !await authorizedLiveAttempt(db, job.request_id, job.attempts, job.leaseToken)
+    ? new EvaluationProviderError('authorization', false)
+    : await evaluate(job, provider, timeoutMs);
   await settle(db, job, result);
   return true;
 }

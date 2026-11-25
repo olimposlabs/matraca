@@ -67,39 +67,51 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
   const { user, org } = useAuth();
   const [scenario, setScenario] = useState<EvaluationScenario | 'configured'>('configured');
   const [busy, setBusy] = useState(false);
+  const [refresh, setRefresh] = useState(0);
   const [error, setError] = useState('');
   const pending = useRef(false);
   const sessionKeys = useRef(new Map<string, string>());
-  const [capabilities, setCapabilities] = useState<{ provider: 'mock' | 'openai'; maximumSeconds: number } | null>(null);
+  const [resumable, setResumable] = useState<string | null>(null);
+  const [capabilities, setCapabilities] = useState<{ provider: 'mock' | 'openai'; maximumSeconds: number; enabled: boolean; availableCredits?: number } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    apiJson<{ provider: 'mock' | 'openai'; maximumSeconds: number }>('/api/evaluation-capabilities', { signal: controller.signal })
+    apiJson<{ provider: 'mock' | 'openai'; maximumSeconds: number; enabled: boolean; availableCredits?: number }>('/api/evaluation-capabilities', { signal: controller.signal })
       .then(setCapabilities).catch(cause => { if (!controller.signal.aborted) setError(errorText(cause)); });
     return () => controller.abort();
-  }, []);
+  }, [refresh]);
   const singular = recording.estimatedCredits === 1;
   const customLabel = singular ? org?.branding.creditSingular : org?.branding.creditPlural;
   const label = typeof customLabel === 'string' ? customLabel : singular ? 'crédito' : 'créditos';
 
+  const key = capabilities ? `matraca-evaluation:${org?.id}:${user?.id}:${recording.id}:${capabilities.provider}:${scenario}` : null;
+  useEffect(() => {
+    try {
+      setResumable(key && (sessionStorage.getItem(key) || sessionKeys.current.has(key)) ? key : null);
+    } catch { setResumable(key && sessionKeys.current.has(key) ? key : null); }
+  }, [key]);
+  const canResume = !!key && resumable === key;
+  const creditAvailable = capabilities?.provider !== 'openai' || (capabilities.availableCredits ?? 0) >= recording.estimatedCredits;
+
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (pending.current || !capabilities) return;
+    if (pending.current || !capabilities || !key || (!canResume && (!capabilities.enabled || !creditAvailable))) return;
     pending.current = true;
     setBusy(true);
     setError('');
-    const key = `matraca-evaluation:${org?.id}:${user?.id}:${recording.id}:${capabilities.provider}:${scenario}`;
     let clientKey = sessionKeys.current.get(key) ?? crypto.randomUUID();
     try {
       clientKey = sessionStorage.getItem(key) ?? clientKey;
       sessionStorage.setItem(key, clientKey);
     } catch { /* The in-memory key still protects repeat clicks in this tab. */ }
     sessionKeys.current.set(key, clientKey);
+    setResumable(key);
     try {
       const { evaluation } = await apiJson<{ evaluation: { id: string } }>('/api/evaluations', {
         method: 'POST', body: { recordingId: recording.id, clientKey, expectedProvider: capabilities.provider,
           ...(capabilities.provider === 'mock' && scenario !== 'configured' ? { scenario } : {}) },
       });
       sessionKeys.current.delete(key);
+      setResumable(null);
       try { sessionStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
       navigate(`/app/evaluations/${evaluation.id}`);
     } catch (cause) {
@@ -116,6 +128,13 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       <p>Esta solicitação reserva {recording.estimatedCredits} {label}. O saldo é debitado quando o relatório fica pronto.</p>
       {capabilities?.provider === 'openai' && <p>Ao solicitar, o áudio, quadros do vídeo e o contexto da sua prática serão enviados à OpenAI para gerar o feedback. Limite de cinco minutos; a análise visual usa quadros amostrados.</p>}
     </div>
+    {capabilities?.provider === 'openai' && <p role="status">{!capabilities.enabled
+      ? 'Esta conta ainda não tem acesso à avaliação real.'
+      : `Saldo habilitado para avaliação real: ${capabilities.availableCredits ?? 0}.`}</p>}
+    {capabilities?.provider === 'openai' && (!capabilities.enabled || !creditAvailable) && <button type="button"
+      className="button button-secondary" disabled={busy} onClick={() => { setError(''); setRefresh(value => value + 1); }}>
+      Atualizar disponibilidade
+    </button>}
     {capabilities?.provider === 'mock' && <label>Cenário do simulador
       <select value={scenario} onChange={event => setScenario(event.target.value as EvaluationScenario | 'configured')} disabled={busy}>
         <option value="configured">Padrão da organização</option>
@@ -123,8 +142,8 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       </select>
     </label>}
     {error && <p className="evaluation-error" role="alert">{error}</p>}
-    <button type="submit" className="button button-primary" disabled={busy || !capabilities}>
-      {busy ? 'Enviando…' : 'Solicitar avaliação'} <ArrowRight size={16} aria-hidden="true" />
+    <button type="submit" className="button button-primary" disabled={busy || !capabilities || (!canResume && (!capabilities.enabled || !creditAvailable))}>
+      {busy ? 'Enviando…' : canResume ? 'Retomar solicitação' : 'Solicitar avaliação'} <ArrowRight size={16} aria-hidden="true" />
     </button>
   </form>;
 }

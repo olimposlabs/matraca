@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireIdentity, type AuthIdentity } from './auth.js';
 import { operationPolicySchema, readOperationPolicy } from './operation-policy.js';
 import { releaseReservationInTransaction } from './wallet.js';
+import { liveLimitsEnabled, liveLimitsSchema, noLiveLimits, readLivePolicy, type LiveLimits } from './evaluation/live-policy.js';
 
 class OperationsError extends Error {
   constructor(readonly statusCode: 400 | 403 | 404 | 409, message: string) { super(message); }
@@ -187,7 +188,60 @@ async function countAndPage(client: PoolClient, sql: string, args: unknown[], pa
   return { items: items.rows, total: count.rows[0].total, page, pageSize };
 }
 
-export async function registerOperations(app: FastifyInstance) {
+const livePolicyInput = z.object({
+  enabled: z.boolean(),
+  organization: liveLimitsSchema,
+  student: liveLimitsSchema,
+  expectedRevision: z.number().int().nonnegative(),
+}).strict().refine(input => !input.enabled || [input.organization, input.student].every(liveLimitsEnabled));
+
+export async function registerOperations(app: FastifyInstance, instance: LiveLimits = noLiveLimits) {
+  app.get(`${base}/live-policy`, request => withOperator(request, false, async (client, org) => ({
+    policy: await readLivePolicy(client, org.id),
+    instance,
+  })));
+  app.put(`${base}/live-policy`, request => {
+    const input = parse(livePolicyInput, request.body);
+    return withOperator(request, true, async (client, org, actor) => {
+      const previous = await readLivePolicy(client, org.id);
+      if (previous.revision !== input.expectedRevision) throw new OperationsError(409, 'A política mudou. Recarregue antes de salvar.');
+      await client.query(
+        `INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision) VALUES($1,$2,$3,$4,1)
+         ON CONFLICT(org_id) DO UPDATE SET enabled=EXCLUDED.enabled,organization_limits=EXCLUDED.organization_limits,
+         student_limits=EXCLUDED.student_limits,revision=live_evaluation_policies.revision+1`,
+        [org.id, input.enabled, input.organization, input.student],
+      );
+      const policy = await readLivePolicy(client, org.id);
+      await audit(client, actor, org.id, 'live_evaluation_policy_changed', { revision: policy.revision });
+      return { policy, instance };
+    });
+  });
+  for (const method of ['GET', 'PUT'] as const) {
+    app.route({ method, url: `${base}/live-students/:id`, handler: request => {
+      const { id } = parse(itemPath, request.params);
+      const input = method === 'PUT' ? parse(z.object({ enabled: z.boolean() }).strict(), request.body) : null;
+      return withOperator(request, method === 'PUT', async (client, org, actor) => {
+        const found = await client.query(
+          `SELECT 1 FROM users u WHERE u.id=$1 AND u.org_id=$2 AND ('student'=ANY(u.roles) OR (NOT $3::boolean AND EXISTS(
+            SELECT 1 FROM live_evaluation_members a WHERE a.org_id=u.org_id AND a.student_id=u.id)))`,
+          [id, org.id, input?.enabled === true],
+        );
+        if (!found.rowCount) throw new OperationsError(404, 'Aluno não encontrado.');
+        if (input) {
+          if (input.enabled) {
+            if (!(await readLivePolicy(client, org.id)).revision) throw new OperationsError(409, 'Salve os limites da organização primeiro.');
+            await client.query('INSERT INTO live_evaluation_members(org_id,student_id) VALUES($1,$2) ON CONFLICT DO NOTHING', [org.id, id]);
+          } else {
+            await client.query('DELETE FROM live_evaluation_members WHERE org_id=$1 AND student_id=$2', [org.id, id]);
+          }
+          await audit(client, actor, org.id, input.enabled ? 'live_evaluation_student_enabled' : 'live_evaluation_student_disabled', { studentId: id });
+        }
+        const member = await client.query('SELECT 1 FROM live_evaluation_members WHERE org_id=$1 AND student_id=$2', [org.id, id]);
+        return { enabled: !!member.rowCount };
+      });
+    } });
+  }
+
   app.get(base, request => {
     const input = parse(scopeInput, request.query);
     return withOperator(request, false, async (client, org) => {
@@ -203,11 +257,14 @@ export async function registerOperations(app: FastifyInstance) {
   });
 
   app.get(`${base}/students`, request => {
-    const input = parse(z.object({ ...pagination, search: z.string().trim().max(120).default('') }).strict(), request.query);
+    const input = parse(z.object({ ...pagination, search: z.string().trim().max(120).default(''), live: z.literal('1').optional() }).strict(), request.query);
     return withOperator(request, false, (client, org) => countAndPage(client,
-      `SELECT id,name,email,status FROM users WHERE org_id=$1 AND 'student'=ANY(roles)
-         AND (strpos(lower(name),lower($2))>0 OR strpos(lower(email),lower($2))>0)`,
-      [org.id, input.search], input.page, input.pageSize, 'lower(name),id'));
+      `SELECT u.id,u.name,u.email,u.status FROM users u WHERE u.org_id=$1
+         AND ('student'=ANY(u.roles) OR ($3::boolean AND EXISTS (
+           SELECT 1 FROM live_evaluation_members a WHERE a.org_id=u.org_id AND a.student_id=u.id
+         )))
+         AND (strpos(lower(u.name),lower($2))>0 OR strpos(lower(u.email),lower($2))>0)`,
+      [org.id, input.search, input.live === '1'], input.page, input.pageSize, 'lower(name),id'));
   });
 
   app.put(`${base}/policy`, request => {

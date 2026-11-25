@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { requireIdentity, type AuthIdentity, type IdentityOrg, type IdentityRole } from './auth.js';
 import { localHostname } from './config.js';
 import { assertSchoolScope, isOrgAdmin, managedSchoolIds, scopeValues, type EducationQuery } from './permissions.js';
-import { grantCreditsInTransaction, adjustCreditsInTransaction, refundConsumptionInTransaction,
+import { getLiveCreditAvailable, grantCreditsInTransaction, adjustCreditsInTransaction, refundConsumptionInTransaction,
   type WalletEntry, type WalletState, type CreditSource } from './wallet.js';
 
 class CreditsAccessError extends Error {
@@ -16,7 +16,7 @@ const id=z.uuid();
 const amount=z.number().int().min(1).max(1_000_000);
 const reason=z.string().trim().min(1).max(500);
 const eventBase={eventId:id,reason};
-const grantInput=z.object({...eventBase,amount:amount.optional(),packageId:id.optional()}).strict()
+const grantInput=z.object({...eventBase,amount:amount.optional(),packageId:id.optional(),liveEligible:z.boolean().optional()}).strict()
   .refine(data=>(data.amount!==undefined)!==(data.packageId!==undefined));
 const adjustInput=z.object({...eventBase,delta:z.number().int().min(-1_000_000).max(1_000_000).refine(n=>n!==0)}).strict();
 const refundInput=z.object({...eventBase,entryId:id}).strict();
@@ -220,6 +220,7 @@ async function move(client:PoolClient,access:Access,userId:string,operation:Oper
   const target={orgId:access.org.id,userId},actorUserId=access.actor.user.id,eventKey=`administrative:${input.eventId}`;
   if(operation==='grant'){
     const grant=input as z.infer<typeof grantInput>;
+    if (grant.liveEligible && !access.central) throw new CreditsAccessError(403,'Somente o backoffice concede créditos para avaliação real.');
     let quantity=grant.amount!,sourceRef=`manual:${input.eventId}`;
     if(grant.packageId){const item=await grantPackage(client,access.org.id,grant.packageId);if(item.status!=='active')throw new CreditsAccessError(409,'O pacote está arquivado.');quantity=item.amount;sourceRef=`package:${item.id}`;}
     ensureGrantLimit(quantity);
@@ -230,7 +231,7 @@ async function move(client:PoolClient,access:Access,userId:string,operation:Oper
       if(quantity>limit.remaining)throw new CreditsAccessError(409,'O limite mensal de concessões da escola seria excedido.');
       schoolId=student.schoolId;budgetMonth=`${limit.month}-01`;
     }
-    result=await grantCreditsInTransaction(client,{...target,amount:quantity,source:'manual',sourceRef,eventKey,reason:input.reason,actorUserId});
+    result=await grantCreditsInTransaction(client,{...target,amount:quantity,source:'manual',sourceRef,eventKey,reason:input.reason,actorUserId,liveEligible:grant.liveEligible});
   }else if(operation==='adjust'){
     const delta = (input as z.infer<typeof adjustInput>).delta;
     ensureGrantLimit(delta);
@@ -254,8 +255,8 @@ async function statement(app:FastifyInstance,request:FastifyRequest,access:Acces
     const limit=bind(query.limit),offset=bind((query.page-1)*query.limit);
     const entries=await client.query<WalletEntry&{actorName:string}>(`SELECT e.*,${actorNameSQL} AS "actorName" FROM wallet_entries e LEFT JOIN users a ON a.id=e.actor_user_id WHERE ${where} ORDER BY e.created_at DESC,e.id DESC LIMIT ${limit} OFFSET ${offset}`,values);
     const reservations=await client.query('SELECT * FROM credit_reservations WHERE org_id=$1 AND user_id=$2 ORDER BY created_at DESC,id DESC LIMIT 100',[current.org.id,userId]);
-    const origins=await client.query('SELECT l.entry_id,e.source,e.source_ref,l.quantity,l.remaining FROM credit_lots l JOIN wallet_entries e ON e.id=l.entry_id AND e.org_id=l.org_id AND e.user_id=l.user_id WHERE l.org_id=$1 AND l.user_id=$2 AND l.remaining>0 ORDER BY l.created_at,l.entry_id',[current.org.id,userId]);
-    return {org:publicOrg(current.org),student,wallet:await wallet(client,current.org.id,userId),entries:entries.rows.map(publicEntry),reservations:reservations.rows,origins:origins.rows,page:query.page,limit:query.limit,total};
+    const origins=await client.query('SELECT l.entry_id,e.source,e.source_ref,l.quantity,l.remaining,l.live_eligible FROM credit_lots l JOIN wallet_entries e ON e.id=l.entry_id AND e.org_id=l.org_id AND e.user_id=l.user_id WHERE l.org_id=$1 AND l.user_id=$2 AND l.remaining>0 ORDER BY l.created_at,l.entry_id',[current.org.id,userId]);
+    return {org:publicOrg(current.org),student,wallet:await wallet(client,current.org.id,userId),liveAvailable:await getLiveCreditAvailable(client,{orgId:current.org.id,userId}),entries:entries.rows.map(publicEntry),reservations:reservations.rows,origins:origins.rows,page:query.page,limit:query.limit,total};
   });
 }
 async function audit(client:PoolClient,access:Access,event:string,metadata:Record<string,unknown>={}){

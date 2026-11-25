@@ -11,6 +11,7 @@ interface OpenAIOptions {
   reportModel: string;
   media: (context: EvaluationContext, signal: AbortSignal) => Promise<EvaluationMedia>;
   recordCall: (context: EvaluationContext, attempt: number, call: ProviderCall) => Promise<void>;
+  authorize?: (context: EvaluationContext, attempt: number, leaseToken: string | undefined, callIndex: number) => Promise<void>;
   isActive?: (context: EvaluationContext, attempt: number) => Promise<boolean>;
   fetch?: typeof fetch;
 }
@@ -35,10 +36,12 @@ export class OpenAIEvaluationProvider implements EvaluationProvider {
 
   private async request(
     endpoint: 'chat/completions' | 'responses', payload: object, stage: ProviderCall['stage'], model: string,
-    context: EvaluationContext, attempt: number, signal: AbortSignal, calls: ProviderCall[],
+    context: EvaluationContext, attempt: number, signal: AbortSignal, calls: ProviderCall[], leaseToken: string | undefined,
   ): Promise<Record<string, unknown>> {
     signal.throwIfAborted();
     if (this.options.isActive && !await this.options.isActive(context, attempt)) throw new EvaluationProviderError('permanent', false);
+    signal.throwIfAborted();
+    await this.options.authorize?.(context, attempt, leaseToken, calls.length);
     signal.throwIfAborted();
     const started = Date.now();
     let response: Response | undefined;
@@ -74,7 +77,7 @@ export class OpenAIEvaluationProvider implements EvaluationProvider {
     return body;
   }
 
-  async evaluate(context: EvaluationContext, { attempt, signal }: Parameters<EvaluationProvider['evaluate']>[1]) {
+  async evaluate(context: EvaluationContext, { attempt, signal, leaseToken }: Parameters<EvaluationProvider['evaluate']>[1]) {
     const media = await this.options.media(context, signal);
     const calls: ProviderCall[] = [];
     const audioNotes: { startUs: number; endUs: number; analysis: string }[] = [];
@@ -91,7 +94,7 @@ export class OpenAIEvaluationProvider implements EvaluationProvider {
             { type: 'input_audio', input_audio: { data: segment.data.toString('base64'), format: 'wav' } },
           ] },
         ],
-      }, 'audio', this.options.audioModel, context, attempt, signal, calls);
+      }, 'audio', this.options.audioModel, context, attempt, signal, calls, leaseToken);
       const choices = Array.isArray(result.choices) ? result.choices : [];
       const choice = object(choices[0]);
       const message = object(choice.message);
@@ -129,7 +132,7 @@ export class OpenAIEvaluationProvider implements EvaluationProvider {
         Não dê uma nota global: o servidor calcula a média ponderada. Recomende uma prática concreta por critério, inclusive sem nota.`,
       input: [{ role: 'user', content }],
       text: { format: { type: 'json_schema', name: 'oratory_report', strict: true, schema: reportFormat } },
-    }, 'report', this.options.reportModel, context, attempt, signal, calls);
+    }, 'report', this.options.reportModel, context, attempt, signal, calls, leaseToken);
     const output = Array.isArray(result.output) ? result.output : [];
     const texts = output.flatMap(item => {
       const message = object(item);

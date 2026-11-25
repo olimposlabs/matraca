@@ -29,7 +29,7 @@ if (workerMode === '--worker-hold' || workerMode === '--worker-once') {
         return new Promise(() => {}); // The parent kills this process after the real claim commits.
       },
     } : new MockEvaluationProvider();
-    const processed = await runEvaluationJob(db, provider, { timeoutMs: workerMode === '--worker-hold' ? 120_000 : 8000 });
+    const processed = await runEvaluationJob(db, provider);
     process.send?.({ type: 'done', processed });
   } finally { await db.close(); process.disconnect?.(); }
 } else {
@@ -144,7 +144,7 @@ async function checkRecovery() {
     assert.deepEqual(await getWallet(db, timeoutStudent), { balance: 1, reserved: 0, available: 1 });
     assert.deepEqual(await counts(timeoutStudent), { results: 0, consumptions: 0 });
     const timeoutPage = await timeoutContext.newPage(); await timeoutPage.goto(`${partnerBase}/app/evaluations/${timeoutId}`);
-    await expect(timeoutPage.getByText('O simulador excedeu o tempo de resposta. Os créditos reservados foram liberados.', { exact: true })).toBeVisible();
+    await expect(timeoutPage.getByText('A avaliação excedeu o tempo de resposta. Os créditos reservados foram liberados.', { exact: true })).toBeVisible();
     await timeoutPage.screenshot({ path: resolve('.data/phase14-recovery-timeout.png'), fullPage: true });
     const permanentId = await requestEvaluation(permanentContext.request, 'Prática com falha definitiva', 'permanent');
     assert.equal(await runEvaluationJob(db, provider), true);

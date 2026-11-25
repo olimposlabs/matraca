@@ -7,10 +7,11 @@ import type { CourseDocument } from '../course-model.js';
 import { assertStudentScope } from '../permissions.js';
 import { requireStudyForEvaluation } from '../journey-progress.js';
 import { readOperationPolicy } from '../operation-policy.js';
-import { reserveCreditsInTransaction } from '../wallet.js';
+import { getLiveCreditAvailable, reserveCreditsInTransaction } from '../wallet.js';
 import { evaluationScenarios, type EvaluationContext, type EvaluationCriterion } from './provider.js';
 import { cancelEvaluationInTransaction } from './worker.js';
 import { liveEvaluationMaximumSeconds } from './openai-config.js';
+import { admitLiveEvaluation, liveEnabledForStudent, noLiveLimits, type LiveLimits } from './live-policy.js';
 
 class EvaluationError extends Error {
   constructor(readonly statusCode: 400 | 403 | 404 | 409 | 429, message: string) {
@@ -78,6 +79,8 @@ function errorMessage(code: string | null): string | null {
     case 'invalid': return 'O provedor devolveu um relatório inválido. Os créditos reservados foram liberados.';
     case 'credentials': return 'O acesso ao provedor de IA precisa ser configurado pelo administrador. Os créditos reservados foram liberados.';
     case 'quota': return 'O provedor de IA está sem saldo ou cota disponível. Os créditos reservados foram liberados.';
+    case 'authorization': return 'A autorização para avaliação real não está ativa. Os créditos reservados foram liberados.';
+    case 'budget': return 'A capacidade de avaliação real foi atingida. Os créditos reservados foram liberados.';
     case 'media': return 'Não foi possível preparar a mídia para avaliação. Os créditos reservados foram liberados.';
     case 'permanent':
     case 'temporary': return 'A avaliação falhou. Os créditos reservados foram liberados.';
@@ -145,10 +148,15 @@ async function studentMutation<T>(request: FastifyRequest, task: (client: PoolCl
   });
 }
 
-export async function registerEvaluations(app: FastifyInstance, provider: 'mock' | 'openai' = 'mock') {
+export async function registerEvaluations(app: FastifyInstance, provider: 'mock' | 'openai' = 'mock', instance: LiveLimits = noLiveLimits) {
   app.get('/api/evaluation-capabilities', async request => {
-    await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']);
-    return { provider, simulated: provider === 'mock', maximumSeconds: provider === 'openai' ? liveEvaluationMaximumSeconds : 1800 };
+    const actor = await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']);
+    if (provider === 'mock') return { provider, simulated: true, maximumSeconds: 1800, enabled: true };
+    const enabled = actor.user.roles.includes('student') && await liveEnabledForStudent(app.db, actor.org.id, actor.user.id, instance);
+    return {
+      provider, simulated: false, maximumSeconds: liveEvaluationMaximumSeconds, enabled,
+      availableCredits: enabled ? await getLiveCreditAvailable(app.db, { orgId: actor.org.id, userId: actor.user.id }) : 0,
+    };
   });
   app.post('/api/evaluations', async (request, reply) => {
     const input = createInput.safeParse(request.body);
@@ -190,9 +198,12 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
       const scenario = provider === 'openai' ? 'success' : input.data.scenario ?? config.evaluationScenario;
       const id = randomUUID();
       const context = await contextFor(client, actor, found.rows[0], id, provider);
+      if (provider === 'openai' && !await liveEnabledForStudent(client, actor.org.id, actor.user.id, instance)) {
+        throw new EvaluationError(403, 'Esta conta ainda não tem acesso à avaliação real.');
+      }
       const reservation = await reserveCreditsInTransaction(client, {
         orgId: actor.org.id, userId: actor.user.id, requestId: id,
-        durationMicroseconds: context.recording.durationMicroseconds,
+        durationMicroseconds: context.recording.durationMicroseconds, provider,
       });
       if (reservation.status !== 'reserved') throw new EvaluationError(409, 'A reserva desta avaliação não está disponível.');
       await client.query(
@@ -200,6 +211,10 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [id, actor.org.id, actor.user.id, recordingId, clientKey, scenario, context, reservation.amount, provider],
       );
+      if (provider === 'openai') await admitLiveEvaluation(client, {
+        orgId: actor.org.id, studentId: actor.user.id, requestId: id, minutes: reservation.amount,
+        hasAudio: context.recording.hasAudio, instance,
+      });
       await client.query('INSERT INTO evaluation_jobs(request_id) VALUES ($1)', [id]);
       await client.query("INSERT INTO evaluation_outbox(request_id,event_type) VALUES ($1,'queued')", [id]);
       return { id, status: 'queued', credits: reservation.amount, simulated: provider === 'mock' };

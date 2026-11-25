@@ -12,7 +12,7 @@ import { chromium, expect, type Browser } from '@playwright/test';
 import { createApp } from '../server/app.js';
 import { createDatabase } from '../server/db.js';
 import { localDatabaseUrl } from '../server/config.js';
-import { evaluationConfiguration, loadOpenAIKey } from '../server/evaluation/openai-config.js';
+import { evaluationConfiguration } from '../server/evaluation/openai-config.js';
 import { createOpenAIProvider } from '../server/evaluation/openai-runtime.js';
 import type { EvaluationReport } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
@@ -20,7 +20,10 @@ import { getWallet, grantCredits } from '../server/wallet.js';
 
 if (!process.argv.includes('--live')) throw new Error('Este teste usa a API paga. Execute com --live para habilitar.');
 if (process.platform !== 'darwin') throw new Error('Este teste sintético usa a voz local do macOS (say).');
-const apiKey = await loadOpenAIKey();
+const apiKey = process.env.OPENAI_SMOKE_API_KEY?.trim();
+if (!apiKey || apiKey === process.env.OPENAI_API_KEY?.trim()) {
+  throw new Error('Configure OPENAI_SMOKE_API_KEY com uma credencial de projeto exclusiva para este smoke.');
+}
 const config = evaluationConfiguration();
 const execute = promisify(execFile);
 const schema = `openai_smoke_${randomUUID().replaceAll('-', '')}`;
@@ -42,12 +45,15 @@ try {
   await db.query("INSERT INTO domains(hostname,org_id) VALUES('127.0.0.1',$1)", [orgId]);
   await db.query("INSERT INTO users(id,org_id,email,name,roles,status) VALUES($1,$2,'sintetico@example.test','Pessoa sintética',ARRAY['student'],'active')", [userId, orgId]);
   await db.query("INSERT INTO sessions(org_id,user_id,hostname,token_hash,expires_at) VALUES($1,$2,'127.0.0.1',$3,now()+interval '1 hour')", [orgId, userId, createHash('sha256').update(token).digest('hex')]);
-  await grantCredits(db, { orgId, userId, amount: 6, source: 'manual', sourceRef: 'synthetic-smoke', eventKey: randomUUID(), reason: 'Validação sintética da OpenAI' });
-  app = await createApp({ databaseUrl: databaseUrl.toString(), storageRoot: join(directory, 'objects'), evaluationProvider: 'openai' });
+  const instance = { requests: 2, minutes: 10, calls: 36 };
+  await db.query('INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision) VALUES($1,true,$2,$2,1)', [orgId, instance]);
+  await db.query('INSERT INTO live_evaluation_members(org_id,student_id) VALUES($1,$2)', [orgId,userId]);
+  await grantCredits(db, { orgId, userId, liveEligible: true, actorUserId: userId, amount: 6, source: 'manual', sourceRef: 'synthetic-smoke', eventKey: randomUUID(), reason: 'Validação sintética da OpenAI' });
+  app = await createApp({ databaseUrl: databaseUrl.toString(), storageRoot: join(directory, 'objects'), evaluationProvider: 'openai', liveLimits: instance });
   const address = await app.listen({ host: '127.0.0.1', port: 0 });
   const headers = { host: new URL(address).host, cookie: `matraca_session=${token}`, 'x-matraca-request': '1' };
   const provider = createOpenAIProvider(db, app.storage, {
-    apiKey, audioModel: config.audioModel, reportModel: config.reportModel,
+    apiKey, audioModel: config.audioModel, reportModel: config.reportModel, instance,
   });
   const aiff = join(directory, 'speech.aiff'), wav = join(directory, 'speech.wav'), video = join(directory, 'presentation.mp4');
   await execute('/usr/bin/say', ['-v', 'Luciana', '-r', '155', '-o', aiff,
