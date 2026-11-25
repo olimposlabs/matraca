@@ -31,7 +31,7 @@ As evidências técnicas abaixo permanecem históricas e não representam a homo
 | --- | --- |
 | Portal direto | Crie uma conta, confirme o link no navegador que o solicitou, preencha o perfil, escolha diagnóstico ou trilha e simule a compra. Confira matrícula e saldo. |
 | Câmera, microfone e relatório | No computador do sandbox, conceda e negue permissões, grave com áudio e vídeo, faça uma prática de 30 s e uma revisão de 5 min. Confira prévia, reprodução, navegação aos trechos, débito e histórico. |
-| Celular físico | **Bloqueado neste sandbox.** O servidor escuta apenas no loopback do computador e usa domínios `.localhost`. Para verificar a câmera no aparelho, é preciso uma origem HTTPS confiável acessível nele e que preserve o roteamento dos três portais. |
+| Celular físico | **Captura e reprodução obrigatórias para o aceite manual.** Ambas estão bloqueadas neste sandbox, que escuta no loopback do computador e usa domínios `.localhost`. O aceite manual permanece pendente até confirmar as duas no aparelho, em uma origem HTTPS confiável e acessível que preserve o roteamento dos três portais. |
 | Domínios e revogação | Entre em duas abas com o mesmo e-mail nos portais direto e parceiro. Compare progresso, arquivos e carteira. Encerre uma sessão e confirme que a outra permanece ativa. Suspenda uma conta sintética e verifique que ela precisa voltar à tela de acesso. |
 | Escola e curso | Confira marca, nomenclatura, cópia da versão publicada, escola, professor certificado e aluno em duas turmas. Transfira um aluno sintético e confira o acesso da escola de destino e o histórico de turma encerrada. |
 | Professor e aluno | Abra uma evidência autorizada, registre a mentoria, responda a uma ação e compare a nova tentativa no portal do aluno. |
