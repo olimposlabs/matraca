@@ -1,6 +1,6 @@
 # Matraca · equipes comerciais de empresas
 
-Extensão editorial preparada em 25/11/2026: **25 vídeos, 25 carrosséis e 25 posts estáticos, totalizando 75 peças**, IDs W-V31–W-V55, W-C31–W-C55 e W-P31–W-P55. As 90 peças anteriores de white label permanecem no arquivo próprio. Aqui o comprador é a empresa que deseja capacitar sua equipe comercial. **Uso corporativo não exige revenda do serviço.** Identidade da experiência e eventual uso de marca própria são escolhas de escopo, não uma obrigação de white label para o cliente.
+Extensão editorial preparada em 25/11/2026: **35 vídeos, 35 carrosséis e 35 posts estáticos, totalizando 105 peças**, IDs W-V31–W-V65, W-C31–W-C65 e W-P31–W-P65. As 90 peças anteriores de white label permanecem no arquivo próprio. Aqui o comprador é a empresa que deseja capacitar sua equipe comercial. **Uso corporativo não exige revenda do serviço.** Identidade da experiência e eventual uso de marca própria são escolhas de escopo, não uma obrigação de white label para o cliente.
 
 ## Estado do produto e decisão de produção
 
@@ -21,7 +21,7 @@ Os roteiros são peças de planejamento, não conteúdo publicado. Todos os diá
 - **Conversão:** “envie PARCERIA” é um convite para conversa de escopo sobre equipe corporativa, não automação implantada. Pedir função, público, situação e rotina; não solicitar dados de clientes ou gravações de vendas em comentários/DMs. Distribuir CTAs entre salvar, compartilhar com liderança, discutir uma pergunta e conversar sobre piloto.
 - **Medição:** distinguir patrocinador, decisor, gestor e participante. Para conteúdo, observar alcance com denominadores, salvamentos, compartilhamentos e conversas qualificadas. Para piloto, separar comunicação na tarefa, adoção do programa e indicadores de negócio. Métricas propostas não são benchmarks nem resultados do Matraca.
 
-## Vídeos · 25 roteiros completos
+## Vídeos · 35 roteiros completos
 
 <a id="w-v31"></a>
 
@@ -948,7 +948,377 @@ Um catálogo de atividades pode mudar com produto, público e prioridades comerc
 
 **Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
 
-## Carrosséis · 25 roteiros de sete páginas
+<a id="w-v56"></a>
+
+### W-V56 — Um colega pode ajudar a revisar a tarefa
+
+**Público e papéis:** Patrocinador: gerente de enablement. Decisor: direção comercial. Gestor: líder que organiza a dinâmica. Usuário: vendedores participantes em pares.
+
+**Objetivo e funil:** Consideração: propor revisão entre pares com critério e escopo definidos, sem anunciar compartilhamento automático de gravações no produto.
+
+**Cenário e objetos:** Sala de formação com duas cadeiras lado a lado, ficha de cenário fictício e cartão de critério “pedido final”. A dinâmica acontece presencialmente; nenhum login, tela compartilhada ou acesso de aluno a gravação alheia.
+
+**Roupa e caracterização:** Pessoa A com camisa azul-clara; pessoa B com blusa verde-sálvia; facilitadora com camisa creme. Roupas sem marca, postura horizontal de colaboração.
+
+**Som, luz e ritmo:** Diálogo natural com pausas de escuta. Sem música nas falas entre pares; trilha instrumental baixa nos inserts. Lapelas individuais e luz lateral suave.
+
+**Capa — texto final:** “Revisão em pares: qual critério vocês combinam?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano de dois. Pessoa A termina uma fala encenada e olha para a colega. | Pessoa A: “Qual parte do pedido ficou clara?” | UMA PERGUNTA PARA A REVISÃO | Corte seco para o cartão. |
+| 2 · 04–12s | Close superior na ficha “o pedido final é reconhecível?”. Facilitadora aponta o texto. | Antes da dinâmica, o grupo combina o critério. O colega observa aquela tarefa e explica o que conseguiu identificar. | CRITÉRIO COMBINADO ANTES | Corte para pessoa B. |
+| 3 · 12–21s | Plano médio de B, olhando A fora de quadro, sem atribuir nota. | Pessoa B: “Entendi que você quer uma nova reunião. Ainda não ouvi qual informação precisa estar pronta para ela.” | EXEMPLO FICTÍCIO DE OBSERVAÇÃO | Corte em eixo para A. |
+| 4 · 21–30s | Plano médio de A anotando uma ação no caderno. | Pessoa A: “Vou explicitar a informação necessária no encerramento e fazer outra tentativa no mesmo cenário.” | UMA AÇÃO PARA A NOVA TENTATIVA | Corte para facilitadora. |
+| 5 · 30–40s | Plano médio da facilitadora com ficha de programa. Pares permanecem desfocados ao fundo. | A dinâmica pode complementar práticas gravadas do piloto Matraca. A empresa define acompanhamento e acesso; aqui a revisão acontece presencialmente. | DINÂMICA PRESENCIAL + PRÁTICA GRAVADA | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal da facilitadora, cartão do critério à vista. | Salve para o treinamento e escolha um critério para a próxima dupla. | SALVE PARA O TREINAMENTO | Pausa final de dois segundos. |
+
+**Legenda final para publicação:**
+
+Um par pode ajudar a tornar a orientação mais compreensível quando ambos sabem o que observar. A cena propõe uma dinâmica presencial com tarefa fictícia, critério e próxima ação. Ela pode complementar a rotina de práticas gravadas, conforme o desenho do programa. Salve para discutir com enablement e escolha um critério que os participantes consigam explicar. #AprendizagemEntrePares #TreinamentoComercial #Matraca
+
+**Acessibilidade e descrição visual:** Duas pessoas revisam presencialmente uma fala fictícia usando um cartão de pedido final. A observação leva a uma ação específica para a próxima tentativa. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Salvamentos e compartilhamentos com facilitadores; conversas sobre desenho de dinâmica e responsabilidades.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v57"></a>
+
+### W-V57 — O líder também pode conferir se orientou com clareza
+
+**Público e papéis:** Patrocinador: direção comercial ou T&D. Decisor: direção comercial. Gestor: enablement e gerentes. Usuário: líderes que acompanham a prática de vendedores.
+
+**Objetivo e funil:** Consideração: mostrar um líder revendo sua orientação a partir da compreensão do participante, sem avaliar desempenho de RH.
+
+**Cenário e objetos:** Mesa de coaching com caderno de exercício, ficha “orientação dada” e cartão “próxima ação”. Cenário fictício de apresentação de proposta; nenhum relato pessoal ou avaliação de funcionário real.
+
+**Roupa e caracterização:** Gerente com camisa cinza-azulada e calça bege; vendedora com blusa verde. Sentados no mesmo lado da mesa, câmera à altura dos olhos.
+
+**Som, luz e ritmo:** Conversa respeitosa, sem música durante as dúvidas. Som discreto de caneta nos inserts; trilha leve no fechamento. Luz suave sem contraste dramático.
+
+**Capa — texto final:** “O participante entendeu a sua orientação?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano médio da gerente, caderno fechado e atenção na interlocutora. | Gerente: “Como você entendeu o próximo exercício?” | O LÍDER TAMBÉM CONFERE | Corte em eixo para vendedora. |
+| 2 · 04–12s | Plano médio da vendedora, apontando uma anotação vaga no caderno. | Vendedora: “Entendi que preciso explicar melhor, mas ainda não sei qual parte devo mudar primeiro.” | DÚVIDA SOBRE A ORIENTAÇÃO | Corte para gerente. |
+| 3 · 12–21s | Plano médio da gerente escrevendo uma instrução específica. | Gerente: “Vamos trabalhar o exemplo. Na próxima tentativa, conecte o recurso à rotina de quem vai ouvir.” | FOCO: EXEMPLO LIGADO À ROTINA | Corte para ficha de tarefa. |
+| 4 · 21–30s | Close superior na ficha, com cenário e critério explícitos. A vendedora lê sua ação. | Vendedora: “Vou manter o cenário e trocar o exemplo por uma situação da rotina informada.” | PARTICIPANTE EXPLICA O COMBINADO | Corte para plano de dois. |
+| 5 · 30–40s | Plano de dois. Gerente fala à câmera sem simular resultado medido. | O registro da prática pode apoiar essa conversa. No piloto Matraca, o programa define quem acompanha e como retoma a orientação. | REGISTRO + CONVERSA DE ACOMPANHAMENTO | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal da gerente. | Envie aos líderes e testem essa pergunta no próximo coaching. | COMO VOCÊ ENTENDEU O EXERCÍCIO? | Segurar dois segundos de leitura. |
+
+**Legenda final para publicação:**
+
+Pedir que o participante explique o combinado pode revelar uma orientação ampla demais. Na cena fictícia, a gerente transforma “explicar melhor” em uma ação sobre o exemplo. O foco é a comunicação do acompanhamento. Compartilhe com os líderes e discutam como conferir a compreensão antes de encerrar o coaching. #LiderançaComercial #FeedbackDeTreinamento #Matraca
+
+**Acessibilidade e descrição visual:** Gerente pergunta como a vendedora entendeu o exercício e reformula uma orientação ampla em tarefa específica. Ambas registram o combinado em cenário fictício. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Compartilhamentos com gerentes; conversas de T&D sobre preparação dos líderes para acompanhar práticas.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v58"></a>
+
+### W-V58 — Experiências diferentes pedem perguntas de entrada
+
+**Público e papéis:** Patrocinador: head de enablement. Decisor: direção comercial. Gestor: coordenador do programa e líderes. Usuário: vendedores com experiências e necessidades declaradas distintas.
+
+**Objetivo e funil:** Consideração: propor recorte inicial de tarefas a partir de objetivo e amostra, sem inferir habilidade por cargo ou tempo de empresa.
+
+**Cenário e objetos:** Oficina com duas fichas fictícias de participantes: “quero organizar a proposta” e “quero responder perguntas específicas”. Não usar idade, salário, ranking ou rótulos de melhor/pior.
+
+**Roupa e caracterização:** Facilitadora com camisa creme; participante A com camiseta azul; participante B com camisa verde. Figurinos de mesma formalidade, sem sinalizar senioridade visual.
+
+**Som, luz e ritmo:** Oficina serena, som de fichas. Trilha instrumental discreta nos planos de mesa; falas sem música. Luz frontal suave e foco nas tarefas.
+
+**Capa — texto final:** “Qual prática cada pessoa precisa começar?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano aberto da mesa com duas fichas de objetivo; facilitadora olha a câmera. | Experiência traz contexto. Qual tarefa a pessoa precisa praticar? | COMECE PELO OBJETIVO DECLARADO | Corte seco para ficha A. |
+| 2 · 04–12s | Close na ficha A. Participante A aponta o objetivo escrito. | Participante A: “Quero organizar minha explicação de proposta.” O primeiro exercício pode observar abertura, exemplo e encerramento. | OBJETIVO: ORGANIZAR A EXPLICAÇÃO | Corte para ficha B. |
+| 3 · 12–21s | Close na ficha B, sem sobrepor à primeira. | Participante B: “Quero responder uma pergunta técnica com clareza.” A tarefa pede outro recorte e conteúdo revisado pelos responsáveis. | OBJETIVO: RESPONDER UMA PERGUNTA | Corte para facilitadora. |
+| 4 · 21–30s | Plano médio da facilitadora com cartões objetivo, amostra e critério. | A equipe examina objetivos declarados e amostras pertinentes para escolher a prática. O cargo não substitui essa observação. | OBJETIVO + AMOSTRA + CRITÉRIO | Corte para quadro do programa. |
+| 5 · 30–40s | Plano médio diante de duas atividades, ambas sem nota. | No piloto Matraca, atividades e percursos podem ser definidos pela organização. A adequação ao participante precisa ser verificada no desenho pedagógico. | ATIVIDADES COM RECORTES DIFERENTES | Corte direto para CTA. |
+| 6 · 40–48s | Close da facilitadora com ficha em branco. | Salve para o planejamento. Quais objetivos sua equipe já declarou? | PERGUNTE ANTES DE ESCOLHER A TAREFA | Final de dois segundos. |
+
+**Legenda final para publicação:**
+
+Experiência declarada ajuda a compreender o contexto, mas a escolha da prática pede objetivo, tarefa e evidência pertinente. O exemplo mostra dois recortes diferentes sem classificar pessoas por cargo ou tempo de empresa. Compartilhe com enablement e revisem quais perguntas de entrada ajudam a definir as primeiras atividades. #DesenvolvimentoComercial #DesignDeTreinamento #Matraca
+
+**Acessibilidade e descrição visual:** Duas pessoas apresentam objetivos diferentes de comunicação em fichas. A facilitadora relaciona objetivo, amostra e critério para discutir as atividades iniciais. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Salvamentos e conversas com coordenadores sobre entrada no programa e necessidades declaradas.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v59"></a>
+
+### W-V59 — Nova vertical: a equipe conhece o contexto que vai explicar?
+
+**Público e papéis:** Patrocinador: diretor de expansão comercial. Decisor: direção comercial. Gestor: enablement com especialista da vertical. Usuário: vendedores que entram em um novo segmento.
+
+**Objetivo e funil:** Descoberta: mostrar preparação de linguagem e cenário para uma nova vertical, sem prometer domínio setorial pela IA.
+
+**Cenário e objetos:** Sala de preparação com quadro “conhecido / a confirmar” e cenário fictício de empresa que organiza equipes de manutenção. Pasta de conteúdo setorial aprovada, sem nome ou dado de cliente.
+
+**Roupa e caracterização:** Especialista com camisa branca; gerente de expansão com blusa verde; vendedor com camisa azul-clara. Sem capacete, jaleco ou uniforme setorial que sugira credencial.
+
+**Som, luz e ritmo:** Diálogo de preparação; sem trilha durante perguntas. Som de marcador e instrumental leve nos inserts. Luz uniforme no quadro.
+
+**Capa — texto final:** “Nova vertical. Quais palavras precisam de contexto?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano médio da gerente diante do quadro, apontando o título da nova vertical. | Entrar numa vertical também muda o contexto da explicação. | PREPARAÇÃO PARA NOVO SEGMENTO | Corte seco para cenário. |
+| 2 · 04–12s | Close superior em ficha fictícia de manutenção com termos de rotina e uma pergunta. | A equipe começa separando o que conhece da rotina e o que precisa confirmar com um especialista responsável. | CONHECIDO • A CONFIRMAR | Corte para vendedor. |
+| 3 · 12–21s | Plano médio do vendedor olhando a especialista fora de quadro. | Vendedor: “Quando vocês falam em janela de atendimento, qual situação da rotina precisamos considerar no exercício?” | PERGUNTA SOBRE O CONTEXTO | Corte em eixo para especialista. |
+| 4 · 21–30s | Plano médio da especialista, anotando definição autorizada numa ficha editorial. | O conteúdo validado vira um cenário fictício. A atividade pede explicar uma proposta usando um exemplo coerente com aquela rotina. | CONTEXTO VALIDADO → EXERCÍCIO | Corte para gerente. |
+| 5 · 30–40s | Plano médio da gerente com ficha de critério. | O piloto Matraca pode organizar essa prática de comunicação. A precisão setorial continua com os responsáveis pelo conteúdo da empresa. | COMUNICAÇÃO COM REVISÃO DE CONTEÚDO | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal da gerente. | Envie à expansão e ao treinamento. Qual contexto precisa ser confirmado primeiro? | ALINHE EXPANSÃO E ENABLEMENT | Dois segundos finais. |
+
+**Legenda final para publicação:**
+
+Uma nova vertical pede vocabulário, exemplos e perguntas ligados à rotina do público. O exercício começa por separar informação conhecida de contexto a confirmar com responsáveis. Depois, a equipe cria um cenário fictício para praticar a explicação. Compartilhe com expansão e enablement antes de preparar a primeira atividade do segmento. #ExpansãoComercial #TreinamentoPorVertical #Matraca
+
+**Acessibilidade e descrição visual:** Equipe prepara um cenário fictício de manutenção e separa informações conhecidas de pontos a confirmar com especialista. O contexto validado orienta uma atividade de comunicação. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Compartilhamentos entre expansão, especialistas e treinamento; conversas sobre entrada em vertical definida.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v60"></a>
+
+### W-V60 — O evento tem conversas diferentes para ensaiar
+
+**Público e papéis:** Patrocinador: marketing de campo e direção comercial. Decisor: direção comercial. Gestor: enablement e líder da equipe do evento. Usuário: vendedores e especialistas participantes.
+
+**Objetivo e funil:** Descoberta: transformar preparação de feira ou encontro profissional em tarefas de comunicação por situação.
+
+**Cenário e objetos:** Espaço cenográfico com bancada neutra, duas cadeiras de reunião e cartão “evento fictício”. Sem marca de feira, ingresso, agenda real ou promessa de geração de leads.
+
+**Roupa e caracterização:** Vendedora com polo azul sem logo; especialista com camisa creme; líder com sobrecamisa verde. Sem crachás reais ou uniformes de patrocinador.
+
+**Som, luz e ritmo:** Montagem em três posições do set, trilha discreta de bastidor. Som ambiente controlado; nenhum ruído de multidão sobre a fala. Luz suave consistente.
+
+**Capa — texto final:** “Antes do evento, ensaie as conversas.”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano aberto da bancada e das cadeiras; líder segura três fichas. | No evento, sua equipe terá mais de uma conversa. | PREPARAÇÃO COMERCIAL PARA EVENTO | Corte para bancada. |
+| 2 · 04–12s | Plano médio da vendedora na bancada, diante de visitante fictício fora de quadro. | Primeiro contato: uma apresentação breve pode dizer quem a equipe atende e perguntar qual assunto interessa à pessoa. | ABERTURA BREVE + PERGUNTA | Corte para as cadeiras. |
+| 3 · 12–21s | Plano médio da especialista sentada, ficha de cenário na mão. | Reunião agendada: o exercício pode pedir uma explicação ligada à situação já informada, com exemplo e condição de uso. | REUNIÃO COM CONTEXTO | Corte para ficha de encerramento. |
+| 4 · 21–30s | Close superior em cartão ação, responsável e informação necessária. | Encerramento: a prática observa se o próximo contato tem propósito, responsável e informação que precisa ser preparada. | PRÓXIMO CONTATO COM PROPÓSITO | Corte para líder. |
+| 5 · 30–40s | Plano médio da líder diante das três posições do set. | O piloto Matraca pode reunir atividades para esse preparo. A empresa define conteúdo, papéis e condições das conversas que pretende ensaiar. | TRÊS SITUAÇÕES • ATIVIDADES DISTINTAS | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal da líder. | Salve para o próximo evento e escolha qual conversa merece o primeiro ensaio. | LEVE AO TIME DO EVENTO | Pausa final de dois segundos. |
+
+**Legenda final para publicação:**
+
+Bancada, reunião agendada e encerramento pedem escolhas diferentes de comunicação. O preparo pode reunir tarefas curtas para cada situação, com materiais aprovados e papéis claros. A cena representa um evento fictício. Compartilhe com marketing de campo e com a liderança que prepara a equipe para o próximo encontro. #PreparaçãoParaEventos #MarketingDeCampo #Matraca
+
+**Acessibilidade e descrição visual:** Equipe ensaia em três posições de um evento fictício: bancada, reunião e encerramento. Fichas indicam objetivos distintos para cada conversa. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Salvamentos e compartilhamentos com marketing de campo; conversas sobre equipe e situações de um evento.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v61"></a>
+
+### W-V61 — A pergunta de campo chega a produto com contexto?
+
+**Público e papéis:** Patrocinador: marketing de produto e RevOps. Decisor: direção comercial. Gestor: enablement com responsável de produto. Usuário: vendedores que formulam dúvidas e especialistas que as recebem.
+
+**Objetivo e funil:** Consideração: propor treino de formulação de pergunta interna, sem capturar chamadas ou integrar dados de CRM.
+
+**Cenário e objetos:** Mesa de alinhamento com caixa “perguntas de campo” e ficha autoral de contexto, dúvida e resposta necessária. Exemplo fictício sobre aprovação de escala; nenhum relato de cliente real.
+
+**Roupa e caracterização:** Vendedora com camisa azul-clara; responsável de produto com blusa creme; facilitador com polo verde. Sem marcas ou crachás.
+
+**Som, luz e ritmo:** Diálogo interno com som de ficha sendo entregue. Sem trilha nas perguntas; instrumental baixo nos inserts. Luz frontal suave e câmera no eixo da mesa.
+
+**Capa — texto final:** “Produto recebeu uma pergunta ou só um título?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Close da ficha com texto “aprovação de escala?”. Produto olha a vendedora. | Produto: “Qual situação você precisa entender melhor?” | PERGUNTA INTERNA COM CONTEXTO | Corte seco para vendedora. |
+| 2 · 04–12s | Plano médio da vendedora, mostrando ficha de cenário fictício. | Vendedora: “No exercício, uma equipe altera turnos e quer saber quem confere a mudança antes de divulgá-la.” | SITUAÇÃO INFORMADA | Corte para ficha em detalhe. |
+| 3 · 12–21s | Close superior na ficha com campos contexto, dúvida e uso da resposta. | A tarefa pode pedir uma pergunta interna que informe o cenário, a dúvida específica e onde a resposta será usada. | CONTEXTO • DÚVIDA • USO | Corte para produto. |
+| 4 · 21–30s | Plano médio de produto, apontando a pergunta reescrita sem improvisar solução técnica. | Produto: “Agora consigo identificar o ponto que precisa de validação e quem deve participar dessa resposta.” | ENCAMINHAMENTO COMPREENSÍVEL | Corte para facilitador. |
+| 5 · 30–40s | Plano médio do facilitador com duas versões da pergunta em papel. | O piloto Matraca pode organizar práticas de comunicação interna da equipe. A resposta técnica e sua aprovação continuam com os responsáveis. | PRÁTICA DE FORMULAÇÃO DA PERGUNTA | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal do facilitador. | Envie a vendas e produto. Qual campo falta nas perguntas que chegam? | ALINHE VENDAS E PRODUTO | Final de dois segundos. |
+
+**Legenda final para publicação:**
+
+Uma pergunta interna fica mais fácil de encaminhar quando contém situação, dúvida e uso esperado da resposta. O exercício trabalha a formulação da pergunta com cenário fictício, sem extrair dados de chamadas. Compartilhe com vendas e produto e escolham uma pergunta recorrente para transformar em tarefa de comunicação. #AlinhamentoVendasProduto #ComunicaçãoInterna #Matraca
+
+**Acessibilidade e descrição visual:** Vendedora e responsável de produto revisam uma pergunta fictícia, acrescentando contexto, dúvida específica e uso da resposta. O facilitador mostra as duas formulações. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Compartilhamentos entre vendas e produto; conversas sobre comunicação interna e responsabilidades de conteúdo.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v62"></a>
+
+### W-V62 — Uma pergunta difícil pode ser respondida com um encaminhamento claro
+
+**Público e papéis:** Patrocinador: gerente comercial. Decisor: direção comercial. Gestor: enablement com responsáveis de conteúdo. Usuário: vendedores e especialistas.
+
+**Objetivo e funil:** Consideração: mostrar treino para reconhecer informação ausente e organizar resposta, sem ensinar evasão ou inventar certeza.
+
+**Cenário e objetos:** Sala de formação com caixa de cartões “perguntas a esclarecer”. Pergunta fictícia: compatibilidade com uma rotina não descrita no material. Pasta de conteúdo aprovada permanece fechada.
+
+**Roupa e caracterização:** Vendedor com camisa azul; facilitadora com blusa verde; interlocutora fictícia com camiseta creme. Sem uniforme ou autoridade técnica presumida.
+
+**Som, luz e ritmo:** Conversa pausada com espaço antes da resposta. Sem música tensa; trilha leve apenas na síntese. Luz suave e close sem dramaticidade.
+
+**Capa — texto final:** “Quando a informação ainda precisa ser confirmada.”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Close do vendedor olhando um cartão e fazendo pausa breve. | Nem toda pergunta pede uma resposta imediata. | INFORMAÇÃO A CONFIRMAR | Corte para interlocutora. |
+| 2 · 04–12s | Plano médio da interlocutora, cartão de cenário na mão. | Interlocutora: “Esse fluxo funciona nesta configuração específica?” O exercício informa que a confirmação ainda não está disponível. | CONDIÇÃO DO CENÁRIO FICTÍCIO | Corte em eixo para vendedor. |
+| 3 · 12–21s | Plano médio do vendedor, postura atenta, sem olhar para material de resposta pronta. | Vendedor: “Ainda preciso confirmar essa configuração. Posso registrar os requisitos e encaminhar a pergunta à pessoa responsável.” | RECONHECER + DELIMITAR + ENCAMINHAR | Corte para três cartões. |
+| 4 · 21–30s | Close superior em cartões com os três verbos. Facilitadora aponta um por vez. | A revisão observa se a fala reconhece a informação ausente, delimita a dúvida e explica o próximo passo de forma compreensível. | CRITÉRIO DA PRÁTICA | Corte para facilitadora. |
+| 5 · 30–40s | Plano médio da facilitadora diante da caixa de perguntas. | Uma biblioteca de cenários pode reunir essas situações. No piloto Matraca, a empresa define atividades, critérios e revisão do conteúdo. | BIBLIOTECA DE CENÁRIOS • piloto | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal da facilitadora. | Salve para o treinamento. Qual tipo de pergunta merece um cenário próprio? | DISCUTA COM A LIDERANÇA | Pausa de dois segundos. |
+
+**Legenda final para publicação:**
+
+Reconhecer uma informação ainda não confirmada pode fazer parte de uma resposta clara. O exemplo fictício trabalha delimitação da dúvida e encaminhamento responsável. A empresa define quem pode confirmar o conteúdo e quais condições orientam a conversa. Salve para a biblioteca de perguntas do treinamento. #PerguntasDifíceis #ComunicaçãoComercial #Matraca
+
+**Acessibilidade e descrição visual:** Um vendedor ensaia resposta a uma configuração ainda não confirmada. Cartões organizam reconhecer a lacuna, delimitar a dúvida e encaminhar o próximo passo. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Salvamentos e comentários sobre categorias de perguntas; conversas sobre biblioteca de cenários e revisão.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v63"></a>
+
+### W-V63 — O especialista convidado precisa de um briefing de aprendizagem
+
+**Público e papéis:** Patrocinador: head de enablement. Decisor: direção comercial ou T&D. Gestor: coordenador da formação. Usuário: especialista convidado e equipe participante.
+
+**Objetivo e funil:** Consideração: transformar participação de especialista em atividade de aprendizagem com objetivo e retomada, sem anunciar evento ou agenda nativa no produto.
+
+**Cenário e objetos:** Sala de preparação com cadeira de convidado e prancheta de briefing. Campos público, situação, dúvida e prática posterior. Especialista encenado, sem credencial profissional específica.
+
+**Roupa e caracterização:** Coordenadora com camisa creme e calça azul; especialista com camisa verde-escura. Sem jaleco, diploma, crachá ou símbolo institucional.
+
+**Som, luz e ritmo:** Diálogo de preparação, voz limpa e sem trilha durante perguntas. Som de prancheta sobre mesa; instrumental discreto no fechamento.
+
+**Capa — texto final:** “Antes do convidado falar, alinhe a tarefa.”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano de dois. Coordenadora entrega a prancheta ao especialista. | Coordenadora: “O que a equipe vai praticar depois?” | BRIEFING PARA O ESPECIALISTA | Corte seco para prancheta. |
+| 2 · 04–12s | Close superior nos campos público e situação. Coordenadora sublinha a situação fictícia. | O briefing informa quem participa, qual conversa comercial precisa preparar e quais dúvidas de conteúdo serão examinadas. | PÚBLICO • CONVERSA • DÚVIDAS | Corte para especialista. |
+| 3 · 12–21s | Plano médio do especialista olhando a coordenadora fora de quadro. | Especialista: “Vou explicar a condição de aprovação e usar um exemplo que a equipe possa transformar em resposta.” | CONTRIBUIÇÃO LIGADA À PRÁTICA | Corte para ficha de atividade. |
+| 4 · 21–30s | Close da ficha “explique a condição para o destinatário do cenário”. Mão acrescenta critério. | Depois, o programa propõe uma tarefa com cenário e critério. O conhecimento apresentado encontra uma oportunidade de ser explicado pelo participante. | CONTEÚDO → TAREFA → REVISÃO | Corte para plano de dois. |
+| 5 · 30–40s | Plano de dois, coordenadora fala à câmera. | O piloto Matraca pode organizar a atividade gravada e seu acompanhamento. A participação do especialista é combinada pela empresa fora da ferramenta. | ATIVIDADE NO PROGRAMA • encontro a combinar | Corte direto para CTA. |
+| 6 · 40–48s | Close da coordenadora. | Envie ao responsável pela formação antes de convidar o próximo especialista. | COMPARTILHE COM T&D E ENABLEMENT | Dois segundos finais. |
+
+**Legenda final para publicação:**
+
+Um convidado pode contribuir melhor para o programa quando conhece o público, a situação e a prática que virá depois. O briefing conecta conteúdo a uma tarefa de comunicação com revisão. O encontro é uma decisão da empresa; o piloto Matraca pode apoiar a organização da atividade gravada. Compartilhe com quem prepara a próxima formação. #EspecialistaConvidado #DesignDeAprendizagem #Matraca
+
+**Acessibilidade e descrição visual:** Coordenadora e especialista encenado preparam um briefing de público, conversa, dúvidas e prática posterior. A atividade gravada é separada do encontro organizado pela empresa. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Compartilhamentos com responsáveis de formação; conversas sobre integrar conteúdo especializado à prática.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v64"></a>
+
+### W-V64 — O kickoff precisa mostrar como começar
+
+**Público e papéis:** Patrocinador: direção comercial. Decisor: direção comercial/T&D. Gestor: enablement e líderes diretos. Usuário: participantes do programa de prática.
+
+**Objetivo e funil:** Decisão: apresentar um início de programa que explique finalidade, tarefa e acompanhamento, sem cronograma ou disponibilidade comercial presumidos.
+
+**Cenário e objetos:** Sala de início de treinamento com três cartões: por que praticar, primeira tarefa e quem acompanha. Duas pessoas da equipe e líder. Nenhuma tela de acesso, convite real ou calendário de lançamento.
+
+**Roupa e caracterização:** Líder com camisa azul-marinho; participantes com blusa creme e polo verde. Roupa cotidiana, sem camisetas de evento ou marca real.
+
+**Som, luz e ritmo:** Fala de reunião curta com pausas e pergunta do participante. Sem trilha durante explicação; som ambiente limpo. Luz suave, enquadramento aberto no começo.
+
+**Capa — texto final:** “No kickoff, a pessoa sabe qual é o primeiro passo?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano aberto da líder diante de dois participantes, três cartões visíveis. | No kickoff, a equipe entende como começar a prática? | KICKOFF COM PRIMEIRA AÇÃO | Corte para líder. |
+| 2 · 04–12s | Plano médio da líder apontando o primeiro cartão. | Líder: “Vamos praticar a explicação de uma proposta para um público definido e revisar um critério por atividade.” | FINALIDADE DO CICLO | Corte para ficha de tarefa. |
+| 3 · 12–21s | Close superior na primeira atividade, cenário fictício e critério pedido final. | A apresentação mostra a primeira tarefa completa, o que será observado e como preparar uma gravação nas condições combinadas. | PRIMEIRA TAREFA VISÍVEL | Corte para participante. |
+| 4 · 21–30s | Plano médio do participante olhando a líder, sem constrangimento. | Participante: “Se eu não entender a orientação, com quem converso?” Líder: “Vamos indicar o responsável e a rotina de retomada.” | ACOMPANHAMENTO COM RESPONSÁVEL | Corte para líder em plano frontal. |
+| 5 · 30–40s | Plano frontal da líder com cartões do programa. | Um piloto Matraca pode começar por esse recorte. A empresa define participantes, responsabilidades e condições antes de convidar a equipe. | ESCOPO DO INÍCIO DO PROGRAMA | Corte direto para CTA. |
+| 6 · 40–48s | Close da líder. | Envie PARCERIA com público, primeira tarefa e quem acompanhará o piloto. | PARCERIA • INÍCIO DA EQUIPE | Pausa final de dois segundos. |
+
+**Legenda final para publicação:**
+
+O kickoff pode tornar a prática concreta: finalidade do ciclo, primeira tarefa e pessoa responsável pelo acompanhamento. A equipe precisa compreender o que fará e como poderá esclarecer dúvidas. Para discutir um possível piloto Matraca, envie PARCERIA com público inicial, situação de comunicação e função que acompanhará o programa. #KickoffDeTreinamento #EquipeComercial #Matraca
+
+**Acessibilidade e descrição visual:** Líder apresenta finalidade, primeira tarefa e acompanhamento a dois participantes em reunião fictícia. Uma pergunta esclarece quem recebe dúvidas sobre a orientação. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Conversas com público, tarefa inicial e responsável; reuniões de escopo com dono do programa.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+<a id="w-v65"></a>
+
+### W-V65 — A estratégia comercial mudou. O programa foi revisitado?
+
+**Público e papéis:** Patrocinador: direção comercial. Decisor: direção comercial com T&D. Gestor: enablement e líderes de áreas. Usuário: equipes afetadas pela nova prioridade.
+
+**Objetivo e funil:** Consideração: orientar revisão do portfólio de práticas quando muda a estratégia, sem confundir decisão de programa com funcionalidade automática.
+
+**Cenário e objetos:** Quadro de planejamento com prioridade anterior e atual, fichas de conversas e três áreas: manter, adaptar e discutir depois. Todas as prioridades são fictícias, sem plano empresarial real.
+
+**Roupa e caracterização:** Diretora com camisa branca e calça azul; responsável de enablement com blusa verde; gerente com camisa cinza. Mesmo nível de luz e enquadramento.
+
+**Som, luz e ritmo:** Oficina de planejamento com som de fichas. Sem trilha de urgência; instrumental discreto nos inserts. Luz uniforme e tempo de leitura dos cartões.
+
+**Capa — texto final:** “Nova estratégia. Quais práticas ainda fazem sentido?”. Fotografar o cenário principal com uma área sólida azul-marinho para o título em creme. Manter rosto e objeto-chave livres; conferir recorte de feed e grade.
+
+**Duração final:** 48 segundos. **Elenco:** pessoas dos papéis citados, interpretando personagens fictícios.
+
+| Take / tempo | Imagem, cenário e ação | Fala integral | Texto na tela | Corte e montagem |
+|---|---|---|---|---|
+| 1 · 00–04s | Plano aberto do quadro; diretora move cartão de prioridade sem apagar o anterior. | A estratégia mudou. Quais conversas agora merecem mais prática? | REVISÃO DO PROGRAMA COMERCIAL | Corte para enablement. |
+| 2 · 04–12s | Plano médio da responsável de enablement com duas fichas de conversas. | Se a prioridade passa a ser outro público, a equipe precisa revisar contextos, perguntas e exemplos usados nas atividades. | PRIORIDADE → CONTEXTOS DE PRÁTICA | Corte para quadro em detalhe. |
+| 3 · 12–21s | Close superior em três fichas de decisão: manter, adaptar e discutir depois. | O programa pode manter tarefas pertinentes, adaptar outras e registrar o que será retomado em outro momento. | DECISÕES DE PLANEJAMENTO | Corte para gerente. |
+| 4 · 21–30s | Plano médio da gerente escrevendo motivo e responsável numa ficha. | Gerente: “Vamos explicar a razão da mudança e combinar quem revisa o conteúdo antes de propor a nova atividade.” | MOTIVO + RESPONSÁVEL + REVISÃO | Corte para diretora. |
+| 5 · 30–40s | Plano médio da diretora com catálogo de atividades fechado. | O piloto Matraca pode organizar cursos e práticas desse recorte. A escolha das prioridades e a validação do programa continuam com a empresa. | PRÁTICAS ALINHADAS AO RECORTE | Corte direto para CTA. |
+| 6 · 40–48s | Close frontal da responsável de enablement. | Salve para a próxima revisão de estratégia e leve as atividades à conversa. | CONECTE ESTRATÉGIA E TREINAMENTO | Dois segundos finais. |
+
+**Legenda final para publicação:**
+
+Uma mudança de prioridade pode pedir outras conversas de comunicação. Revisitar o catálogo ajuda a discutir o que manter, adaptar e retomar depois, com motivos e responsáveis explícitos. O planejamento é da empresa. Salve este roteiro para incluir as atividades de treinamento na próxima revisão da estratégia comercial. #EstratégiaComercial #GestãoDeTreinamento #Matraca
+
+**Acessibilidade e descrição visual:** Direção, enablement e gerência revisam um quadro fictício de prioridades e atividades. Fichas registram decisões de manter, adaptar ou retomar depois. Legendar integralmente as falas finais com revisão de sincronização; os conceitos centrais são narrados. Texto de apoio não substitui a legenda. Usar contraste alto, não cobrir boca ou mãos e respeitar as pausas de leitura.
+
+**Métrica de decisão:** Salvamentos e compartilhamentos com direção/enablement; conversas sobre revisão do programa após mudança de prioridade.
+
+**Conferência de gravação:** ensaiar falas com cronômetro, gravar duas versões naturais por take com margem de dois segundos antes/depois, preservar figurino e posição dos objetos e conferir os textos físicos. Toda a cena é encenada; eventual captura de produto segue o rótulo e as condições da direção comum.
+
+## Carrosséis · 35 roteiros de sete páginas
 
 <a id="w-c31"></a>
 
@@ -2800,7 +3170,747 @@ Um catálogo de critérios precisa acompanhar a tarefa que a equipe realmente ut
 
 **Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
 
-## Posts estáticos · 25 roteiros de imagem única
+<a id="w-c56"></a>
+
+### W-C56 — Roteiro de revisão presencial entre pares
+
+**Público e papéis:** Patrocinador: enablement. Decisor: direção comercial. Gestor: facilitador e líder direto. Usuário: vendedores participantes em duplas.
+
+**Objetivo e funil:** Consideração: entregar pauta de dinâmica complementar à prática gravada, com responsabilidades explícitas.
+
+**Direção de arte específica:** Duas cadeiras lado a lado, fichas de cenário e critério. Fotografias de mãos em mangas azul e verde; fundo creme, títulos azuis. Não mostrar acesso de participante ao histórico de colega ou ferramenta de compartilhamento. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** Duas pessoas. Uma tarefa. Um critério combinado.
+
+**Imagem, composição e acabamento:** Capa com duas canetas apontando a mesma ficha e título no terço superior. Etiqueta “dinâmica presencial proposta”. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Duas canetas e uma ficha representam revisão presencial em dupla.
+
+#### Página 2/7
+
+**Texto final da página:** Comecem pelo cenário fictício. As duas pessoas precisam conhecer público, objetivo e tarefa antes da tentativa.
+
+**Imagem, composição e acabamento:** Ficha com três campos e um cartão de contexto. Não incluir dados de cliente ou exemplo extra não explicado. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Cenário compartilhado define público, objetivo e tarefa da prática.
+
+#### Página 3/7
+
+**Texto final da página:** Escolham um critério observável. Exemplo: o pedido final informa qual ação o ouvinte deve compreender?
+
+**Imagem, composição e acabamento:** Pergunta em cartão verde; pequeno ícone de lupa acompanhado da palavra critério. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Critério do exemplo observa a ação comunicada no pedido final.
+
+#### Página 4/7
+
+**Texto final da página:** A pessoa pratica; o colega descreve o que ouviu. “Entendi o pedido de reunião; faltou a informação que precisa estar pronta.”
+
+**Imagem, composição e acabamento:** Dois balões de fala sobre foto de caderno. Etiqueta de exemplo fictício em corpo legível. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Colega descreve pedido identificado e uma informação ainda ausente.
+
+#### Página 5/7
+
+**Texto final da página:** Confiram a interpretação. O participante pode explicar sua intenção e escolher uma mudança para a próxima tentativa.
+
+**Imagem, composição e acabamento:** Ficha de intenção ao lado de ficha de ação; nenhuma nota, estrela ou classificação entre colegas. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Conversa de revisão relaciona intenção, observação e próxima ação.
+
+#### Página 6/7
+
+**Texto final da página:** Combinem o acompanhamento. O facilitador orienta a dinâmica; acesso a registros segue o escopo e as permissões do programa.
+
+**Imagem, composição e acabamento:** Mapa de funções de participante, colega e facilitador. Não representar compartilhamento automático de mídia. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Responsabilidades da dinâmica e acesso a registros são definidos separadamente.
+
+#### Página 7/7
+
+**Texto final da página:** Salve para a formação da equipe. Qual critério os pares conseguiriam discutir com clareza?
+
+**Imagem, composição e acabamento:** Duas fichas completas e pergunta final em faixa azul. CTA principal de salvar, assinatura discreta. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para escolher critério claro para uma revisão entre pares.
+
+**Legenda final para publicação:**
+
+Revisão entre pares pode começar com uma tarefa fictícia e um critério que ambos compreendem. O roteiro propõe uma dinâmica presencial, com facilitação e próxima ação. O uso de registros depende das regras do programa. Compartilhe com enablement para discutir como essa conversa pode complementar as práticas da equipe. #AprendizagemEntrePares #FormaçãoComercial #Matraca
+
+**Métrica de decisão:** Salvamentos e compartilhamentos com facilitadores; conversas sobre dinâmica e acompanhamento.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c57"></a>
+
+### W-C57 — Como o líder confere a própria orientação
+
+**Público e papéis:** Patrocinador: direção comercial/T&D. Decisor: direção comercial. Gestor: enablement e gerentes. Usuário: líderes de acompanhamento.
+
+**Objetivo e funil:** Consideração: entregar perguntas para revisar a clareza do coaching sem classificar desempenho profissional.
+
+**Direção de arte específica:** Caderno de orientação com perguntas em azul e respostas fictícias em verde. Fotos de duas pessoas lado a lado, mangas cinza e verde; nenhum formulário de avaliação de RH. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** A orientação ficou clara para quem vai praticar?
+
+**Imagem, composição e acabamento:** Capa com caderno aberto e pergunta grande acima. Duas canetas indicam conversa, sem carimbo de aprovado. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Pergunta de capa convida o líder a conferir a compreensão da orientação.
+
+#### Página 2/7
+
+**Texto final da página:** Pergunte: “Como você entendeu o próximo exercício?” Dê espaço para o participante explicar com suas palavras.
+
+**Imagem, composição e acabamento:** Balão da pergunta sobre fundo creme e cartão de escuta abaixo. Evitar ícone de interrogatório. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Líder pede ao participante que explique o exercício com suas palavras.
+
+#### Página 3/7
+
+**Texto final da página:** Ouça o que ficou amplo. “Explicar melhor” pode precisar de um foco como exemplo, estrutura ou pedido final.
+
+**Imagem, composição e acabamento:** Três cartões de foco ao redor da expressão ampla, todos com a mesma hierarquia. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Uma orientação ampla pode ser recortada em um foco observável.
+
+#### Página 4/7
+
+**Texto final da página:** Reescreva a ação. Exemplo: “Use uma situação da rotina informada para explicar o recurso.”
+
+**Imagem, composição e acabamento:** Enunciado em cartão verde, com etiqueta “exemplo de orientação”. Um lápis aponta a ação. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Exemplo transforma orientação ampla em ação ligada à rotina do público.
+
+#### Página 5/7
+
+**Texto final da página:** Confira tarefa e critério. O que será gravado e qual evidência permitirá discutir a ação escolhida?
+
+**Imagem, composição e acabamento:** Duas fichas de tarefa e evidência conectadas por linha fina; nenhum resultado inventado. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Tarefa e critério são conferidos antes da próxima tentativa.
+
+#### Página 6/7
+
+**Texto final da página:** Retome a compreensão. O participante consegue descrever o combinado agora? Registrem dúvidas e próximo acompanhamento.
+
+**Imagem, composição e acabamento:** Caderno com campos combinado, dúvida e retomada, sem datas ou nomes reais. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Registro preserva compreensão, dúvidas e retomada do acompanhamento.
+
+#### Página 7/7
+
+**Texto final da página:** Envie aos gerentes. Uma boa pergunta também pode melhorar a orientação do líder.
+
+**Imagem, composição e acabamento:** Pergunta inicial retorna em destaque com caderno fechado. CTA de compartilhar em faixa azul. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para os líderes revisarem a clareza das próprias orientações.
+
+**Legenda final para publicação:**
+
+A conversa de acompanhamento pode incluir uma verificação da orientação dada pelo líder. Pedir uma explicação do combinado ajuda a localizar termos amplos e escolher uma ação concreta. Salve este roteiro para a formação dos gerentes e discutam como ele cabe na rotina de coaching. #LiderançaDeVendas #ClarezaNoFeedback #Matraca
+
+**Métrica de decisão:** Compartilhamentos com gerentes e T&D; conversas sobre formação de revisores.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c58"></a>
+
+### W-C58 — Perguntas de entrada para escolher a primeira prática
+
+**Público e papéis:** Patrocinador: head de enablement. Decisor: direção comercial. Gestor: coordenação do programa. Usuário: vendedores com objetivos e experiências declarados distintos.
+
+**Objetivo e funil:** Consideração: orientar recorte inicial de tarefas com base em contexto e evidência pertinente.
+
+**Direção de arte específica:** Fichas de entrada com objetivo, situação e amostra. Sem idade, classificação por tempo de casa ou retratos que representem níveis. Fundo creme e verde para perguntas, azul para rótulos. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** Antes de escolher a atividade, conheça o objetivo.
+
+**Imagem, composição e acabamento:** Capa com duas fichas de objetivos diferentes e uma pergunta central. Nenhuma ficha recebe selo de nível superior. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Objetivos diferentes introduzem a escolha das atividades iniciais.
+
+#### Página 2/7
+
+**Texto final da página:** Qual conversa a pessoa quer preparar? Peça uma situação específica, como explicar uma proposta ou responder a uma pergunta.
+
+**Imagem, composição e acabamento:** Campo de situação com dois exemplos textuais, sem nomes ou dados de conta. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Pergunta de entrada identifica uma conversa concreta para preparar.
+
+#### Página 3/7
+
+**Texto final da página:** Qual experiência ela declara nessa situação? Registre contexto e frequência sem transformar relato em comprovação de habilidade.
+
+**Imagem, composição e acabamento:** Ficha de relato com etiqueta “informação declarada”. Não usar escala de competência. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Experiência declarada é registrada como contexto da situação.
+
+#### Página 4/7
+
+**Texto final da página:** Que amostra permite observar o foco? Defina uma tarefa pertinente ao objetivo e condições claras para realizá-la.
+
+**Imagem, composição e acabamento:** Ficha de atividade ligada ao objetivo por linha azul; ícones de cenário e critério com texto. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Amostra de prática é escolhida por pertinência ao objetivo.
+
+#### Página 5/7
+
+**Texto final da página:** O que a amostra sustenta? Procure evidência do critério e registre o que ainda não pode ser observado.
+
+**Imagem, composição e acabamento:** Lupa editorial sobre trecho fictício e campo de limitações, sem nota global. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Leitura da amostra considera evidência e limites do critério.
+
+#### Página 6/7
+
+**Texto final da página:** Qual próximo recorte faz sentido? A equipe combina a prática e revisita sua adequação com o participante.
+
+**Imagem, composição e acabamento:** Dois cartões de possibilidade e uma ficha de acordo. Não representar recomendação automática. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Próxima atividade é combinada e sua adequação será revisitada.
+
+#### Página 7/7
+
+**Texto final da página:** Salve para desenhar a entrada no programa. Cargo e tempo de empresa não substituem essas perguntas.
+
+**Imagem, composição e acabamento:** Cinco perguntas resumidas em lista ampla, CTA de salvar e assinatura Matraca. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Resumo convida a usar perguntas de contexto antes de escolher tarefas.
+
+**Legenda final para publicação:**
+
+Objetivo, experiência declarada e amostra pertinente ajudam a discutir a primeira prática. O recorte precisa ser revisto com o participante e a equipe responsável. Compartilhe com enablement para examinar as perguntas que hoje orientam a entrada no programa. #DesignDeTreinamento #DesenvolvimentoComercial #Matraca
+
+**Métrica de decisão:** Salvamentos por coordenadores; conversas sobre definição de atividades iniciais.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c59"></a>
+
+### W-C59 — Briefing de comunicação para uma nova vertical
+
+**Público e papéis:** Patrocinador: direção de expansão. Decisor: direção comercial. Gestor: enablement com especialista da vertical. Usuário: vendedores do novo segmento.
+
+**Objetivo e funil:** Consideração: entregar pauta de preparação setorial com revisão responsável de conteúdo.
+
+**Direção de arte específica:** Quadro de conhecido e a confirmar, fichas de rotina e linguagem. Sem roupas ou ícones que atribuam expertise profissional. Exemplo fictício de manutenção, sem dados de cliente. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** Nova vertical: o que a equipe precisa compreender antes de explicar?
+
+**Imagem, composição e acabamento:** Capa com pasta “novo contexto” e duas colunas de informação. Título azul em fundo creme. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Preparação para nova vertical começa por compreender o contexto.
+
+#### Página 2/7
+
+**Texto final da página:** Rotina: qual situação o público precisa organizar? Descreva o processo com informações conhecidas e marque as lacunas.
+
+**Imagem, composição e acabamento:** Ficha de rotina fictícia de manutenção, com um campo a confirmar destacado. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Rotina do público é descrita com informações conhecidas e lacunas.
+
+#### Página 3/7
+
+**Texto final da página:** Vocabulário: quais termos precisam ser compreendidos e explicados? Confirme o significado com responsáveis pelo conteúdo.
+
+**Imagem, composição e acabamento:** Três cartões de termos genéricos e um campo de definição; nenhuma definição técnica inventada. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Termos relevantes são conferidos com responsáveis do conteúdo.
+
+#### Página 4/7
+
+**Texto final da página:** Exemplo: qual situação autorizada ou fictícia ajuda a mostrar o uso? Evite importar um exemplo de outra vertical sem revisão.
+
+**Imagem, composição e acabamento:** Duas fichas de contexto diferentes com marcador revisar; nenhuma nota de adequação automática. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Exemplo deve ser revisado para o contexto da nova vertical.
+
+#### Página 5/7
+
+**Texto final da página:** Pergunta: o que o comprador precisa entender para examinar a proposta? Use o contexto confirmado para escrever o enunciado.
+
+**Imagem, composição e acabamento:** Balão de pergunta ligado à ficha de rotina, sem perfil psicológico do comprador. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Pergunta do exercício nasce do contexto confirmado da vertical.
+
+#### Página 6/7
+
+**Texto final da página:** Revisão: especialista confere precisão; treinamento examina clareza, exemplo e limites da explicação.
+
+**Imagem, composição e acabamento:** Duas colunas de responsabilidades ligadas à atividade, sem selo de certificação. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Precisão setorial e comunicação têm revisões responsáveis distintas.
+
+#### Página 7/7
+
+**Texto final da página:** Envie a expansão e enablement. Qual informação precisa ser confirmada antes da primeira prática?
+
+**Imagem, composição e acabamento:** Quadro completo e uma ficha de pendência em destaque. CTA compartilhar em azul. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para alinhar informações antes de criar a prática do segmento.
+
+**Legenda final para publicação:**
+
+Uma nova vertical pede contexto antes de roteiro. Rotina, vocabulário, exemplo e pergunta precisam ser examinados com responsáveis pelo conteúdo. O exercício de comunicação pode ser criado depois desse alinhamento, usando cenário fictício. Compartilhe o briefing com expansão e enablement. #ExpansãoDeMercado #TreinamentoPorSegmento #Matraca
+
+**Métrica de decisão:** Compartilhamentos entre expansão e treinamento; conversas com vertical e responsável de conteúdo definidos.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c60"></a>
+
+### W-C60 — Mapa de ensaio para a equipe de um evento
+
+**Público e papéis:** Patrocinador: marketing de campo. Decisor: direção comercial. Gestor: enablement e líder do evento. Usuário: vendedores e especialistas participantes.
+
+**Objetivo e funil:** Consideração: entregar agenda de preparação de conversas distintas, sem prometer resultado de evento.
+
+**Direção de arte específica:** Planta editorial simples de bancada, mesa e área de encerramento. Não usar nome de evento real ou agenda contratada. Fotos cenográficas com roupas azul, creme e verde, textos em áreas sólidas. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** Antes do evento, escolham quais conversas vão ensaiar.
+
+**Imagem, composição e acabamento:** Capa com quatro fichas de situação sobre planta de set fictício. Título no terço superior. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Quatro situações de evento orientam o preparo da equipe.
+
+#### Página 2/7
+
+**Texto final da página:** Primeiro contato: a pessoa entende quem a equipe atende e pode dizer qual assunto deseja explorar?
+
+**Imagem, composição e acabamento:** Bancada cenográfica e cartão de pergunta de interesse. Nenhum lead ou dado de visitante. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Primeiro contato explica atuação e abre espaço para o interesse do visitante.
+
+#### Página 3/7
+
+**Texto final da página:** Reunião agendada: a explicação usa o contexto já informado, com exemplo e condição pertinente?
+
+**Imagem, composição e acabamento:** Duas cadeiras com ficha de cenário fictício e três marcadores de revisão. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Reunião agendada pede explicação contextualizada com exemplo e condição.
+
+#### Página 4/7
+
+**Texto final da página:** Passagem ao especialista: quem apresenta a pergunta e explica por que outra pessoa entra na conversa?
+
+**Imagem, composição e acabamento:** Dois cartões de funções e uma seta com rótulo contexto, sem chamada ao vivo. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Passagem ao especialista preserva a pergunta e o contexto.
+
+#### Página 5/7
+
+**Texto final da página:** Encerramento: qual ação faz sentido depois, quem assume e que informação precisa estar pronta?
+
+**Imagem, composição e acabamento:** Cartão de ação, responsável e informação, sem data ou compromisso comercial inventado. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Encerramento organiza ação, responsável e preparação necessária.
+
+#### Página 6/7
+
+**Texto final da página:** Ensaio: gravem tarefas por situação com critérios definidos. Confiram conteúdo, papéis e materiais antes de usar no evento.
+
+**Imagem, composição e acabamento:** Quatro fichas individuais de prática e checklist de materiais, sem análise de evento real. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Preparação usa tarefas gravadas e revisão de conteúdo e papéis.
+
+#### Página 7/7
+
+**Texto final da página:** Salve para a reunião de preparação. Qual conversa merece atenção primeiro no seu próximo evento?
+
+**Imagem, composição e acabamento:** As situações reaparecem em mapa compacto, CTA salvar e pergunta grande. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para priorizar uma conversa no preparo da equipe de evento.
+
+**Legenda final para publicação:**
+
+Um evento reúne situações diferentes de comunicação. O mapa ajuda a escolher o que ensaiar e quem participa de cada conversa, com conteúdo e condições revisados. Use cenários fictícios no treinamento. Compartilhe com marketing de campo e com os líderes que preparam a equipe. #PreparaçãoComercial #MarketingDeEventos #Matraca
+
+**Métrica de decisão:** Salvamentos por marketing de campo; conversas com evento, equipe e situações definidos.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c61"></a>
+
+### W-C61 — Uma pergunta interna que produto consegue encaminhar
+
+**Público e papéis:** Patrocinador: marketing de produto/RevOps. Decisor: direção comercial. Gestor: enablement e responsável de produto. Usuário: vendedores e especialistas.
+
+**Objetivo e funil:** Consideração: oferecer ficha de formulação de dúvida interna como tarefa de comunicação.
+
+**Direção de arte específica:** Ficha editorial com contexto, dúvida e uso da resposta. Sem captura de e-mail, CRM ou mensagem real. Azul e creme, verde para o foco da pergunta. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** A pergunta de campo chega com informação suficiente?
+
+**Imagem, composição e acabamento:** Capa com ficha “aprovação?” e outra com campos de contexto. Não marcar erro pessoal. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Duas formulações introduzem clareza de perguntas internas.
+
+#### Página 2/7
+
+**Texto final da página:** Contexto: qual situação fictícia está sendo examinada? Inclua o necessário para compreender a dúvida.
+
+**Imagem, composição e acabamento:** Campo de cenário de escala com duas linhas e etiqueta fictício. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Primeiro campo situa a dúvida em um cenário definido.
+
+#### Página 3/7
+
+**Texto final da página:** Dúvida: qual ponto precisa de confirmação? Separe perguntas diferentes para permitir encaminhamento pertinente.
+
+**Imagem, composição e acabamento:** Dois cartões de perguntas separados, cada um com um foco. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Perguntas específicas são separadas para facilitar o encaminhamento.
+
+#### Página 4/7
+
+**Texto final da página:** Uso: para qual tarefa ou explicação a resposta será necessária? Isso ajuda a definir o recorte da informação.
+
+**Imagem, composição e acabamento:** Ficha de resposta esperada ligada a uma atividade, sem prazo presumido. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Uso da resposta informa a tarefa que depende do esclarecimento.
+
+#### Página 5/7
+
+**Texto final da página:** Conhecido e pendente: o que já está no material aprovado e o que ainda exige validação?
+
+**Imagem, composição e acabamento:** Duas colunas com rótulos textuais e pasta de versão aprovada. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Pergunta distingue informação disponível e ponto que exige confirmação.
+
+#### Página 6/7
+
+**Texto final da página:** Exercício: grave a formulação da dúvida e revise clareza, contexto e foco. A resposta técnica segue com o responsável.
+
+**Imagem, composição e acabamento:** Celular editorial e ficha de critérios, sem chatbot ou resposta automática. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Prática observa a formulação da pergunta, com validação técnica separada.
+
+#### Página 7/7
+
+**Texto final da página:** Envie a vendas e produto. Qual campo deixaria as perguntas mais compreensíveis na sua rotina?
+
+**Imagem, composição e acabamento:** Ficha completa e pergunta final em destaque. CTA de compartilhar em faixa azul. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para as áreas revisarem o contexto das perguntas internas.
+
+**Legenda final para publicação:**
+
+Contexto, dúvida e uso esperado podem tornar uma pergunta interna mais compreensível. A atividade proposta examina como a equipe formula a dúvida; a validação técnica continua com os responsáveis. Compartilhe o modelo com vendas e produto e escolham uma pergunta fictícia para praticar. #AlinhamentoComercial #VendasEProduto #Matraca
+
+**Métrica de decisão:** Compartilhamentos entre áreas; conversas sobre formulação e encaminhamento de dúvidas.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c62"></a>
+
+### W-C62 — Como organizar uma biblioteca de perguntas difíceis
+
+**Público e papéis:** Patrocinador: gerente comercial. Decisor: direção comercial. Gestor: enablement e responsáveis de conteúdo. Usuário: vendedores e especialistas.
+
+**Objetivo e funil:** Consideração: propor catálogo de cenários que distingue resposta disponível, informação faltante e encaminhamento.
+
+**Direção de arte específica:** Caixa de fichas com categorias textuais, sem transcript de cliente. Cada exemplo é fictício; fundo creme, títulos azuis, cartões verdes para perguntas de revisão. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** Perguntas difíceis podem virar cenários de prática.
+
+**Imagem, composição e acabamento:** Capa com caixa de fichas e um cartão de pergunta sem resposta. Título grande acima. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Caixa de fichas representa biblioteca de cenários de perguntas.
+
+#### Página 2/7
+
+**Texto final da página:** Categoria 1: a informação existe no material aprovado. A tarefa pode observar como explicá-la para um destinatário definido.
+
+**Imagem, composição e acabamento:** Pasta aprovada ao lado de ficha de público; nenhum conteúdo técnico inventado. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Primeira categoria trabalha explicação de informação disponível.
+
+#### Página 3/7
+
+**Texto final da página:** Categoria 2: falta contexto do comprador. A tarefa pede uma pergunta de esclarecimento pertinente.
+
+**Imagem, composição e acabamento:** Balão de pergunta ligado a campo de contexto vazio. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Segunda categoria pede esclarecer contexto ainda ausente.
+
+#### Página 4/7
+
+**Texto final da página:** Categoria 3: a informação exige confirmação responsável. A prática observa como delimitar a dúvida e encaminhar.
+
+**Imagem, composição e acabamento:** Cartão de pendência e função responsável, sem prazo ou garantia de solução. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Terceira categoria trabalha informação que exige validação.
+
+#### Página 5/7
+
+**Texto final da página:** Em cada ficha: cenário, condição, tarefa, critério e versão. Evite transformar uma resposta provisória em afirmação definitiva.
+
+**Imagem, composição e acabamento:** Modelo de ficha com cinco campos e marcador de versão. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Cada cenário registra condição e versão da informação.
+
+#### Página 6/7
+
+**Texto final da página:** Revisão: conteúdo é conferido pelo responsável; comunicação é examinada na tarefa. Registrem dúvidas para atualizar o catálogo.
+
+**Imagem, composição e acabamento:** Duas funções em colunas e caderno de dúvidas, sem nota global. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Revisão separa precisão do conteúdo e comunicação da resposta.
+
+#### Página 7/7
+
+**Texto final da página:** Salve para enablement. Qual categoria sua equipe precisa praticar primeiro?
+
+**Imagem, composição e acabamento:** Três cartões de categoria em leque e CTA salvar, sem ranking de dificuldade. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para priorizar uma categoria de pergunta no treinamento.
+
+**Legenda final para publicação:**
+
+Nem toda pergunta difícil tem a mesma origem. Algumas pedem explicar informação disponível; outras pedem contexto ou confirmação especializada. Organizar essas condições ajuda a criar tarefas pertinentes e revisar o conteúdo. Salve para a próxima atualização da biblioteca comercial. #PerguntasDifíceis #BibliotecaComercial #Matraca
+
+**Métrica de decisão:** Salvamentos por autores; conversas sobre catálogo de cenários e revisão de conteúdo.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c63"></a>
+
+### W-C63 — Briefing para conectar o convidado à prática
+
+**Público e papéis:** Patrocinador: enablement ou T&D. Decisor: direção comercial. Gestor: coordenador da formação. Usuário: especialista convidado e participantes.
+
+**Objetivo e funil:** Consideração: entregar pauta de preparação do especialista e da atividade posterior.
+
+**Direção de arte específica:** Prancheta com campos de aprendizagem e cadeira vazia de convidado. Sem agenda, transmissão, certificação ou recurso de evento atribuído ao produto. Fundo claro e texto azul. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** O que a equipe fará com o conteúdo do convidado?
+
+**Imagem, composição e acabamento:** Capa com cadeira e prancheta de briefing, título em área creme sólida. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Briefing introduz o uso do conteúdo apresentado por um convidado.
+
+#### Página 2/7
+
+**Texto final da página:** Público: quem participa e qual contexto de comunicação já foi definido? Compartilhe informações pertinentes, sem dados de clientes.
+
+**Imagem, composição e acabamento:** Ficha de funções e situação, sem nomes ou histórico individual. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Briefing identifica participantes e contexto de comunicação.
+
+#### Página 3/7
+
+**Texto final da página:** Pergunta central: qual dúvida de conteúdo a contribuição precisa esclarecer? Delimite o foco do encontro.
+
+**Imagem, composição e acabamento:** Uma pergunta em cartão verde e outras em lista de assuntos futuros. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Uma pergunta central delimita a contribuição do especialista.
+
+#### Página 4/7
+
+**Texto final da página:** Exemplo: qual cenário fictício ou material autorizado pode tornar a explicação concreta para aquele público?
+
+**Imagem, composição e acabamento:** Ficha de cenário e pasta de materiais autorizados, sem documento real. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Exemplo pertinente é preparado com cenário fictício ou material autorizado.
+
+#### Página 5/7
+
+**Texto final da página:** Prática posterior: o participante vai explicar o quê, para quem e com qual critério? Escreva o enunciado antes.
+
+**Imagem, composição e acabamento:** Três campos de tarefa em destaque e pequeno ícone de gravação editorial. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Atividade posterior define explicação, destinatário e critério.
+
+#### Página 6/7
+
+**Texto final da página:** Retomada: quem revisa a atividade e encaminha dúvidas que ficaram? O encontro e o acompanhamento têm responsáveis definidos.
+
+**Imagem, composição e acabamento:** Linha de responsabilidades com encontro, prática e revisão, sem calendário automático. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Retomada da aprendizagem tem funções responsáveis explícitas.
+
+#### Página 7/7
+
+**Texto final da página:** Envie a quem organiza a formação. Para discutir práticas gravadas no piloto Matraca, envie PARCERIA com o contexto da equipe.
+
+**Imagem, composição e acabamento:** Prancheta completa, CTA compartilhar principal e PARCERIA secundário. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para organizar o briefing e discutir a prática posterior.
+
+**Legenda final para publicação:**
+
+O briefing ajuda o convidado a conectar sua contribuição à situação da equipe e à tarefa que virá depois. Encontro, atividade e revisão precisam de responsáveis. O piloto Matraca pode ser discutido para organizar a prática gravada; a participação do especialista é combinada pela empresa. #FormaçãoComEspecialistas #DesignDeTreinamento #Matraca
+
+**Métrica de decisão:** Compartilhamentos com organizadores; conversas sobre atividade posterior e acompanhamento.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c64"></a>
+
+### W-C64 — Roteiro do kickoff de um programa de prática
+
+**Público e papéis:** Patrocinador: direção comercial. Decisor: direção comercial/T&D. Gestor: enablement e líderes. Usuário: participantes do piloto.
+
+**Objetivo e funil:** Decisão: oferecer pauta de apresentação do programa com primeira tarefa e acompanhamento claros.
+
+**Direção de arte específica:** Três cartões de abertura e uma atividade fictícia completa. Fotos de reunião pequena, roupas azul, creme e verde. Sem tela de cadastro ou data de lançamento. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** No kickoff, mostre como a pessoa começa.
+
+**Imagem, composição e acabamento:** Capa com primeira tarefa em destaque e duas cadeiras de participantes. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Primeira tarefa orienta a apresentação inicial do programa.
+
+#### Página 2/7
+
+**Texto final da página:** Finalidade: qual situação de comunicação o ciclo pretende trabalhar? Explique o recorte em linguagem de rotina.
+
+**Imagem, composição e acabamento:** Cartão com situação de proposta e objetivo observável, sem slogan amplo de transformação. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Finalidade do ciclo se conecta a uma situação cotidiana.
+
+#### Página 3/7
+
+**Texto final da página:** Primeira atividade: apresente público, cenário, entrega e critério. A pessoa precisa reconhecer o que fará.
+
+**Imagem, composição e acabamento:** Ficha completa com quatro campos legíveis, não um formulário vazio. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Primeira atividade contém contexto e instruções suficientes.
+
+#### Página 4/7
+
+**Texto final da página:** Preparação: quais condições de gravação e materiais de apoio foram combinados? Reserve espaço para dúvidas.
+
+**Imagem, composição e acabamento:** Ícones de som, câmera e material com texto por extenso. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Preparação da gravação e apoio são explicados aos participantes.
+
+#### Página 5/7
+
+**Texto final da página:** Acompanhamento: quem revisa, como a orientação será retomada e com quem esclarecer dificuldades?
+
+**Imagem, composição e acabamento:** Mapa de funções com responsável por revisão e operação, sem canal não confirmado. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Participantes conhecem responsáveis pelo acompanhamento e dificuldades.
+
+#### Página 6/7
+
+**Texto final da página:** Compreensão: peça que uma pessoa explique o primeiro passo com suas palavras. Ajuste o que ainda ficou amplo.
+
+**Imagem, composição e acabamento:** Dois balões de fala com primeiro passo e dúvida, sem prova ou nota. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Compreensão do início é conferida por uma explicação do participante.
+
+#### Página 7/7
+
+**Texto final da página:** Salve para a reunião de início. Para desenhar um piloto Matraca, envie PARCERIA com público, situação e responsável.
+
+**Imagem, composição e acabamento:** Roteiro completo em prancheta e CTA de salvar; nota piloto em validação. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para usar a pauta e discutir escopo de piloto corporativo.
+
+**Legenda final para publicação:**
+
+Uma apresentação de programa pode terminar com um primeiro passo compreensível. Finalidade, atividade, preparação e acompanhamento ajudam a equipe a saber como começar e onde esclarecer dúvidas. Salve a pauta para o kickoff e revise o enunciado da primeira tarefa com os responsáveis. #KickoffComercial #GestãoDeTreinamento #Matraca
+
+**Métrica de decisão:** Salvamentos por donos de programa; conversas com tarefa inicial e acompanhamento definidos.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+<a id="w-c65"></a>
+
+### W-C65 — Revisão de práticas após uma mudança de estratégia
+
+**Público e papéis:** Patrocinador: direção comercial. Decisor: direção com T&D. Gestor: enablement e líderes. Usuário: equipes afetadas pela prioridade.
+
+**Objetivo e funil:** Consideração: entregar mapa de revisão do portfólio de atividades, com motivos e responsabilidades.
+
+**Direção de arte específica:** Quadro de prioridades e catálogo de atividades em papel. Três áreas manter, adaptar e retomar depois; mesma cor de importância. Sem ação automática de arquivamento ou alteração de histórico. Aplicar master 1080 × 1350, margens de 80 px, títulos de 58–72 px e corpo de 34–42 px, com quebras que preservem leitura no celular.
+
+#### Página 1/7
+
+**Texto final da página:** A nova prioridade aparece nas atividades da equipe?
+
+**Imagem, composição e acabamento:** Capa com cartão de estratégia ao lado de catálogo, ligado por ponto de interrogação. Manter copy em área sólida, com numeração 1/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Pergunta relaciona nova prioridade e atividades do programa.
+
+#### Página 2/7
+
+**Texto final da página:** Nomeie a mudança. Público, oferta, canal ou situação de conversa: o que foi alterado na estratégia aprovada?
+
+**Imagem, composição e acabamento:** Quatro cartões de dimensão, com campo de motivo e fonte interna a definir. Manter copy em área sólida, com numeração 2/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Revisão identifica o que mudou na estratégia aprovada.
+
+#### Página 3/7
+
+**Texto final da página:** Mapeie conversas afetadas. Quais explicações, perguntas e exemplos precisam de outro contexto?
+
+**Imagem, composição e acabamento:** Linha de situações comerciais com fichas de perguntas e exemplos. Manter copy em área sólida, com numeração 3/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Conversas afetadas orientam a revisão das práticas.
+
+#### Página 4/7
+
+**Texto final da página:** Examine o catálogo. Quais tarefas permanecem pertinentes e quais precisam de adaptação? Registre a razão da escolha.
+
+**Imagem, composição e acabamento:** Catálogo com marcações manter e adaptar, sem apagar páginas. Manter copy em área sólida, com numeração 4/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Tarefas são revistas com motivo explícito para manter ou adaptar.
+
+#### Página 5/7
+
+**Texto final da página:** Defina o que fica para depois. Priorizar exige registrar o que será retomado, com contexto e responsável.
+
+**Imagem, composição e acabamento:** Pasta de assuntos futuros e ficha de responsável, sem data prometida. Manter copy em área sólida, com numeração 5/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Assuntos adiados preservam contexto e responsabilidade.
+
+#### Página 6/7
+
+**Texto final da página:** Revise antes de propor. Conteúdo, critérios e versões precisam acompanhar a nova atividade. Explique a mudança aos participantes.
+
+**Imagem, composição e acabamento:** Checklist de conteúdo, critério e versão junto a cartão de comunicação à equipe. Manter copy em área sólida, com numeração 6/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Nova atividade é revisada e sua mudança explicada aos participantes.
+
+#### Página 7/7
+
+**Texto final da página:** Leve o mapa à reunião de estratégia. Que prática precisa ser revista primeiro e por quê?
+
+**Imagem, composição e acabamento:** Quadro completo e uma ficha de primeira revisão em destaque, CTA compartilhar. Manter copy em área sólida, com numeração 7/7 no rodapé e assinatura discreta Matraca.
+
+**Descrição alternativa:** Convite para escolher uma prática prioritária de revisão com justificativa.
+
+**Legenda final para publicação:**
+
+Revisitar o programa ajuda a conectar a nova prioridade às conversas que a equipe precisa preparar. O mapa propõe decisões de manter, adaptar ou retomar depois, com motivos e responsáveis. Compartilhe com direção e enablement para incluir as atividades na próxima discussão de estratégia. #EstratégiaDeVendas #GestãoDeAprendizagem #Matraca
+
+**Métrica de decisão:** Compartilhamentos entre direção e enablement; conversas sobre revisão do programa.
+
+**Conferência da arte:** conferir ordem das sete páginas, texto integral, contraste, leitura em celular e descrições alternativas individuais. Objetos, exemplos e diagramas são editoriais; não usar dados ou marcas de clientes reais.
+
+## Posts estáticos · 35 roteiros de imagem única
 
 <a id="w-p31"></a>
 
@@ -3549,5 +4659,305 @@ Uma equipe pode preparar a contribuição de cada pessoa e o motivo de cada pass
 Uma atividade pode mudar com público, produto ou prioridade do programa. O descritor precisa ser examinado junto do novo enunciado, preservando a versão e o contexto dos registros anteriores. Salve este lembrete para a manutenção do catálogo e escolham um critério para revisar com os gerentes. Para discutir essa rotina no piloto Matraca, envie PARCERIA. #GestãoDeCritérios #EnablementComercial #Matraca
 
 **Métrica de decisão:** Salvamentos por responsáveis de catálogo; conversas sobre critérios, versões e revisão do programa.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+<a id="w-p56"></a>
+
+### W-P56 — Uma dupla, um critério de conversa
+
+**Público e papéis:** Patrocinador: enablement. Decisor: direção comercial. Gestor: facilitador e líder direto. Usuário: vendedores em pares.
+
+**Objetivo e funil:** Consideração: apresentar revisão presencial entre pares como dinâmica de aprendizagem com foco.
+
+**Texto final da arte:**
+
+> Uma tarefa compartilhada.
+> Um critério combinado.
+> Qual observação ajuda a próxima tentativa?
+
+**Cenário e objetos:** Duas cadeiras lado a lado e uma ficha fictícia de pedido final sobre mesa. Duas canetas apontam partes diferentes da ficha; não há telefone, tela ou registro de outra pessoa disponível para consulta.
+
+**Roupa e caracterização:** Mãos em mangas azul-clara e verde-sálvia. Sem crachás ou gestos de correção autoritária; postura colaborativa.
+
+**Composição, câmera, luz e acabamento:** Master 1080 × 1350. Foto superior a 60 graus nos 55% inferiores, texto azul de 58 px sobre creme no topo. Palavra critério em verde sobre faixa azul. Luz lateral difusa, rótulo “dinâmica presencial proposta” de 32 px. Margens de 80 px e assinatura Matraca na base. Não usar estrelas, notas ou ranking entre colegas.
+
+**Descrição alternativa:** Duas canetas examinam uma ficha fictícia de pedido final em uma mesa de dupla. Texto destaca tarefa, critério e próxima tentativa.
+
+**Legenda final para publicação:**
+
+Uma revisão entre pares pode começar pelo que ambos sabem observar. O colega descreve o que identificou e o participante escolhe uma ação de prática, com facilitação. A dinâmica proposta é presencial e pode complementar o programa. Salve para discutir com enablement qual critério faz sentido para a próxima dupla. #AprendizagemEntrePares #TreinamentoDeVendas #Matraca
+
+**Métrica de decisão:** Salvamentos e compartilhamentos com facilitadores; conversas sobre dinâmica de revisão.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p57"></a>
+
+### W-P57 — A orientação também merece uma pergunta
+
+**Público e papéis:** Patrocinador: direção comercial/T&D. Decisor: direção comercial. Gestor: enablement e gerentes. Usuário: líderes que acompanham participantes.
+
+**Objetivo e funil:** Consideração: incentivar o líder a conferir compreensão do combinado.
+
+**Texto final da arte:**
+
+> “Como você entendeu
+> o próximo exercício?”
+> Uma pergunta para quem orienta.
+
+**Cenário e objetos:** Caderno de coaching aberto com campos orientação e ação compreendida. Duas cadeiras no mesmo lado da mesa; nenhuma ficha de desempenho de funcionário ou registro real.
+
+**Roupa e caracterização:** Gerente com camisa cinza-azulada e participante com blusa verde; enquadrar mãos e torso, sem expressão de avaliação ou reprovação.
+
+**Composição, câmera, luz e acabamento:** Plano médio lateral, foto na metade inferior e área azul sólida acima. Pergunta em creme de 60 px, palavra entendeu em verde. Luz suave na altura dos rostos, sem sombra dura. Margens de 80 px, etiqueta “encenação” de 32 px e assinatura discreta. Texto não cobre boca ou mãos.
+
+**Descrição alternativa:** Duas pessoas conversam diante de caderno de orientação e ação. Texto propõe perguntar como o participante entendeu o exercício.
+
+**Legenda final para publicação:**
+
+A explicação do participante pode revelar um termo amplo ou um passo que ainda não ficou claro. O líder pode então reformular a orientação e conferir a compreensão novamente. Compartilhe com os gerentes e escolham uma conversa de coaching para experimentar essa pergunta. #LiderançaComercial #ClarezaNoFeedback #Matraca
+
+**Métrica de decisão:** Compartilhamentos com gerentes; conversas sobre formação de líderes revisores.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p58"></a>
+
+### W-P58 — O objetivo orienta o começo
+
+**Público e papéis:** Patrocinador: head de enablement. Decisor: direção comercial. Gestor: coordenador do programa. Usuário: participantes com experiências declaradas distintas.
+
+**Objetivo e funil:** Consideração: valorizar perguntas de entrada e tarefa pertinente, sem classificar habilidade por cargo.
+
+**Texto final da arte:**
+
+> Experiência traz contexto.
+> O objetivo ajuda a escolher
+> a primeira prática.
+
+**Cenário e objetos:** Duas fichas fictícias: organizar uma proposta e responder uma pergunta específica. Uma terceira ficha central diz objetivo, amostra e critério. Não usar idade, salário ou senioridade como nota.
+
+**Roupa e caracterização:** Sem pessoas; roupa não aplicável. Papéis foscos e canetas simples, sem objetos que indiquem status profissional.
+
+**Composição, câmera, luz e acabamento:** Plano superior a 90 graus, fichas no centro inferior. Fundo creme, título azul de 62 px e objetivo em verde sobre azul. Luz uniforme, margens de 80 px, rótulo “planejamento de atividades” em 32 px. Fichas de mesmo tamanho para evitar hierarquia entre objetivos. Assinatura na base.
+
+**Descrição alternativa:** Duas fichas de objetivos diferentes se ligam a objetivo, amostra e critério. Texto relaciona experiência a contexto e objetivo à primeira prática.
+
+**Legenda final para publicação:**
+
+O tempo de empresa pode ajudar a entender a trajetória, mas o recorte da atividade pede uma situação concreta e evidência pertinente. Pergunte o que a pessoa quer preparar e examine uma tarefa adequada ao foco. Salve para revisar as perguntas de entrada do seu programa. #DesenvolvimentoComercial #DesignDeAprendizagem #Matraca
+
+**Métrica de decisão:** Salvamentos por coordenadores; conversas sobre entrada e definição de atividades.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p59"></a>
+
+### W-P59 — Uma nova vertical pede outro contexto
+
+**Público e papéis:** Patrocinador: direção de expansão. Decisor: direção comercial. Gestor: enablement e especialista responsável. Usuário: vendedores do segmento.
+
+**Objetivo e funil:** Descoberta: estimular alinhamento de contexto setorial antes do exercício de comunicação.
+
+**Texto final da arte:**
+
+> Nova vertical.
+> Qual contexto sua equipe
+> precisa confirmar primeiro?
+
+**Cenário e objetos:** Quadro de conhecido e a confirmar, pasta “rotina do segmento” e ficha fictícia de manutenção. Nenhum dado de cliente, definição clínica/jurídica ou símbolo de expertise setorial.
+
+**Roupa e caracterização:** Especialista encenada com camisa branca e vendedor com camisa azul-clara, fotografados de lado apontando a ficha. Sem uniforme técnico ou crachá.
+
+**Composição, câmera, luz e acabamento:** Plano médio aberto com quadro nos 55% inferiores e faixa azul no topo. Texto creme de 60 px, contexto em verde. Luz frontal suave e escrita legível. Margens de 80 px, etiqueta “cenário fictício de preparação” de 32 px e assinatura Matraca. Não usar mapa de domínio de mercado.
+
+**Descrição alternativa:** Duas pessoas revisam um quadro de informações conhecidas e a confirmar para uma vertical fictícia. Texto pergunta qual contexto precisa ser confirmado primeiro.
+
+**Legenda final para publicação:**
+
+Rotina, termos e exemplos podem mudar quando a equipe entra em outro segmento. O conteúdo precisa ser confirmado com responsáveis antes de virar tarefa de comunicação. Compartilhe com expansão e enablement e escolham uma informação que deve estar clara antes da primeira prática. #ExpansãoComercial #TreinamentoPorVertical #Matraca
+
+**Métrica de decisão:** Compartilhamentos entre expansão e treinamento; conversas com segmento e responsabilidade definidos.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p60"></a>
+
+### W-P60 — A conversa do evento começa no ensaio
+
+**Público e papéis:** Patrocinador: marketing de campo. Decisor: direção comercial. Gestor: líder do evento e enablement. Usuário: vendedores e especialistas participantes.
+
+**Objetivo e funil:** Descoberta: conectar preparação de evento a situações concretas de comunicação.
+
+**Texto final da arte:**
+
+> Bancada. Reunião. Próximo contato.
+> Qual conversa sua equipe
+> vai ensaiar antes do evento?
+
+**Cenário e objetos:** Bancada neutra, duas cadeiras e três cartões das situações em set fictício. Não usar nome de feira, crachá real, agenda ou promessa de leads.
+
+**Roupa e caracterização:** Líder com sobrecamisa verde, vendedora com polo azul e especialista com camisa creme. Pessoas em preparação, sem visitante real ou pose promocional.
+
+**Composição, câmera, luz e acabamento:** Plano aberto vertical, equipe e objetos na metade inferior. Texto azul de 54 px sobre creme no topo; ensaiar em verde sobre azul. Luz ampla e suave, rótulos dos cartões em 34 px. Margens de 80 px e etiqueta “ensaio fictício”. Assinatura pequena, sem logos de evento.
+
+**Descrição alternativa:** Três profissionais preparam cartões de bancada, reunião e próximo contato num set de evento fictício. Texto convida a escolher uma conversa para ensaiar.
+
+**Legenda final para publicação:**
+
+O preparo pode diferenciar abertura breve, explicação contextualizada e encerramento com propósito. Cada situação pede uma tarefa e um critério. Salve este post para a reunião de preparação e escolha com marketing de campo qual conversa merece o primeiro ensaio da equipe. #PreparaçãoParaEventos #EquipeComercial #Matraca
+
+**Métrica de decisão:** Salvamentos e compartilhamentos com marketing de campo; conversas sobre situações de evento.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p61"></a>
+
+### W-P61 — Uma pergunta interna precisa viajar com contexto
+
+**Público e papéis:** Patrocinador: marketing de produto/RevOps. Decisor: direção comercial. Gestor: enablement e responsável de produto. Usuário: vendedores e especialistas.
+
+**Objetivo e funil:** Consideração: mostrar formulação de dúvida interna como parte da comunicação da equipe.
+
+**Texto final da arte:**
+
+> Contexto. Dúvida. Uso da resposta.
+> O que precisa acompanhar
+> a pergunta que vai para produto?
+
+**Cenário e objetos:** Ficha de pergunta autoral sobre aprovação de escala e três campos das palavras da arte. Caixa de perguntas em papel ao fundo; nenhuma mensagem, e-mail ou CRM real.
+
+**Roupa e caracterização:** Mãos de vendedora com manga azul-clara e responsável de produto com manga creme, organizando a ficha.
+
+**Composição, câmera, luz e acabamento:** Plano superior, ficha central na metade inferior. Fundo creme, título azul de 54 px e contexto sublinhado verde. Luz lateral suave, margens de 80 px, etiqueta “exercício fictício” de 32 px. Assinatura discreta. Não representar envio automático ou conexão entre sistemas.
+
+**Descrição alternativa:** Duas mãos organizam ficha de contexto, dúvida e uso esperado da resposta. Texto pergunta quais informações acompanham uma dúvida enviada a produto.
+
+**Legenda final para publicação:**
+
+Uma pergunta pode ficar mais compreensível quando informa a situação, o ponto a confirmar e a tarefa que depende da resposta. O exercício trabalha a formulação da dúvida; a validação técnica permanece com os responsáveis. Compartilhe com vendas e produto para revisar um modelo de pergunta da equipe. #VendasEProduto #ComunicaçãoInterna #Matraca
+
+**Métrica de decisão:** Compartilhamentos entre áreas; conversas sobre comunicação e encaminhamento de conteúdo.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p62"></a>
+
+### W-P62 — A informação ainda não confirmada pode ficar clara
+
+**Público e papéis:** Patrocinador: gerente comercial. Decisor: direção comercial. Gestor: enablement e responsáveis de conteúdo. Usuário: vendedores e especialistas.
+
+**Objetivo e funil:** Consideração: apresentar resposta transparente a pergunta que exige confirmação.
+
+**Texto final da arte:**
+
+> O que ainda falta confirmar?
+> Quem pode esclarecer?
+> Como explicar o próximo passo?
+
+**Cenário e objetos:** Três cartões de pergunta sobre mesa, pasta de material aprovado fechada e ficha fictícia de configuração. Sem contrato, preço ou promessa técnica.
+
+**Roupa e caracterização:** Vendedor com camisa azul aparece apenas por mão apontando o cartão de responsável. Sem distintivo de autoridade.
+
+**Composição, câmera, luz e acabamento:** Plano superior a 90 graus, cartões na parte inferior em sequência. Texto creme de 54 px sobre azul no topo, confirmar em verde. Luz difusa, margens de 80 px e rótulo “cenário fictício”. Assinatura Matraca na base. Não usar selo de certeza ou resposta gerada por IA.
+
+**Descrição alternativa:** Três cartões organizam informação pendente, responsável e próximo passo. Texto convida a explicar o encaminhamento de uma dúvida.
+
+**Legenda final para publicação:**
+
+Reconhecer uma informação ausente pode vir acompanhado de uma pergunta bem delimitada e um encaminhamento compreensível. A empresa define quem confirma o conteúdo e quais condições orientam a resposta. Salve para criar um cenário de prática na biblioteca de perguntas difíceis. #PerguntasDifíceis #TreinamentoComercial #Matraca
+
+**Métrica de decisão:** Salvamentos e conversas sobre categorias de perguntas e responsabilidades.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p63"></a>
+
+### W-P63 — O conteúdo do convidado encontra uma tarefa
+
+**Público e papéis:** Patrocinador: enablement/T&D. Decisor: direção comercial. Gestor: coordenador da formação. Usuário: especialista convidado e participantes.
+
+**Objetivo e funil:** Consideração: destacar ligação entre contribuição especializada e prática posterior.
+
+**Texto final da arte:**
+
+> Depois do especialista,
+> o que a equipe
+> vai conseguir praticar?
+
+**Cenário e objetos:** Cadeira de convidado vazia, prancheta com público, dúvida e tarefa posterior, caderno de revisão na mesa. Nenhum evento real, agenda de produto ou credencial.
+
+**Roupa e caracterização:** Coordenadora com camisa creme aparece colocando a prancheta na mesa; enquadrar mão e torso. Sem diploma ou símbolo profissional.
+
+**Composição, câmera, luz e acabamento:** Plano médio aberto, cadeira e mesa na metade inferior. Texto azul de 60 px sobre creme acima; praticar em verde sobre azul. Luz lateral suave, margens de 80 px e rótulo “briefing de formação” de 32 px. Assinatura discreta. Não sugerir especialista incluído na oferta Matraca.
+
+**Descrição alternativa:** Cadeira de convidado e prancheta de público, dúvida e tarefa posterior acompanham pergunta sobre a prática após a formação.
+
+**Legenda final para publicação:**
+
+O briefing pode conectar a contribuição do convidado a uma situação de comunicação da equipe. Defina público, dúvida central, exemplo e atividade posterior com responsáveis pela revisão. O encontro é organizado pela empresa. Compartilhe este post com quem prepara a próxima formação. #FormaçãoComEspecialistas #DesignDeTreinamento #Matraca
+
+**Métrica de decisão:** Compartilhamentos com organizadores de formação; conversas sobre prática posterior e acompanhamento.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p64"></a>
+
+### W-P64 — O primeiro passo precisa aparecer no kickoff
+
+**Público e papéis:** Patrocinador: direção comercial. Decisor: direção comercial/T&D. Gestor: enablement e líder direto. Usuário: equipe participante.
+
+**Objetivo e funil:** Conversão: pedir contexto de início de programa com primeira atividade definida.
+
+**Texto final da arte:**
+
+> Por que praticar?
+> Qual é a primeira tarefa?
+> Quem acompanha?
+> Comece por essas respostas.
+
+**Cenário e objetos:** Três cartões das perguntas sobre mesa de reunião e ficha fictícia de atividade de proposta. Líder aponta a primeira tarefa; nenhum convite real, data ou tela de cadastro.
+
+**Roupa e caracterização:** Líder com camisa azul-marinho; participantes com blusa creme e polo verde, em postura de escuta natural.
+
+**Composição, câmera, luz e acabamento:** Plano médio aberto, pessoas e cartões nos 55% inferiores. Texto creme de 52 px em bloco azul superior, primeira tarefa em verde. Luz suave, margens de 80 px, rótulo “proposta de piloto em validação” de 32 px. Assinatura Matraca. Não representar lançamento público.
+
+**Descrição alternativa:** Líder apresenta cartões de finalidade, primeira tarefa e acompanhamento a participantes de uma reunião fictícia. Texto orienta começar por essas respostas.
+
+**Legenda final para publicação:**
+
+Uma apresentação de programa pode dar contexto e mostrar uma ação concreta para começar. Finalidade, primeira tarefa e acompanhamento ajudam a equipe a compreender a rotina. Envie PARCERIA com público inicial, situação de comunicação e função responsável para discutir um possível piloto Matraca. #KickoffDePrograma #CapacitaçãoComercial #Matraca
+
+**Métrica de decisão:** Conversas com público, atividade inicial e responsável; registrar origem W-P64.
+
+**Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.
+
+<a id="w-p65"></a>
+
+### W-P65 — A nova prioridade chega ao treinamento?
+
+**Público e papéis:** Patrocinador: direção comercial. Decisor: direção com T&D. Gestor: enablement e líderes. Usuário: equipes afetadas pela mudança de estratégia.
+
+**Objetivo e funil:** Consideração: estimular revisão do catálogo de práticas junto da prioridade comercial.
+
+**Texto final da arte:**
+
+> A prioridade mudou.
+> Quais práticas vale manter,
+> adaptar ou retomar depois?
+
+**Cenário e objetos:** Quadro de planejamento com três áreas de decisão e catálogo de atividades em papel. Pasta de histórico fechada permanece ao lado. Nenhum plano estratégico real ou indicador financeiro.
+
+**Roupa e caracterização:** Diretora com camisa branca e responsável de enablement com blusa verde, fotografadas de lado organizando fichas. Sem gesto de descarte de registros.
+
+**Composição, câmera, luz e acabamento:** Plano frontal do quadro na metade inferior; área creme de texto acima com título azul de 58 px. Palavra práticas em verde sobre faixa azul. Luz uniforme, rótulos de decisão em 34 px, margens de 80 px e assinatura discreta. Não usar seta de crescimento, automação de arquivamento ou promessa de alinhamento garantido.
+
+**Descrição alternativa:** Duas pessoas revisam atividades em áreas de manter, adaptar e retomar depois. Texto relaciona mudança de prioridade à revisão das práticas.
+
+**Legenda final para publicação:**
+
+Uma nova prioridade pode mudar o público, o contexto e as perguntas que a equipe precisa preparar. O catálogo de atividades merece entrar nessa conversa, com motivos e responsáveis para cada escolha. Compartilhe com direção e enablement e selecionem uma prática para revisar primeiro. #EstratégiaComercial #GestãoDeTreinamento #Matraca
+
+**Métrica de decisão:** Compartilhamentos entre direção e enablement; conversas sobre revisão do programa por prioridade.
 
 **Conferência de produção:** verificar copy integral na imagem, leitura e recorte em celular, licenças de fotografia, ausência de dados reais e coerência da legenda com o estado do piloto. Inserir a descrição alternativa antes de publicar.

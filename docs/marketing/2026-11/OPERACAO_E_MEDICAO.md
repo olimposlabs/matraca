@@ -4,11 +4,11 @@ Manual de execução proposto em 25/11/2026. Os roteiros estão prontos para ori
 
 ## 1. Duas campanhas, uma decisão de capacidade
 
-Cada plano ampliado possui 165 peças: 55 Reels, 55 carrosséis e 55 imagens únicas. A base original possui 90 por frente; vendedores acrescentam 75 à frente direta e equipes comerciais acrescentam 75 à institucional. No calendário completo independente, cada campanha dura 28 semanas, com duas peças de cada formato por semana até a semana 27 e uma de cada na semana 28. Executar as duas simultaneamente em perfis diferentes exigiria 12 publicações semanais e atendimento dos dois públicos. Isso é uma possibilidade de operação, não a recomendação inicial para uma equipe reduzida.
+Cada plano ampliado possui 195 peças: 65 Reels, 65 carrosséis e 65 imagens únicas. A base original possui 90 por frente; vendedores acrescentam 105 à frente direta e equipes comerciais acrescentam 105 à institucional. No calendário completo independente, cada campanha dura 33 semanas, com duas peças de cada formato por semana até a semana 32 e uma de cada na semana 33. Executar as duas simultaneamente em perfis diferentes exigiria 12 publicações semanais e atendimento dos dois públicos. Isso é uma possibilidade de operação, não a recomendação inicial para uma equipe reduzida.
 
-**Padrão inicial recomendado:** um perfil, seis publicações totais por semana, três de cada frente. Segunda D-V, terça W-C, quarta D-P, quinta W-V, sexta D-C e sábado W-P; domingo para atendimento e análise. Cada semana avança um tema conforme a ordem editorial do calendário, e o ciclo completa as 330 peças em 55 semanas. Usar capa e destaque “Para organizações” nas peças B2B e sinalizar “Vendedores”/“Equipes” nos conteúdos específicos. Se essa mistura reduzir entendimento do visitante, testar perfil institucional separado, preservando os destinos comerciais distintos.
+**Padrão inicial recomendado:** um perfil, seis publicações totais por semana, três de cada frente. Segunda D-V, terça W-C, quarta D-P, quinta W-V, sexta D-C e sábado W-P; domingo para atendimento e análise. Cada semana avança um tema conforme a ordem editorial do calendário, e o ciclo completa as 390 peças em 65 semanas. Usar capa e destaque “Para organizações” nas peças B2B e sinalizar “Vendedores”/“Equipes” nos conteúdos específicos. Se essa mistura reduzir entendimento do visitante, testar perfil institucional separado, preservando os destinos comerciais distintos.
 
-**Alternativa independente:** dois calendários de 28 semanas (três peças na última), cada um com segunda/quinta vídeo, terça/sexta carrossel e quarta/sábado estático. Não significa que as duas campanhas devem começar juntas. **Sprint comercial:** executar somente a extensão, 150 peças em 25 semanas combinadas ou 75 em 13 semanas por segmento independente (três peças na última). Escolher um modo; publicar o calendário completo e o sprint como se fossem acervos diferentes duplicaria as peças. O primeiro dia permanece a definir. Horários são hipóteses de teste, não agendamentos realizados.
+**Alternativa independente:** dois calendários de 33 semanas (três peças na última), cada um com segunda/quinta vídeo, terça/sexta carrossel e quarta/sábado estático. Não significa que as duas campanhas devem começar juntas. **Sprint comercial:** executar somente a extensão, 210 peças em 35 semanas combinadas ou 105 em 18 semanas por segmento independente (três peças na última). Escolher um modo; publicar o calendário completo e o sprint como se fossem acervos diferentes duplicaria as peças. O primeiro dia permanece a definir. Horários são hipóteses de teste, não agendamentos realizados.
 
 ## 2. Equipe, responsabilidades e capacidade
 
@@ -24,7 +24,7 @@ Cada plano ampliado possui 165 peças: 55 Reels, 55 carrosséis e 55 imagens ún
 
 Uma pessoa pode acumular papéis. Estimativa inicial de planejamento para seis peças por semana: 2–3h de preparação/ensaio; 2–3h de captação em lote; 5–8h de edição dos dois Reels; 4–6h para os dois carrosséis; 2–3h para os dois estáticos; 2h de revisão e agendamento; 3–5h de atendimento/análise. Total de referência: 20–30h, arredondado a partir das faixas. Não é cotação de mercado nem tempo medido desta equipe. Cronometrar o primeiro lote e recalibrar, incluindo retrabalho e especialistas.
 
-Produzir por lotes, sem gravar os 110 Reels antes de testar linguagem. Primeiro lote do ciclo completo: duas peças de cada formato para cada frente, suficientes para duas semanas no perfil combinado. Para o sprint comercial, começar com uma de cada formato para cada segmento, seis peças, e revisar antes de ampliar. Os 330 roteiros são acervo editorial; ordem pode mudar com fatos e capacidade, mantendo o inventário.
+Produzir por lotes, sem gravar os 130 Reels antes de testar linguagem. Primeiro lote do ciclo completo: duas peças de cada formato para cada frente, suficientes para duas semanas no perfil combinado. Para o sprint comercial, começar com uma de cada formato para cada segmento, seis peças, e revisar antes de ampliar. Os 390 roteiros são acervo editorial; ordem pode mudar com fatos e capacidade, mantendo o inventário.
 
 ## 3. Preparação e diária de gravação
 
@@ -65,7 +65,7 @@ Entregáveis por ID: arquivo final, versão limpa, capa, legenda em texto, alt t
 
 ## 5. Stories e apoio diário
 
-Stories são complementos opcionais e não entram na contagem das 330 peças. Usar o mesmo tema do feed com outra interação, sem repetir a publicação inteira.
+Stories são complementos opcionais e não entram na contagem das 390 peças. Usar o mesmo tema do feed com outra interação, sem repetir a publicação inteira.
 
 | Frente/tipo | Story 1 | Story 2 | Story 3 |
 | --- | --- | --- | --- |
@@ -100,7 +100,7 @@ Fontes verificadas na main: [execução](https://github.com/olimposlabs/matraca/
 
 Identificar cada peça pelo seu ID. Quando houver destino público verificado, padrão de UTM: `utm_source=instagram`, `utm_medium=organic_social` ou `paid_social`, `utm_campaign=matraca_direto_piloto` ou `matraca_wl_piloto`, `utm_content=d-v01` e assim por diante. São parâmetros propostos, não links já publicados. Não colocar nomes ou e-mails na URL.
 
-Para a extensão, usar `utm_campaign=matraca_vendedores_piloto` nos IDs D-31–55 e `matraca_equipes_comerciais_piloto` nos W-31–55, preservando o ID completo em `utm_content`, por exemplo `d-v31`. Registrar segmento e função separadamente da frente comercial. O filtro “Base multidisciplinar” do leitor identifica os arquivos originais; ele não significa ausência de vendedores na base. TREINO com contexto VENDA encaminha a pessoa; PARCERIA com contexto EQUIPE encaminha a organização. As respostas são humanas enquanto não houver automação implantada. Se alguém mudar de percurso, vincular o mesmo contato e a conta empresarial, evitando somar a mesma pessoa como dois leads novos. Atendimento e critérios de qualificação estão na [campanha comercial](EXTENSAO_COMERCIAL.md).
+Para a extensão, usar `utm_campaign=matraca_vendedores_piloto` nos IDs D-31–65 e `matraca_equipes_comerciais_piloto` nos W-31–65, preservando o ID completo em `utm_content`, por exemplo `d-v31`. Registrar segmento e função separadamente da frente comercial. O filtro “Base multidisciplinar” do leitor identifica os arquivos originais; ele não significa ausência de vendedores na base. TREINO com contexto VENDA encaminha a pessoa; PARCERIA com contexto EQUIPE encaminha a organização. As respostas são humanas enquanto não houver automação implantada. Se alguém mudar de percurso, vincular o mesmo contato e a conta empresarial, evitando somar a mesma pessoa como dois leads novos. Atendimento e critérios de qualificação estão na [campanha comercial](EXTENSAO_COMERCIAL.md).
 
 Para DMs, registrar peça quando identificável; se necessário perguntar “Qual conteúdo trouxe você até aqui?”. Não atribuir por suposição. CRM mínimo: data, ID de contato interno, frente, segmento, origem informada, situação/objetivo, etapa, consentimento de contato, responsável, próximo passo e data combinada. Não copiar casos clínicos, processos ou gravações para planilha de marketing.
 
