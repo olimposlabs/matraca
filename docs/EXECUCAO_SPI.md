@@ -245,3 +245,7 @@ A [PR #22](https://github.com/olimposlabs/matraca/pull/22) foi integrada em `128
 Base `c5a12dab651bda88d587154a08af3c02e3fcc014`. A confirmação explícita usa uma intenção vinculada ao navegador de origem. A migração 018 revoga credenciais ao suspender usuário ou organização e encerra sessões e links anteriores. A emissão aplica cotas por origem e destinatário conhecido. [Identidade](technical/IDENTITY.md)
 
 A [PR #24](https://github.com/olimposlabs/matraca/pull/24) foi integrada em `a97e649b9ff47d77c37b3315a2ffa2e0552fa0a8`. Os ajustes de duas revisões independentes passaram no [CI do head final](https://github.com/olimposlabs/matraca/actions/runs/45540986429). No merge, passaram 55 testes focados e a jornada Chromium de cadastro e login. A integração acionou somente CI.
+
+## SPI de segurança · S05
+
+Base `ad4e054c4ba79fb1a44de7873f28a00179381a28`. O PostgreSQL local usa credenciais geradas, banco próprio por sandbox e papéis separados de bootstrap, migração e execução. O runtime rejeita credencial antiga e privilégios administrativos. [Operações](OPERATIONS.md)

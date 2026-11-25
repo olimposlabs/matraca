@@ -1,5 +1,6 @@
 import { createDatabase } from '../server/db.js';
-import { configuration, localPartnerDomainSuffix } from '../server/config.js';
+import { localPartnerDomainSuffix } from '../server/config.js';
+import { migrationDatabaseUrl } from '../server/local-database-config.js';
 import { DEFAULT_BRANDING } from '../server/organizations.js';
 import { seedEducation } from './seed-education.js';
 import { seedWallet } from './seed-wallet.js';
@@ -15,7 +16,7 @@ const organizations = [
   { slug: 'backoffice', name: 'Matraca · Backoffice', kind: 'backoffice', hosts: [`backoffice.${domainSuffix}`, ...(defaultHosts ? ['backoffice.localhost'] : [])] },
 ];
 const students = ['Ana Silva','Bruno Lima','Carla Souza','Diego Alves','Elisa Rocha','Fabio Costa'];
-const db = createDatabase(configuration().databaseUrl);
+const db = createDatabase(migrationDatabaseUrl());
 try {
   await db.transaction(async client => {
     await client.query("INSERT INTO app_metadata (key,value) VALUES ('demo', $1) ON CONFLICT (key) DO NOTHING", [JSON.stringify({ name: 'Matraca', mode: 'local', createdBy: 'seed' })]);

@@ -7,7 +7,7 @@ import cookie from '@fastify/cookie';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
 import { registerCommerce, type SimulatedPaymentStatus } from '../server/commerce.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { emptyCourse } from '../server/course-model.js';
 import { createDatabase } from '../server/db.js';
 import { getWallet } from '../server/wallet.js';
@@ -19,7 +19,7 @@ const central = (org: { orgId: string }) => `/api/backoffice/commerce/orgs/${org
 
 describe('catálogo, pedidos e pagamentos locais simulados', () => {
   const schema = `commerce_test_${randomUUID().replaceAll('-', '')}`;
-  const database = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const database = testDatabaseUrl();
   const url = new URL(database); url.searchParams.set('options', `-c search_path=${schema}`);
   const control = createDatabase(database), db = createDatabase(url.toString());
   let app: FastifyInstance, root: string;

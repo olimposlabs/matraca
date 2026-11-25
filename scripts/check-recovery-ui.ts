@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium, expect, type APIRequestContext, type Browser, type BrowserContext } from '@playwright/test';
 import { createApp } from '../server/app.js';
 import { nextMonth } from '../server/billing-preview.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
@@ -42,7 +42,7 @@ async function checkRecovery() {
   const port = 3017, partnerBase = `http://127.0.0.1:${port}`, centralBase = `http://localhost:${port}`;
   const schema = `recovery_ui_${randomUUID().replaceAll('-', '')}`;
   const temporary = await mkdtemp(join(tmpdir(), 'matraca-recovery-ui-'));
-  const databaseUrl = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const databaseUrl = testDatabaseUrl();
   const control = createDatabase(databaseUrl), isolated = new URL(databaseUrl);
   isolated.searchParams.set('options', `-c search_path=${schema}`);
   const db = createDatabase(isolated.toString());

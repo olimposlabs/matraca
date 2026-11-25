@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { allocateBilledUsage, closeBillingPeriod } from '../server/billing.js';
 import { nextMonth } from '../server/billing-preview.js';
@@ -21,7 +21,7 @@ describe('faturamento com histórico de corte, vigência e conciliação', () =>
   let app: FastifyInstance, db: ReturnType<typeof createDatabase>, control: ReturnType<typeof createDatabase>, root: string;
   let financialNow = new Date('2026-05-02T12:00:00Z');
   beforeAll(async () => {
-    const base = process.env.DATABASE_URL ?? localDatabaseUrl; control = createDatabase(base); await control.query(`CREATE SCHEMA ${schema}`);
+    const base = testDatabaseUrl(); control = createDatabase(base); await control.query(`CREATE SCHEMA ${schema}`);
     const url = new URL(base); url.searchParams.set('options', `-c search_path=${schema}`); db = createDatabase(url.toString());
     const directory = new URL('../server/migrations/', import.meta.url);
     for (const name of (await readdir(directory)).filter(name => name.endsWith('.sql')).sort()) await db.query(await readFile(new URL(name, directory), 'utf8'));

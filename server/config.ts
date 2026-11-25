@@ -1,11 +1,11 @@
 import { resolve } from 'node:path';
-export const localDatabaseUrl = 'postgres://matraca:matraca-local-only@127.0.0.1:54329/matraca';
+import { localDatabaseConnection } from './local-database-config.js';
 export function configuration(overrides: { databaseUrl?: string; storageRoot?: string } = {}) {
   if (process.env.APP_MODE && process.env.APP_MODE !== 'local') {
     throw new Error('Este piloto permite apenas APP_MODE=local. Produção exige configuração explícita.');
   }
   return {
-    databaseUrl: overrides.databaseUrl ?? process.env.DATABASE_URL ?? localDatabaseUrl,
+    get databaseUrl() { return overrides.databaseUrl ?? process.env.DATABASE_URL ?? localDatabaseConnection('runtime'); },
     storageRoot: resolve(overrides.storageRoot ?? process.env.STORAGE_ROOT ?? '.data/objects'),
     port: Number(process.env.PORT ?? 3001),
   };

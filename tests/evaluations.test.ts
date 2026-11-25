@@ -6,7 +6,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
 import { emptyCourse, validatePublication, type CourseDocument, type CourseUnit } from '../server/course-model.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { drainLiveEvaluations, runEvaluationJob } from '../server/evaluation/worker.js';
@@ -26,7 +26,7 @@ interface Student {
 
 describe('fila, relatórios e reserva atômica', () => {
   const schema = `evaluation_test_${randomUUID().replaceAll('-', '')}`;
-  const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const base = testDatabaseUrl();
   const control = createDatabase(base);
   const url = new URL(base);
   url.searchParams.set('options', `-c search_path=${schema}`);

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import {
   adjustCredits, consumeReservation, consumeReservationInTransaction, creditsForDuration,
@@ -14,7 +14,7 @@ describe('carteira transacional e origens de créditos', () => {
   let control: ReturnType<typeof createDatabase>;
   let db: ReturnType<typeof createDatabase>;
   beforeAll(async () => {
-    const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+    const base = testDatabaseUrl();
     control = createDatabase(base);
     await control.query(`CREATE SCHEMA ${schema}`);
     const url = new URL(base); url.searchParams.set('options',`-c search_path=${schema}`);

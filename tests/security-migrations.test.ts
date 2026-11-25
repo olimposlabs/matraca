@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import { createDatabase } from '../server/db.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { seedId } from '../scripts/seed-id.js';
 
 it('migra pedidos reais antigos sem debitar saldo ou interromper a simulação', async () => {
-  const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const base = testDatabaseUrl();
   const schema = `upgrade_test_${randomUUID().replaceAll('-', '')}`;
   const control = createDatabase(base);
   const url = new URL(base);
@@ -53,7 +53,7 @@ it('migra pedidos reais antigos sem debitar saldo ou interromper a simulação',
 });
 
 it('preserva os cursos anteriores e compartilha só a primeira versão autoral do seed', async () => {
-  const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const base = testDatabaseUrl();
   const schema = `course_upgrade_test_${randomUUID().replaceAll('-', '')}`;
   const control = createDatabase(base);
   const url = new URL(base);
@@ -88,7 +88,7 @@ it('preserva os cursos anteriores e compartilha só a primeira versão autoral d
 });
 
 it('a migração encerra credenciais legadas e preserva a conta', async () => {
-  const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const base = testDatabaseUrl();
   const schema = `identity_upgrade_test_${randomUUID().replaceAll('-', '')}`;
   const control = createDatabase(base);
   const url = new URL(base);

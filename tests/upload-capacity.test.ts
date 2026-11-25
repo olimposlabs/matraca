@@ -4,14 +4,14 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { LocalStorage } from '../server/storage.js';
 import { UploadCapacity } from '../server/upload-capacity.js';
 
 describe('capacidade de upload persistida', () => {
   const schema = `upload_test_${randomUUID().replaceAll('-', '')}`;
-  const base = new URL(process.env.DATABASE_URL ?? localDatabaseUrl);
+  const base = new URL(testDatabaseUrl());
   const control = createDatabase(base.href);
   base.searchParams.set('options', `-c search_path=${schema}`);
   const db = createDatabase(base.href);

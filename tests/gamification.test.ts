@@ -6,7 +6,7 @@ import type { PoolClient } from 'pg';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { emptyCourse } from '../server/course-model.js';
 import { createDatabase } from '../server/db.js';
 import { awardLearningEvent, defaultGamificationPolicy } from '../server/gamification-core.js';
@@ -17,7 +17,7 @@ const manager = '/api/gamification/manage';
 
 describe('XP, rankings históricos e prêmios', () => {
   const schema = `gamification_test_${randomUUID().replaceAll('-', '')}`;
-  const database = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const database = testDatabaseUrl();
   const url = new URL(database);
   url.searchParams.set('options', `-c search_path=${schema}`);
   const control = createDatabase(database);

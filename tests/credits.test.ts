@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { consumeReservation, getWallet, grantCredits, reserveCredits } from '../server/wallet.js';
 
@@ -22,7 +22,7 @@ describe('API de créditos, autorização e orçamento escolar', () => {
 
   beforeAll(async () => {
     root = await mkdtemp(join(tmpdir(), 'matraca-credits-'));
-    const baseUrl = process.env.DATABASE_URL ?? localDatabaseUrl;
+    const baseUrl = testDatabaseUrl();
     control = createDatabase(baseUrl);
     await control.query(`CREATE SCHEMA ${schema}`);
     const url = new URL(baseUrl);
