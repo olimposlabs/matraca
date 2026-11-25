@@ -15,16 +15,23 @@ export function startPostgresCluster() {
   { env: environment, encoding: 'utf8', timeout: 10000 }).trim();
   if (!/^unix:\/\/\/[^\r\n]+$/u.test(endpoint)) throw new Error('O PostgreSQL local exige Docker no socket Unix.');
   const host = `--host=${endpoint}`;
-  try { execFileSync('docker', [host, 'image', 'inspect', 'postgres:17-alpine'], { env: environment, stdio: 'ignore', timeout: 10000 }); }
+  const composeEnvironment = { ...environment, MATRACA_POSTGRES_BOOTSTRAP_FILE: clusterSecret };
+  const image = execFileSync('docker', [host, 'compose', 'config', '--images', 'postgres'], {
+    env: composeEnvironment, encoding: 'utf8', timeout: 10000,
+  }).trim();
+  if (!/^postgres:17-alpine@sha256:[a-f0-9]{64}$/u.test(image)) {
+    throw new Error('Fixe a imagem PostgreSQL do Compose por digest.');
+  }
+  try { execFileSync('docker', [host, 'image', 'inspect', image], { env: environment, stdio: 'ignore', timeout: 10000 }); }
   catch {
     const directory = mkdtempSync(join(tmpdir(), 'matraca-public-docker-'));
     try {
       writeFileSync(join(directory, 'config.json'), '{}\n', { mode: 0o600 });
-      execFileSync('docker', ['--config', directory, host, 'pull', 'postgres:17-alpine'], { env: environment, stdio: 'inherit', timeout: 180000 });
+      execFileSync('docker', ['--config', directory, host, 'pull', image], { env: environment, stdio: 'inherit', timeout: 180000 });
     } finally { rmSync(directory, { recursive: true, force: true }); }
   }
   execFileSync('docker', [host, 'compose', 'up', '-d', '--wait', '--pull', 'never'], {
-    env: { ...environment, MATRACA_POSTGRES_BOOTSTRAP_FILE: clusterSecret }, stdio: 'inherit', timeout: 90000,
+    env: composeEnvironment, stdio: 'inherit', timeout: 90000,
   });
   return host;
 }
