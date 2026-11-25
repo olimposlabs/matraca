@@ -1,6 +1,6 @@
 # Matraca — extensão de conteúdo para vendedores individuais
 
-**Versão editorial:** 25 de novembro de 2026. **Escopo adicional:** 20 vídeos, 20 carrosséis e 20 posts estáticos, IDs D-V31–50, D-C31–50 e D-P31–50. São 60 peças novas, além das 90 da biblioteca direta original. Público: profissionais de vendas que querem preparar a própria comunicação, incluindo SDRs/BDRs, executivos de contas, vendedores técnicos, consultores, representantes, varejistas e responsáveis por renovação.
+**Versão editorial:** 25 de novembro de 2026. **Escopo adicional:** 25 vídeos, 25 carrosséis e 25 posts estáticos, IDs D-V31–55, D-C31–55 e D-P31–55. São 75 peças novas, além das 90 da biblioteca direta original. Os IDs 51–55 acrescentam 15 peças aos 60 roteiros 31–50 preservados nesta extensão. Público: profissionais de vendas que querem preparar a própria comunicação, incluindo SDRs/BDRs, executivos de contas, vendedores técnicos, consultores, representantes, varejistas e responsáveis por renovação.
 
 ## Direção e uso desta extensão
 
@@ -16,7 +16,7 @@ As empresas, compradores, propostas, números de prazo e diálogos das cenas sã
 
 **Medição:** alcance e retenção ajudam a revisar a mensagem; salvamentos e compartilhamentos indicam usos possíveis; conversas qualificadas indicam demanda. Não interpretar visualização, curtida ou simulação bem executada como venda causada pelo produto. As métricas de cada peça abaixo são foco editorial, sem meta numérica prometida.
 
-## 20 vídeos novos
+## 25 vídeos novos
 
 <a id="d-v31"></a>
 
@@ -358,7 +358,92 @@ As empresas, compradores, propostas, números de prazo e diálogos das cenas sã
 
 **Áudio/edição:** nenhum gráfico fictício de ganho ou depoimento de sucesso; manter o relato de dificuldade inteiro. **Acessibilidade:** campos e pergunta de adaptação narrados; alt da capa: ficha de revisão de uso, experiência e necessidade antes de discutir renovação. **Legenda pronta:** “Renovar começa por revisar. Pergunte o que foi usado, o que a pessoa observou e quais condições precisam mudar para a próxima etapa. Na cena fictícia, uma dificuldade orienta a conversa em vez de desaparecer do resumo. Quer ensaiar uma revisão de conta? Envie TREINO e descreva o contexto de VENDA. #RenovacaoDeClientes #GestaoDeContas #Matraca”
 
-## 20 carrosséis novos
+<a id="d-v51"></a>
+
+### D-V51 — Uma interrupção muda a ordem da conversa
+
+**Público/funil/objetivo:** executivos de contas e vendedores técnicos; topo; reconhecer uma pergunta e retomar a explicação com um combinado. **Métrica:** salvamentos por alcance. **Duração:** 45 s. **Cenário/roupa:** mesa de reunião, esquema cenográfico de implantação em três cartões; vendedora de camisa verde-escura, comprador de camisa azul-clara. **Capa:** mão apontando um cartão no meio da sequência; “Como retomar depois de uma interrupção?”
+
+| Take/tempo | Cena, enquadramento, ação e corte | Fala integral e texto de tela |
+|---|---|---|
+| 1 · 00–05 | Plano médio da vendedora, explicação interrompida por gesto do comprador; corte para quem pergunta. | “Uma pergunta interrompeu sua explicação. Como você reorganiza a conversa?” Tela: “Escute antes de retomar.” |
+| 2 · 05–12 | Contraplano do comprador; mão aponta cartão “preparação”, sem gesto agressivo. | “Antes de continuar: nossa equipe precisa parar o atendimento durante essa preparação?” Tela: “A dúvida muda a prioridade.” |
+| 3 · 12–20 | Plano médio da vendedora; afasta o roteiro e olha para interlocutor. | “Essa dúvida é importante. Primeiro, vamos identificar qual etapa você está considerando, para eu não responder sobre outra situação.” Tela: “Reconheça e localize a pergunta.” |
+| 4 · 20–28 | Plano superior; comprador toca primeiro cartão; vendedora acompanha sem disputar a mão. | Comprador: “A configuração inicial.” Vendedora: “Certo. Vamos esclarecer essa etapa e depois retomo a sequência. Faz sentido?” Tela: “Um novo combinado.” |
+| 5 · 28–36 | Close frontal da vendedora fora da encenação; cartões ao fundo. | “Interrupção pode trazer uma informação necessária. Marque onde parou e reorganize a fala pelo que precisa ser entendido.” Tela: “Pergunta → esclarecimento → retomada”. |
+| 6 · 36–45 | Plano superior, clipe marca cartão da retomada; tela final creme. | “Salve e ensaie com um colega: ele faz uma pergunta no meio da explicação, e você combina como seguir.” Tela: “Salve o exercício de retomada.” |
+
+**Áudio/edição:** deixar o início da pergunta natural, sem sobrepor frases a ponto de dificultar entendimento; sem buzzer ou efeito de conflito. **Acessibilidade:** legendas identificam comprador e vendedora; todos os cartões essenciais são nomeados; alt da capa: uma pergunta interrompe uma sequência de cartões para esclarecer uma etapa da apresentação. **Legenda pronta:** “Uma pergunta no meio da explicação pode revelar o que precisa vir primeiro. Reconheça a dúvida, localize a etapa e combine como a conversa vai continuar. Depois, retome o ponto marcado quando fizer sentido. Salve o exercício e ensaie com um colega uma apresentação que permita perguntas reais. #ComunicacaoEmVendas #ReuniaoComercial #Matraca”
+
+<a id="d-v52"></a>
+
+### D-V52 — Uma resposta por áudio com uma mensagem principal
+
+**Público/funil/objetivo:** vendedores de varejo, representantes e serviços; topo; preparar áudio breve em canal já combinado. **Métrica:** salvamentos. **Duração:** 45 s. **Cenário/roupa:** balcão cenográfico de loja, caixa sem etiqueta, celular com interface genérica sem marca; vendedor de polo azul e mãos de cliente com manga creme. **Capa:** celular e cartão de uma frase; “O que a pessoa precisa ouvir neste áudio?”
+
+| Take/tempo | Cena, enquadramento, ação e corte | Fala integral e texto de tela |
+|---|---|---|
+| 1 · 00–05 | Close do vendedor diante do celular; olha um roteiro com várias linhas e escolhe uma. | “Seu áudio comercial tem uma mensagem ou várias conversas misturadas?” Tela: “Uma resposta principal.” |
+| 2 · 05–12 | Plano superior de mensagem desenhada em papel, sem conversa real; voz da cliente em off. | “Pode me mandar um áudio curto explicando como ficou a retirada?” Tela: “Pedido fictício · canal combinado”. |
+| 3 · 12–20 | Plano médio do vendedor gravando apenas uma encenação; celular não envia mensagem. | “Olá, Lia. Seu pedido está separado para retirada até sexta-feira. Você prefere passar pela manhã ou à tarde?” Tela: “Contexto + informação + pergunta”. |
+| 4 · 20–28 | Close do cartão com a frase, mão sublinha “retirada até sexta”; voz do vendedor em off. | “O exemplo responde à retirada e faz uma pergunta ligada a ela. Os detalhes precisam corresponder ao combinado real.” Tela: “Responda à questão recebida.” |
+| 5 · 28–36 | Plano lateral, vendedor escuta o ensaio com fone e anota um ajuste. | “Ouça antes de enviar. Se a pessoa preferir texto ou não puder ouvir, use um formato adequado à conversa.” Tela: “Áudio claro · formato combinado”. |
+| 6 · 36–45 | Plano superior, cartão recebe três palavras; corte final estático. | “Salve e ensaie um áudio de até vinte segundos: qual é a informação principal e qual resposta você precisa receber?” Tela: “Ensaio breve no seu aparelho.” |
+
+**Áudio/edição:** áudio do take 3 limpo, sem efeito que imite compressão ruim; não mostrar envio, confirmação de leitura ou mensagem de cliente real. **Acessibilidade:** toda a mensagem falada aparece em legenda; alt da capa: celular ao lado de uma frase preparada para responder de forma breve sobre uma retirada fictícia. **Legenda pronta:** “Uma resposta por áudio pode ter contexto, informação principal e uma pergunta pertinente. No exemplo fictício, a pessoa pediu um áudio sobre retirada. Ensaie uma versão curta, escute e confira se o formato combina com a preferência do interlocutor. Salve para preparar o próximo áudio comercial que fizer sentido enviar. #AudioComercial #VendasNoVarejo #Matraca”
+
+<a id="d-v53"></a>
+
+### D-V53 — Corrija o mal-entendido sem culpar o comprador
+
+**Público/funil/objetivo:** consultores e executivos de contas; meio; reparar uma explicação ambígua de escopo. **Métrica:** conversas qualificadas sobre prática. **Duração:** 48 s. **Cenário/roupa:** reunião sobre oficina fictícia, proposta sem nomes, dois cartões “grupo” e “individual”; consultora de blazer roxo, comprador de camisa bege. **Capa:** duas interpretações da mesma frase; “O que ficou entendido?”
+
+| Take/tempo | Cena, enquadramento, ação e corte | Fala integral e texto de tela |
+|---|---|---|
+| 1 · 00–06 | Plano conjunto, comprador aponta “individual” e consultora percebe a diferença; corte para pergunta. | “O comprador entendeu uma condição diferente. Como você esclarece sem colocar a culpa nele?” Tela: “Repare a explicação.” |
+| 2 · 06–14 | Contraplano do comprador, documento em mãos, tom de dúvida. | “Quando você falou em revisão, entendi que cada participante teria um encontro individual.” Tela: “A interpretação do comprador.” |
+| 3 · 14–22 | Plano médio da consultora, postura aberta; mantém documento no centro. | “Minha explicação ficou ambígua. Nesta proposta, a revisão acontece em grupo, durante a segunda sessão.” Tela: “Reconheça a ambiguidade.” |
+| 4 · 22–30 | Plano superior; consultora aponta item do escopo e separa cartão “individual”. | “O encontro individual não está incluído. Essa diferença muda o que vocês precisam? Vamos revisar antes de qualquer decisão.” Tela: “Condição clara + efeito na decisão”. |
+| 5 · 30–39 | Plano conjunto, comprador observa os dois cartões; narradora em off. | “O reparo precisa esclarecer a condição e abrir espaço para rever a adequação. Corrija também o material se houver ambiguidade.” Tela: “Fala e documento precisam coincidir.” |
+| 6 · 39–48 | Close frontal da consultora fora da cena; assinatura Matraca no fim. | “Quer ensaiar como desfazer um mal-entendido? Envie TREINO e conte seu contexto de VENDA para conhecer o piloto Matraca.” Tela: “TREINO · contexto: VENDA”. |
+
+**Áudio/edição:** sem efeito de erro sobre o comprador; manter a pausa após a pergunta sobre adequação; não encenar assinatura ou acordo final. **Acessibilidade:** nomes de modalidades falados e legendados; alt da capa: cartões de revisão em grupo e encontro individual representam interpretações diferentes a esclarecer. **Legenda pronta:** “Uma explicação ambígua pode gerar entendimentos diferentes. Reconheça o ponto, apresente a condição correta e pergunte como isso afeta a necessidade do comprador. O exemplo da oficina é fictício. Quer praticar essa conversa de reparo? Envie TREINO e descreva uma situação de VENDA para conhecer o piloto Matraca. #ComunicacaoClara #VendasConsultivas #Matraca”
+
+<a id="d-v54"></a>
+
+### D-V54 — Peça uma indicação sem pedir um contato que não foi autorizado
+
+**Público/funil/objetivo:** representantes, consultores e vendedores autônomos; topo; formular pedido de indicação com escolha e consentimento. **Métrica:** compartilhamentos. **Duração:** 45 s. **Cenário/roupa:** mesa de café cenográfica, cartão público de apresentação sem telefone real; vendedor de camisa verde, cliente de blusa azul. **Capa:** cartão de apresentação entre duas mãos; “Uma indicação pode começar sem passar um número.”
+
+| Take/tempo | Cena, enquadramento, ação e corte | Fala integral e texto de tela |
+|---|---|---|
+| 1 · 00–05 | Close do cartão público sobre a mesa; vendedor o oferece sem empurrar. | “Pedir uma indicação não exige pedir o telefone de outra pessoa.” Tela: “Convite com escolha.” |
+| 2 · 05–12 | Plano médio do vendedor, olhar para cliente, mãos afastadas do celular. | “Se lembrar de alguém para quem esta proposta faça sentido, você se sentiria à vontade para compartilhar minha apresentação?” Tela: “Pergunte antes de presumir.” |
+| 3 · 12–20 | Contraplano da cliente, cartão permanece na mesa. | “Posso encaminhar para uma colega e deixar que ela decida se quer conversar.” Tela: “A outra pessoa escolhe o contato.” |
+| 4 · 20–28 | Plano conjunto, vendedor confirma sem pedir nome ou número. | “Perfeito. Aqui está meu contato público. Ela pode procurar quando quiser; você não precisa me enviar os dados dela.” Tela: “Apresentação pública · contato voluntário”. |
+| 5 · 28–36 | Close frontal do vendedor fora da cena; cartão ao lado. | “O exercício é fazer um pedido claro, aceitar um não e preservar a escolha de quem ainda não participou da conversa.” Tela: “Pedido claro, sem obrigação.” |
+| 6 · 36–45 | Plano superior do cartão sem dado real; assinatura final. | “Compartilhe com quem trabalha por indicação. Ensaie um convite que a pessoa possa aceitar ou recusar com tranquilidade.” Tela: “Compartilhe o exercício de indicação.” |
+
+**Áudio/edição:** conversa natural, sem som de dinheiro ou celebração da indicação; não mostrar captura de contato nem envio. **Acessibilidade:** legenda integral com identificação dos papéis; alt da capa: cartão público de apresentação oferecido como alternativa ao compartilhamento de dados de uma terceira pessoa. **Legenda pronta:** “Uma indicação pode começar pelo compartilhamento de uma apresentação pública, deixando a outra pessoa decidir se quer conversar. Prepare um pedido que possa ser recusado e não transforme a relação em obrigação. Compartilhe o exercício com quem trabalha por indicação e ensaie uma frase natural para o seu contexto. #IndicacaoDeClientes #VendasConsultivas #Matraca”
+
+<a id="d-v55"></a>
+
+### D-V55 — Quando o ambiente atrapalha, ajuste a conversa
+
+**Público/funil/objetivo:** vendedores de varejo, representantes e expositores em feiras; meio; adaptar captação, ritmo e formato para compreensão. **Métrica:** salvamentos e mensagens de interesse. **Duração:** 48 s. **Cenário/roupa:** estande cenográfico com balcão e cartaz abstrato, área lateral mais calma; vendedor de polo grafite, compradora de camisa verde. **Capa:** duas pessoas mudando de posição perto do balcão; “A conversa está sendo compreendida?”
+
+| Take/tempo | Cena, enquadramento, ação e corte | Fala integral e texto de tela |
+|---|---|---|
+| 1 · 00–06 | Plano aberto do estande, ambiente sugerido por pessoas desfocadas; comprador sinaliza dificuldade. | “Se o ambiente dificulta entender, falar mais alto pode não resolver a conversa.” Tela: “Ajuste a condição de comunicação.” |
+| 2 · 06–14 | Close da compradora, fala audível; mão indica o ambiente, sem tocar no ouvido. | “Não consegui acompanhar a diferença entre as duas opções. Aqui está difícil de ouvir.” Tela: “Uma dificuldade relatada.” |
+| 3 · 14–22 | Plano médio do vendedor, aponta área lateral sem conduzir fisicamente a pessoa. | “Prefere conversar ali, onde está mais tranquilo, ou ver um resumo escrito das diferenças?” Tela: “Ofereça alternativas.” |
+| 4 · 22–30 | Plano conjunto em área lateral; compradora escolhe cartão de resumo. | Compradora: “O resumo ajuda.” Vendedor: “Vamos comparar um ponto de cada vez. Qual diferença você quer esclarecer primeiro?” Tela: “Formato escolhido + uma ideia por vez”. |
+| 5 · 30–39 | Close frontal do vendedor fora da cena, cartão legível em mãos. | “Pergunte qual ajuste ajuda. Não presuma a causa da dificuldade nem decida pela pessoa qual formato ela deve usar.” Tela: “Confirme a preferência.” |
+| 6 · 39–48 | Plano médio do vendedor, cartões sobre balcão; corte final creme. | “Quer praticar como adaptar um atendimento? Envie TREINO e descreva seu contexto de VENDA para conhecer o piloto Matraca.” Tela: “TREINO · contexto: VENDA”. |
+
+**Áudio/edição:** ruído de feira apenas sugerido, sempre abaixo da fala; reduzir no take 2 e zerar na explicação para não reproduzir a barreira. Não usar deficiência como caricatura. **Acessibilidade:** legendas completas, contraste alto, alternativas narradas; alt da capa: vendedor oferece uma área mais tranquila e um resumo escrito para facilitar uma conversa. **Legenda pronta:** “Quando o ambiente atrapalha, pergunte qual ajuste ajuda: outro local, um resumo escrito ou uma explicação por partes. A preferência pertence à pessoa. O estande do vídeo é uma encenação. Quer ensaiar como adaptar seu atendimento? Envie TREINO e conte o contexto de VENDA para conhecer o piloto Matraca. #Atendimento #ComunicacaoEmVendas #Matraca”
+
+## 25 carrosséis novos
 
 Todos os carrosséis têm **seis páginas**, com numeração no rodapé e assinatura Matraca. “Texto” é a redação final da página; “arte” é direção de produção; “alternativo” é a descrição acessível. Não usar capturas de conversas reais. As páginas de cada peça desenvolvem uma tarefa comercial diferente da encenação do vídeo correspondente.
 
@@ -662,7 +747,82 @@ Todos os carrosséis têm **seis páginas**, com numeração no rodapé e assina
 
 **Legenda pronta:** “O que foi usado, o que foi observado, o que mudou e o que precisa ser ajustado? Essas perguntas ajudam a preparar uma conversa de renovação baseada na experiência do cliente. Quer ensaiar essa revisão? Envie TREINO e descreva seu contexto de VENDA para conhecer a proposta do piloto Matraca. #RenovacaoDeClientes #GestaoDeContas #Matraca”
 
-## 20 posts estáticos novos
+<a id="d-c51"></a>
+
+### D-C51 — Um mapa para retomar a fala depois de uma pergunta
+
+**Público/funil/objetivo:** executivos de contas e vendedores técnicos; topo; organizar mudança de ordem durante a apresentação. **Métrica:** salvamentos. **Direção:** três cartões de sequência, clipe móvel e balões de pergunta; roxo, verde e creme; sem retratar comprador como obstáculo.
+
+1. **Texto:** “Uma pergunta entrou no meio da explicação. Onde você retoma?” **Arte:** linha com três cartões, interrompida por balão lateral; um clipe marca o segundo cartão. **Alternativo:** pergunta no meio de uma sequência cria uma necessidade de reorganizar a fala.
+2. **Texto:** “Escute a pergunta inteira. Ela pode mostrar uma condição necessária para entender o restante.” **Arte:** balão do comprador em destaque; roteiro do vendedor recua para o fundo. **Alternativo:** pergunta do comprador recebe espaço antes da continuação da apresentação.
+3. **Texto:** “Localize: ‘Você quer esclarecer a preparação inicial ou o uso depois da entrega?’” **Arte:** dois cartões de etapas, sem resposta escolhida; pergunta em roxo. **Alternativo:** exemplo de pergunta que distingue duas etapas antes de responder.
+4. **Texto:** “Combine a ordem: ‘Vamos esclarecer essa etapa e depois volto à sequência. Faz sentido?’” **Arte:** seta vai do roteiro ao balão e retorna ao clipe; verde indica o caminho. **Alternativo:** acordo explícito sobre esclarecer uma dúvida e retomar a sequência.
+5. **Texto:** “Retome com contexto: ‘Esclarecida a preparação, agora podemos ver o que acontece no primeiro uso.’” **Arte:** clipe deslocado para cartão “primeiro uso”; frase ocupa metade da página. **Alternativo:** transição verbal reconecta a resposta à continuação da explicação.
+6. **Texto:** “Salve o mapa: escutar, localizar, combinar e retomar. Ensaie com perguntas no meio da fala.” **Arte:** quatro verbos em cartões conectados; assinatura Matraca na base. **Alternativo:** resumo de quatro ações para retomar uma apresentação de forma pertinente.
+
+**Legenda pronta:** “Escutar, localizar, combinar e retomar: um mapa para quando a apresentação muda de ordem. A pergunta pode revelar o que precisa ser entendido antes do próximo ponto. Salve e ensaie com um colega: ele interrompe com uma dúvida pertinente, e você prepara a transição para continuar. #ReuniaoComercial #ComunicacaoEmVendas #Matraca”
+
+<a id="d-c52"></a>
+
+### D-C52 — Edite um áudio comercial antes de gravar
+
+**Público/funil/objetivo:** varejistas, representantes e vendedores de serviços; topo; reduzir assuntos misturados numa resposta por áudio. **Métrica:** salvamentos. **Direção:** roteiro sobre papel, ondas sonoras meramente ilustrativas e celular sem marca; nenhuma mensagem real ou confirmação de envio.
+
+1. **Texto:** “Seu próximo áudio responde a qual pergunta?” **Arte:** balão “Como ficou a retirada?” sobre celular de costas; título em roxo. **Alternativo:** pergunta fictícia de retirada orienta a preparação de uma resposta por áudio.
+2. **Texto:** “Separe o assunto principal. Aqui, a pessoa quer saber sobre retirada — não sobre o catálogo inteiro.” **Arte:** cartão “retirada” no centro; “novidades” e “catálogo” ficam separados ao lado. **Alternativo:** organização do assunto principal distingue a resposta necessária de temas adicionais.
+3. **Texto:** “Prepare a informação: ‘Seu pedido está separado para retirada até sexta-feira.’ Confira a condição antes de falar.” **Arte:** uma linha de roteiro em verde; etiqueta “exemplo fictício”, sem número de pedido. **Alternativo:** frase objetiva informa uma condição fictícia de retirada.
+4. **Texto:** “Acrescente uma pergunta ligada ao assunto: ‘Você prefere passar pela manhã ou à tarde?’” **Arte:** dois cartões de períodos, sem escolher pelo interlocutor; fundo creme. **Alternativo:** pergunta permite ao comprador indicar o período de retirada.
+5. **Texto:** “Escute o ensaio. A mensagem está audível e completa? Se texto funcionar melhor para a pessoa, use texto.” **Arte:** fone, roteiro e caixa “formato combinado”; nenhum áudio é apresentado como obrigatório. **Alternativo:** revisão do áudio e possibilidade de escolher um formato mais adequado.
+6. **Texto:** “Salve: uma pergunta recebida, uma resposta principal e um próximo passo pertinente.” **Arte:** três balões em sequência, último aberto para resposta; assinatura na base. **Alternativo:** resumo de um roteiro curto para resposta comercial em canal combinado.
+
+**Legenda pronta:** “Uma pergunta recebida, uma resposta principal e um próximo passo pertinente. Esse roteiro ajuda a preparar um áudio comercial sem misturar assuntos. Grave um ensaio curto, escute e confira se o formato atende à preferência da pessoa. Salve para usar quando uma resposta por áudio fizer sentido na conversa. #AudioComercial #VendasNoVarejo #Matraca”
+
+<a id="d-c53"></a>
+
+### D-C53 — Quatro movimentos para reparar um mal-entendido
+
+**Público/funil/objetivo:** consultores e executivos de contas; meio; corrigir uma condição compreendida de forma diferente. **Métrica:** salvamentos e mensagens qualificadas. **Direção:** dois cartões de interpretação e documento cenográfico, cores de igual peso; não usar “cliente errado” nem símbolos de culpa.
+
+1. **Texto:** “A pessoa entendeu uma condição diferente. Como você esclarece o que aconteceu?” **Arte:** duas versões de uma frase ligadas à mesma proposta; título roxo. **Alternativo:** uma proposta gerou duas interpretações que precisam ser esclarecidas.
+2. **Texto:** “Ouça a interpretação: ‘Quando você diz revisão, entendeu um encontro individual ou uma atividade em grupo?’” **Arte:** dois cartões “individual” e “grupo”; balão de pergunta acima. **Alternativo:** pergunta identifica como o comprador interpretou a modalidade de revisão.
+3. **Texto:** “Reconheça a ambiguidade quando ela existir: ‘Minha explicação não diferenciou essas modalidades com clareza.’” **Arte:** trecho do roteiro sublinhado, sem apontar dedo para personagem. **Alternativo:** vendedor reconhece uma falta de clareza na própria explicação.
+4. **Texto:** “Explique a condição correta: ‘Nesta proposta, a revisão acontece em grupo. O encontro individual não está incluído.’” **Arte:** documento cenográfico mostra o item correspondente; etiqueta “exemplo fictício”. **Alternativo:** condição correta do escopo é apresentada de forma explícita.
+5. **Texto:** “Reabra a avaliação: ‘Essa diferença muda o que vocês precisam?’ Confira também se o material escrito pede correção.” **Arte:** proposta e balão de resposta lado a lado; espaço em branco preserva a escolha. **Alternativo:** comprador pode rever a adequação depois do esclarecimento da condição.
+6. **Texto:** “Quer ensaiar uma conversa de reparo? Envie TREINO e conte seu contexto de VENDA.” **Arte:** cartão “próxima prática” junto dos dois sentidos agora separados; rodapé “Piloto Matraca”. **Alternativo:** convite para conhecer o piloto e praticar a correção de um mal-entendido comercial.
+
+**Legenda pronta:** “Ouça a interpretação, reconheça a ambiguidade, explique a condição correta e reabra a avaliação. Corrigir um mal-entendido também pode exigir ajustar o material escrito. O exemplo é fictício. Quer preparar essa conversa? Envie TREINO e descreva uma situação de VENDA para conhecer o piloto Matraca. #ComunicacaoClara #VendasConsultivas #Matraca”
+
+<a id="d-c54"></a>
+
+### D-C54 — Uma indicação que preserva a escolha das pessoas
+
+**Público/funil/objetivo:** autônomos, consultores e representantes; topo; pedir indicação sem transformar confiança em obrigação. **Métrica:** compartilhamentos. **Direção:** cartão público de apresentação, três balões de pessoas adultas abstratas, nenhum número, nome real ou lista de contatos.
+
+1. **Texto:** “Uma indicação pode começar com um convite, sem passar dados de outra pessoa.” **Arte:** cartão de apresentação entre dois balões; o terceiro permanece distante e sem conexão automática. **Alternativo:** convite de indicação preserva a escolha de uma pessoa que ainda não participou da conversa.
+2. **Texto:** “Peça permissão: ‘Você se sentiria à vontade para compartilhar minha apresentação com alguém para quem ela faça sentido?’” **Arte:** pergunta em balão roxo grande, espaço para resposta abaixo. **Alternativo:** vendedor pergunta se a pessoa deseja compartilhar uma apresentação pública.
+3. **Texto:** “Facilite uma escolha voluntária: uma apresentação clara e um canal público permitem que a outra pessoa decida se quer procurar você.” **Arte:** cartão cenográfico com “o que ofereço” e “canal público”, sem dados de contato utilizáveis. **Alternativo:** material de apresentação oferece contexto e deixa a iniciativa de contato para o interessado.
+4. **Texto:** “Não presuma autorização: ‘Você não precisa me enviar o telefone da pessoa. Ela pode entrar em contato se quiser.’” **Arte:** um telefone sem número fica separado do cartão; nenhum símbolo alarmista. **Alternativo:** frase esclarece que dados de uma terceira pessoa não precisam ser compartilhados.
+5. **Texto:** “Aceite a recusa: ‘Sem problema. Obrigado por considerar.’ O pedido não cria uma dívida.” **Arte:** dois balões encerram a conversa com o mesmo tamanho; fundo creme. **Alternativo:** recusa ao pedido de indicação recebe um encerramento tranquilo.
+6. **Texto:** “Compartilhe e ensaie um convite que possa receber um sim ou um não.” **Arte:** dois cartões “aceitar” e “recusar” com igual peso; assinatura Matraca. **Alternativo:** convite para praticar pedidos de indicação que respeitam a escolha.
+
+**Legenda pronta:** “Uma indicação funciona como convite quando as pessoas mantêm a escolha. Prepare uma apresentação clara, use um canal público e não presuma autorização para receber dados de terceiros. Compartilhe o roteiro e ensaie também como responder a uma recusa com naturalidade. #IndicacaoDeClientes #RepresentacaoComercial #Matraca”
+
+<a id="d-c55"></a>
+
+### D-C55 — Adapte o atendimento quando compreender fica difícil
+
+**Público/funil/objetivo:** varejistas, representantes e expositores; meio; responder a barreiras de comunicação sem presumir sua causa. **Métrica:** salvamentos e mensagens de interesse. **Direção:** estande cenográfico, área lateral e cartões de resumo; pessoas adultas com roupas grafite e verde; sem caricaturas ou símbolos de diagnóstico.
+
+1. **Texto:** “A conversa está difícil de acompanhar. O que pode ser ajustado?” **Arte:** duas pessoas no balcão, balão “não consegui entender”; fundo com movimento apenas sugerido. **Alternativo:** comprador relata dificuldade de acompanhar uma conversa em um estande.
+2. **Texto:** “Reconheça o relato: ‘Obrigado por avisar. Qual parte ficou difícil de acompanhar?’” **Arte:** vendedor olha para a pessoa, celular afastado; pergunta em roxo. **Alternativo:** vendedor reconhece a dificuldade e pergunta qual parte precisa ser esclarecida.
+3. **Texto:** “Ofereça alternativas: outro local, resumo escrito ou explicação em partes. Pergunte o que ajuda naquele momento.” **Arte:** três cartões com local, texto e sequência, todos do mesmo tamanho. **Alternativo:** alternativas de formato e ambiente são oferecidas sem escolher pela pessoa.
+4. **Texto:** “Retome uma ideia: ‘Vamos começar pela diferença de tamanho entre as duas opções.’” **Arte:** duas fichas de produto com apenas o campo “tamanho” destacado; sem medidas inventadas. **Alternativo:** explicação é retomada por uma diferença específica entre duas opções.
+5. **Texto:** “Confira o ajuste: ‘Assim ficou mais fácil acompanhar? Que ponto ainda precisa de outra explicação?’” **Arte:** balão de pergunta e espaço de resposta, sem carimbo de solução garantida. **Alternativo:** pergunta verifica se o ajuste escolhido ajudou e se ainda há dúvidas.
+6. **Texto:** “Quer praticar uma adaptação de atendimento? Envie TREINO e conte seu contexto de VENDA.” **Arte:** cartões de alternativas junto de bloco de ensaio; rodapé “Conheça o piloto Matraca”. **Alternativo:** convite para conhecer o piloto e praticar comunicação adequada ao contexto de atendimento.
+
+**Legenda pronta:** “Reconheça a dificuldade, ofereça alternativas e confira se o ajuste ajudou. Outro local, um resumo escrito ou uma explicação por partes podem ser opções; pergunte qual faz sentido para a pessoa. Quer ensaiar essa conversa? Envie TREINO e descreva o contexto de VENDA para conhecer o piloto Matraca. #Atendimento #ComunicacaoEmVendas #Matraca”
+
+## 25 posts estáticos novos
 
 Cada ID abaixo corresponde a **uma imagem única**. Fotografias são encenações editoriais, sem sugerir que o elenco é cliente ou usuário do Matraca. O texto essencial da arte é retomado na legenda. Nenhuma mensagem comercial ilustrada foi enviada. Além de texto, composição e alt, cada peça indica a ação de comunicação que o vendedor pode praticar.
 
@@ -785,6 +945,36 @@ Cada ID abaixo corresponde a **uma imagem única**. Fotografias são encenaçõe
 ### D-P50 — Uso disponível, uso realizado, próxima necessidade
 
 **Público/funil/objetivo:** gerentes de conta e vendedores recorrentes; meio; revisar experiência antes da renovação. **Métrica:** salvamentos e mensagens qualificadas. **Texto da arte:** “O QUE FOI USADO — E O QUE AINDA FAZ SENTIDO?” Apoio: “Renovação começa pela revisão da experiência.” **Imagem/direção:** ficha de revisão com três colunas “disponível”, “utilizado” e “próxima necessidade”; gerente de conta com manga roxa e cliente com manga verde apontam campos diferentes. Sem percentuais, gráficos de crescimento ou nomes reais. **Composição:** pergunta no topo; ficha ocupa centro; uma área de observação “dificuldades também entram” na base. **Alt:** “Ficha de revisão distingue o que estava disponível, o que foi utilizado e a próxima necessidade do cliente.” **Legenda pronta:** “O que foi usado e o que ainda faz sentido? Antes de discutir continuidade, escute exemplos de utilidade, dificuldade e mudança de necessidade. Essas informações ajudam a preparar uma proposta pertinente. Quer ensaiar uma conversa de renovação? Envie TREINO e descreva seu contexto de VENDA para conhecer o piloto Matraca. #RenovacaoDeClientes #GestaoDeContas #Matraca”
+
+<a id="d-p51"></a>
+
+### D-P51 — A pergunta pode mudar o caminho
+
+**Público/funil/objetivo:** executivos de contas e vendedores técnicos; topo; retomar uma apresentação depois de uma interrupção. **Métrica:** salvamentos. **Texto da arte:** “VAMOS ESCLARECER ESTE PONTO E DEPOIS RETOMAR?” Apoio: “Reconheça a pergunta. Combine a ordem. Marque onde continuar.” **Imagem/direção:** mesa de reunião cenográfica com três cartões em sequência; mão de vendedora com manga verde-escura coloca um clipe no cartão central, mão do comprador com manga azul-clara aponta o primeiro. Câmera superior, luz suave, nenhum gesto de disputa. **Composição:** pergunta em três linhas na metade superior; foto de cartões e mãos na inferior; linha roxa faz um desvio e retorna ao clipe. **Alt:** “Mãos reorganizam cartões de uma apresentação e marcam o ponto de retomada depois de uma pergunta.” **Legenda pronta:** “Vamos esclarecer este ponto e depois retomar? Uma frase assim pode combinar a ordem da conversa quando uma pergunta aparece no meio da apresentação. Escute primeiro, localize a dúvida e marque onde continuar. Salve e ensaie uma explicação que tenha espaço para o interlocutor participar. #ReuniaoComercial #ComunicacaoEmVendas #Matraca”
+
+<a id="d-p52"></a>
+
+### D-P52 — Um áudio precisa responder a alguma coisa
+
+**Público/funil/objetivo:** varejistas e representantes; topo; preparar resposta por áudio em canal combinado. **Métrica:** salvamentos. **Texto da arte:** “QUAL PERGUNTA ESTE ÁUDIO ESTÁ RESPONDENDO?” Apoio: “Uma informação principal. Uma pergunta pertinente. Um formato combinado.” **Imagem/direção:** celular de costas sobre balcão, roteiro de uma frase e fone; mão de vendedor com manga azul sublinha “retirada”, sem mostrar mensagem real ou botão de envio. Uma caixa de papelão sem etiqueta aparece desfocada ao fundo. **Composição:** pergunta em roxo no topo; still ocupa centro; os três elementos do apoio ficam em linhas separadas na base, com corpo legível. **Alt:** “Celular, fone e roteiro com o assunto retirada ajudam a preparar uma resposta comercial breve por áudio.” **Legenda pronta:** “Qual pergunta este áudio está respondendo? Escolha a informação principal, prepare uma pergunta ligada a ela e confira se áudio é o formato combinado. Faça um ensaio curto e escute antes de enviar. Salve o exercício para evitar misturar vários assuntos na próxima resposta comercial. #AudioComercial #VendasNoVarejo #Matraca”
+
+<a id="d-p53"></a>
+
+### D-P53 — Clareza também inclui reparar
+
+**Público/funil/objetivo:** consultores e executivos de contas; meio; reconhecer uma interpretação diferente e esclarecer escopo. **Métrica:** conversas qualificadas sobre prática. **Texto da arte:** “MINHA EXPLICAÇÃO FICOU AMBÍGUA. VAMOS ESCLARECER.” Apoio: “Ouça o entendimento. Explique a condição. Reabra a avaliação.” **Imagem/direção:** consultora de blazer roxo e comprador de camisa bege diante de proposta fictícia; ambos apontam para cartões diferentes, “grupo” e “individual”, mantendo expressões de conversa. Enquadramento do peito à mesa, texto dos cartões legível, nenhuma assinatura. **Composição:** frase no topo em faixa creme; foto central; três ações do apoio na base em roxo e grafite. **Alt:** “Duas pessoas identificam interpretações diferentes de uma proposta para esclarecer revisão em grupo e encontro individual.” **Legenda pronta:** “Minha explicação ficou ambígua. Vamos esclarecer. Reconhecer o ponto pode abrir espaço para corrigir uma condição e perguntar como ela afeta a necessidade do comprador. Quer ensaiar uma conversa de reparo? Envie TREINO e conte seu contexto de VENDA para conhecer a proposta do piloto Matraca. #ComunicacaoClara #VendasConsultivas #Matraca”
+
+<a id="d-p54"></a>
+
+### D-P54 — Indicar não precisa significar passar um número
+
+**Público/funil/objetivo:** autônomos, consultores e representantes; topo; pedir indicação com possibilidade de recusa. **Métrica:** compartilhamentos. **Texto da arte:** “VOCÊ SE SENTIRIA À VONTADE PARA COMPARTILHAR MINHA APRESENTAÇÃO?” Apoio: “Um convite que preserva a escolha de quem indica e de quem recebe.” **Imagem/direção:** cartão cenográfico com resumo público da oferta entre duas mãos; mangas verde e azul; telefone virado para baixo fora do centro; sem nome, número, QR code funcional ou mensagem enviada. Foto superior de mesa creme, luz lateral suave. **Composição:** pergunta em quatro linhas no topo; cartão na metade inferior; apoio em faixa verde-escura com texto creme; assinatura discreta. **Alt:** “Cartão público de apresentação é oferecido para compartilhamento voluntário, sem solicitar dados de uma terceira pessoa.” **Legenda pronta:** “Você se sentiria à vontade para compartilhar minha apresentação? Esse pedido permite que a pessoa escolha indicar e que quem recebe decida procurar você. Prepare também uma resposta tranquila se ela preferir não compartilhar. Envie este exercício a alguém que trabalha por indicação. #IndicacaoDeClientes #VendasConsultivas #Matraca”
+
+<a id="d-p55"></a>
+
+### D-P55 — Pergunte qual ajuste ajuda
+
+**Público/funil/objetivo:** varejistas e expositores em feiras; meio; adaptar ambiente e formato de comunicação. **Métrica:** salvamentos e mensagens qualificadas. **Texto da arte:** “OUTRO LOCAL, UM RESUMO OU UMA EXPLICAÇÃO POR PARTES?” Apoio: “Pergunte o que ajuda a pessoa a acompanhar.” **Imagem/direção:** estande cenográfico com balcão e área lateral visível; vendedor de polo grafite mostra um cartão de resumo, compradora de camisa verde observa e escolhe; câmera na altura dos olhos, distância confortável. Não mostrar pessoa como incapaz ou usar gesto de audição como caricatura. **Composição:** três alternativas em cartões gráficos no alto; foto na metade inferior; apoio em faixa creme sobre área livre da imagem; contraste forte e texto grande. **Alt:** “Vendedor oferece um resumo escrito e uma área mais tranquila, perguntando qual ajuste facilita a conversa para a compradora.” **Legenda pronta:** “Outro local, um resumo ou uma explicação por partes? Quando compreender fica difícil, ofereça alternativas e pergunte qual ajuste ajuda. Depois, confira se a conversa ficou mais clara. Quer ensaiar uma adaptação de atendimento? Envie TREINO e descreva o contexto de VENDA para conhecer o piloto Matraca. #Atendimento #ComunicacaoEmVendas #Matraca”
 
 ## Conferência específica deste lote
 

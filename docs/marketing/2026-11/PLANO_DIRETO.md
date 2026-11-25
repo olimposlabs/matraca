@@ -1,6 +1,6 @@
 # Plano de marketing — vendas diretas Matraca
 
-Proposta de trabalho de 25/11/2026, ampliada para vendedores. Mercado brasileiro, comunicação em português, aquisição pelo Instagram. Decisões de campanha abaixo são recomendações para teste, não resultados observados. Este documento orienta 150 peças: as 90 de [CONTEUDO_DIRETO.md](CONTEUDO_DIRETO.md) e as 60 novas de [CONTEUDO_VENDEDORES.md](CONTEUDO_VENDEDORES.md). A [campanha comercial](EXTENSAO_COMERCIAL.md) detalha a prioridade de vendas; operação e calendários são comuns.
+Proposta de trabalho de 25/11/2026, ampliada para vendedores. Mercado brasileiro, comunicação em português, aquisição pelo Instagram. Decisões de campanha abaixo são recomendações para teste, não resultados observados. Este documento orienta 165 peças: as 90 de [CONTEUDO_DIRETO.md](CONTEUDO_DIRETO.md) e as 75 novas de [CONTEUDO_VENDEDORES.md](CONTEUDO_VENDEDORES.md). A [campanha comercial](EXTENSAO_COMERCIAL.md) detalha a prioridade de vendas; operação e calendários são comuns.
 
 ## 1. Objetivo e ponto de partida
 
@@ -94,11 +94,11 @@ Uma página de interesse, quando for criada, terá dois caminhos: “Quero prati
 
 ## 6. Pilares e organização editorial
 
-Distribuição sugerida para a base original de 90 peças: 30 com reconhecimento de problema, 30 com exercício aplicável, 15 com funcionamento/limites do método, 10 com objeções e 5 com convite ao próximo passo. A extensão de 60 acrescenta 20 temas comerciais, cada um com Reel, carrossel e estático: prospecção, descoberta, demonstração, negociação, objeções, acompanhamento e continuidade. A classificação de público, etapa, objetivo e métrica está em cada peça. Um Reel também pode qualificar; um post estático também pode ensinar.
+Distribuição sugerida para a base original de 90 peças: 30 com reconhecimento de problema, 30 com exercício aplicável, 15 com funcionamento/limites do método, 10 com objeções e 5 com convite ao próximo passo. A extensão de 75 acrescenta 25 temas comerciais, cada um com Reel, carrossel e estático: prospecção, descoberta, demonstração, negociação, objeções, acompanhamento e continuidade. A classificação de público, etapa, objetivo e métrica está em cada peça. Um Reel também pode qualificar; um post estático também pode ensinar.
 
-Os 50 Reels mostram comportamento e mudança; os 50 carrosséis organizam raciocínio e oferecem material consultável; os 50 posts fixam uma ideia ou tarefa visual. Repetir um tema entre formatos é intencional se cada um acrescentar utilidade. Evitar publicar a mesma mensagem três vezes seguidas ou apenas transformar legenda em páginas.
+Os 55 Reels mostram comportamento e mudança; os 55 carrosséis organizam raciocínio e oferecem material consultável; os 55 posts fixam uma ideia ou tarefa visual. Repetir um tema entre formatos é intencional se cada um acrescentar utilidade. Evitar publicar a mesma mensagem três vezes seguidas ou apenas transformar legenda em páginas.
 
-Cadência completa independente de 25 semanas: segunda e quinta Reel, terça e sexta carrossel, quarta e sábado estático; domingo reservado a respostas e leitura. A publicação de 6 peças por semana é uma hipótese de capacidade, não uma regra do algoritmo. O calendário combinado oferece alternativa de 50 semanas com um único perfil e 6 publicações totais por semana. O sprint exclusivo para vendedores usa os IDs 31–50 em 10 semanas independentes ou 20 semanas compartilhadas com equipes comerciais; ele é uma alternativa ao ciclo completo.
+Cadência completa independente de 28 semanas, com três peças na última: segunda e quinta Reel, terça e sexta carrossel, quarta e sábado estático; domingo reservado a respostas e leitura. A publicação de 6 peças por semana é uma hipótese de capacidade, não uma regra do algoritmo. O calendário combinado oferece alternativa de 55 semanas com um único perfil e 6 publicações totais por semana. O sprint exclusivo para vendedores usa os IDs 31–55 em 13 semanas independentes (três peças na última) ou 25 semanas compartilhadas com equipes comerciais; ele é uma alternativa ao ciclo completo.
 
 Horários iniciais de teste: 12h30 e 19h30 em GMT-3. Alternar grupos comparáveis por duas semanas, registrar exposição e ajustar pelos dados da conta; não anunciar “melhor horário universal”. Stories e collabs seguem o manual operacional.
 

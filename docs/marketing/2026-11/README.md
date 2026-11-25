@@ -1,25 +1,25 @@
-# Matraca — dois planos de marketing e 300 peças para Instagram
+# Matraca — dois planos de marketing e 330 peças para Instagram
 
 Preparado em 25 de novembro de 2026. Estratégia, pesquisa e roteiros de produção em português brasileiro. O material considera vendas diretas do Matraca e venda do serviço white label a organizações, com percursos comerciais diferentes.
 
 **Comece pela [leitura navegável](LEITURA.html)**: planos completos e biblioteca com busca por assunto, frente, segmento e formato. O arquivo funciona sem conexão para consultar o conteúdo; links de fontes externas exigem internet. Também é possível ler e editar cada caderno Markdown abaixo.
 
-**Ampliação comercial:** vendedores já apareciam na base. Agora ganham 60 peças exclusivas; equipes comerciais de empresas recebem outras 60. A [campanha comercial](EXTENSAO_COMERCIAL.md) define mensagens, públicos, jornadas, piloto, atendimento, orçamento e medição desses dois percursos. As 180 peças originais foram preservadas.
+**Ampliação comercial:** vendedores já apareciam na base. Agora ganham 75 peças exclusivas; equipes comerciais de empresas recebem outras 75. A [campanha comercial](EXTENSAO_COMERCIAL.md) define mensagens, públicos, jornadas, piloto, atendimento, orçamento e medição desses dois percursos. As 180 peças originais e os 120 roteiros da primeira ampliação foram preservados. O complemento mais recente acrescenta cinco de cada formato por público, nos IDs 51–55.
 
 ## Os dois planos
 
 | Caso de uso | Estratégia completa | Caderno de produção |
 | --- | --- | --- |
-| **Vendas diretas como Matraca** | [Plano direto](PLANO_DIRETO.md): posicionamento, profissões, ofertas, funil, aquisição, atendimento, orçamento, retenção e métricas | [Base: 30 de cada formato](CONTEUDO_DIRETO.md) + [vendedores: mais 20 de cada](CONTEUDO_VENDEDORES.md). Total: 150 peças, IDs D-V01–50, D-C01–50 e D-P01–50 |
-| **White label e organizações** | [Plano white label](PLANO_WHITE_LABEL.md): compradores, comitê de decisão, método do parceiro, descoberta, demonstração, piloto, proposta, expansão e métricas | [Base: 30 de cada formato](CONTEUDO_WHITE_LABEL.md) + [equipes comerciais: mais 20 de cada](CONTEUDO_EQUIPES_COMERCIAIS.md). Total: 150 peças, IDs W-V01–50, W-C01–50 e W-P01–50 |
+| **Vendas diretas como Matraca** | [Plano direto](PLANO_DIRETO.md): posicionamento, profissões, ofertas, funil, aquisição, atendimento, orçamento, retenção e métricas | [Base: 30 de cada formato](CONTEUDO_DIRETO.md) + [vendedores: mais 25 de cada](CONTEUDO_VENDEDORES.md). Total: 165 peças, IDs D-V01–55, D-C01–55 e D-P01–55 |
+| **White label e organizações** | [Plano white label](PLANO_WHITE_LABEL.md): compradores, comitê de decisão, método do parceiro, descoberta, demonstração, piloto, proposta, expansão e métricas | [Base: 30 de cada formato](CONTEUDO_WHITE_LABEL.md) + [equipes comerciais: mais 25 de cada](CONTEUDO_EQUIPES_COMERCIAIS.md). Total: 165 peças, IDs W-V01–55, W-C01–55 e W-P01–55 |
 
-**Total ampliado: 100 vídeos, 100 carrosséis e 100 posts estáticos.** A extensão contém 20 vídeos, 20 carrosséis e 20 posts para vendedores e as mesmas quantidades para equipes de vendas/comercial. Cada ID representa uma peça; páginas e takes não são peças adicionais. Stories de apoio e alternativas de fechamento são complementos, fora dos 300. Uma empresa pode contratar desenvolvimento interno sem revender o serviço; a marca própria é discutida conforme necessidade e escopo.
+**Total ampliado: 110 vídeos, 110 carrosséis e 110 posts estáticos.** A extensão contém 25 vídeos, 25 carrosséis e 25 posts para vendedores e as mesmas quantidades para equipes de vendas/comercial. Cada ID representa uma peça; páginas e takes não são peças adicionais. Stories de apoio e alternativas de fechamento são complementos, fora dos 330. Uma empresa pode contratar desenvolvimento interno sem revender o serviço; a marca própria é discutida conforme necessidade e escopo.
 
 ## Como usar na produção
 
 1. Leia o plano da frente que será executada e escolha o público prioritário.
 2. Consulte o [baseline de mercado](BASELINE_MERCADO.md), que distingue fatos observados de hipóteses para o Matraca.
-3. Escolha a cadência nos [calendários completos](CALENDARIOS.md): acervo de 300 em 50 semanas no perfil único, ou 150 por frente em 25 semanas independentes. Para priorizar só a extensão comercial, o sprint usa 120 em 20 semanas combinadas, ou 60 por segmento em 10 semanas independentes. São modos alternativos de usar as mesmas peças.
+3. Escolha a cadência nos [calendários completos](CALENDARIOS.md): acervo de 330 em 55 semanas no perfil único, ou 165 por frente em 28 semanas independentes (três peças na última). Para priorizar só a extensão comercial, o sprint usa 150 em 25 semanas combinadas, ou 75 por segmento em 13 semanas independentes (três peças na última). São modos alternativos de usar as mesmas peças.
 4. Localize o ID no caderno ou na busca da leitura navegável.
 5. Siga os takes/páginas/arte, a legenda e a direção de produção; ensaie, produza e revise o primeiro lote.
 6. Use o [manual de operação e medição](OPERACAO_E_MEDICAO.md) para captação, acabamento, Stories, atendimento, atribuição e revisão de resultados.

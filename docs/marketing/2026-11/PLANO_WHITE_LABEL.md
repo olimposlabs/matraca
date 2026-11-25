@@ -1,6 +1,6 @@
 # Plano de marketing — serviço White Label Matraca
 
-Proposta de trabalho de 25/11/2026, ampliada para equipes comerciais. O objetivo é conquistar organizações que queiram oferecer prática de comunicação com metodologia e operação compatíveis com seu contexto, sob sua marca quando pertinente ao escopo. São 150 peças: as 90 de [CONTEUDO_WHITE_LABEL.md](CONTEUDO_WHITE_LABEL.md) e as 60 novas de [CONTEUDO_EQUIPES_COMERCIAIS.md](CONTEUDO_EQUIPES_COMERCIAIS.md). A [campanha comercial](EXTENSAO_COMERCIAL.md) detalha esse segundo percurso institucional. Não há campanha, contratação ou envio de mensagens executado nesta entrega.
+Proposta de trabalho de 25/11/2026, ampliada para equipes comerciais. O objetivo é conquistar organizações que queiram oferecer prática de comunicação com metodologia e operação compatíveis com seu contexto, sob sua marca quando pertinente ao escopo. São 165 peças: as 90 de [CONTEUDO_WHITE_LABEL.md](CONTEUDO_WHITE_LABEL.md) e as 75 novas de [CONTEUDO_EQUIPES_COMERCIAIS.md](CONTEUDO_EQUIPES_COMERCIAIS.md). A [campanha comercial](EXTENSAO_COMERCIAL.md) detalha esse segundo percurso institucional. Não há campanha, contratação ou envio de mensagens executado nesta entrega.
 
 ## 1. Tese comercial e estágio real
 
@@ -83,7 +83,7 @@ Conteúdo de descoberta mostra um problema do programa; consideração explica u
 
 Perfil separado, se houver equipe para atendê-lo: nome sugerido “Matraca para organizações”, sujeito à disponibilidade. Bio: “Seu método, sua marca, prática entre encontros. Conheça o piloto white label Matraca. Envie PARCERIA.” Não é necessário criar uma segunda conta agora: no perfil único, usar capas “Para organizações”, destaque próprio e link com escolha de percurso.
 
-Fixados B2B: “Para quem é o white label”; “O percurso de uma prática”; “Como desenhar um piloto”. Destaques: Parceiros; Equipes; Método; Operação; Demonstração; Consumo; Perguntas. No sprint comercial, o primeiro fixado passa a “Como organizar a prática da equipe de vendas”. O calendário completo independente usa 6 publicações semanais durante 25 semanas. No perfil único, usar o calendário combinado de 50 semanas. O sprint dedicado usa apenas os 60 novos IDs 31–50 em 10 semanas independentes, ou 20 semanas compartilhadas com vendedores. São opções de execução do mesmo acervo.
+Fixados B2B: “Para quem é o white label”; “O percurso de uma prática”; “Como desenhar um piloto”. Destaques: Parceiros; Equipes; Método; Operação; Demonstração; Consumo; Perguntas. No sprint comercial, o primeiro fixado passa a “Como organizar a prática da equipe de vendas”. O calendário completo independente usa 6 publicações semanais durante 27 semanas e três peças na semana 28. No perfil único, usar o calendário combinado de 55 semanas. O sprint dedicado usa apenas os 75 novos IDs 31–55 em 13 semanas independentes (três peças na última), ou 25 semanas compartilhadas com vendedores. São opções de execução do mesmo acervo.
 
 ## 6. Penetração e distribuição
 

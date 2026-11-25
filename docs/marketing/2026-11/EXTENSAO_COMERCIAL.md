@@ -1,6 +1,6 @@
 # Campanha comercial — vendedores e equipes de vendas
 
-Extensão solicitada em 25/11/2026. Acrescenta **120 peças inéditas** às 180 do pacote original: 20 vídeos, 20 carrosséis e 20 posts para vendedores individuais; a mesma quantidade para empresas que desenvolvem equipes comerciais. A base anterior permanece disponível. O acervo completo passa a 300 peças, sendo 100 de cada formato.
+Extensão solicitada em 25/11/2026. Reúne **150 peças inéditas** além das 180 do pacote original: 25 vídeos, 25 carrosséis e 25 posts para vendedores individuais; a mesma quantidade para empresas que desenvolvem equipes comerciais. A base anterior permanece disponível. O acervo completo passa a 330 peças, sendo 110 de cada formato. O complemento mais recente acrescenta 30 peças (cinco de cada formato por público), IDs 51–55, preservando os 120 roteiros comerciais anteriores.
 
 ## 1. O público já estava coberto; agora recebe prioridade própria
 
@@ -10,8 +10,8 @@ Esta extensão transforma essa cobertura inicial em duas campanhas dedicadas. A 
 
 | Campanha | Quem compra | Trabalho a realizar | Benefício a demonstrar | Biblioteca nova |
 | --- | --- | --- | --- | --- |
-| Vendedores individuais | Profissional que investe na própria prática | Preparar uma conversa comercial específica e escolher uma mudança na próxima tentativa | Explicação mais clara, pergunta pertinente, escuta e próximo passo compreensível | [D-V31–50, D-C31–50 e D-P31–50](CONTEUDO_VENDEDORES.md) |
-| Equipes comerciais | Empresa, patrocinada por direção comercial e/ou T&D | Organizar prática recorrente por função, etapa e critério, com acompanhamento de gestores | Rotina de capacitação, clareza de critérios e evidências para orientar feedback | [W-V31–50, W-C31–50 e W-P31–50](CONTEUDO_EQUIPES_COMERCIAIS.md) |
+| Vendedores individuais | Profissional que investe na própria prática | Preparar uma conversa comercial específica e escolher uma mudança na próxima tentativa | Explicação mais clara, pergunta pertinente, escuta e próximo passo compreensível | [D-V31–55, D-C31–55 e D-P31–55](CONTEUDO_VENDEDORES.md) |
+| Equipes comerciais | Empresa, patrocinada por direção comercial e/ou T&D | Organizar prática recorrente por função, etapa e critério, com acompanhamento de gestores | Rotina de capacitação, clareza de critérios e evidências para orientar feedback | [W-V31–55, W-C31–55 e W-P31–55](CONTEUDO_EQUIPES_COMERCIAIS.md) |
 
 **Vendedor** é a pessoa que pratica. **Gestor comercial** pode acompanhar e influenciar a compra. **Direção/T&D** pode patrocinar e contratar. Um profissional que pede o material para si entra na campanha direta; quem procura capacitar uma equipe entra na conversa institucional, independentemente do cargo escrito em seu perfil.
 
@@ -94,19 +94,27 @@ Problema de capacitação → exemplo de rotina → material para discutir com g
 
 **Roteiro de reunião, 20 minutos:** 0–4min para a situação que se repete; 4–8min para público e rotina; 8–12min para exercício e critério; 12–16min para responsáveis, capacidade e requisitos; 16–20min para combinar demonstração, verificação pendente ou próximo passo. Perguntar por requisitos de CRM, chamadas e integração cedo, sem prometê-los.
 
-**Resumo para encaminhar internamente:** “Queremos avaliar uma rotina de prática para [função da equipe], começando pela conversa [situação]. O piloto proposto deve definir exercício, acompanhamento, modo de avaliação, consumo e critérios de continuidade. A demonstração será usada para confirmar o escopo disponível.” Os campos entre colchetes são preenchidos na proposta da conta; não são copy de uma das 120 peças.
+**Resumo para encaminhar internamente:** “Queremos avaliar uma rotina de prática para [função da equipe], começando pela conversa [situação]. O piloto proposto deve definir exercício, acompanhamento, modo de avaliação, consumo e critérios de continuidade. A demonstração será usada para confirmar o escopo disponível.” Os campos entre colchetes são preenchidos na proposta da conta; não são copy de uma das 150 peças.
 
 ## 6. Distribuição editorial e calendário
 
-O pacote completo intercala conteúdos comerciais cedo, preservando os 180 anteriores e seus IDs. Cada frente agora reúne 150 peças, com 50 de cada formato. Em um perfil com seis publicações totais por semana, o acervo completo ocupa 50 semanas. Em duas frentes independentes com seis publicações por semana cada, são 25 semanas por frente.
+O pacote completo intercala conteúdos comerciais cedo, preservando os 180 anteriores e seus IDs. Cada frente agora reúne 165 peças, com 55 de cada formato. Em um perfil com seis publicações totais por semana, o acervo completo ocupa 55 semanas. Em duas frentes independentes com seis publicações por semana cada, são 28 semanas por frente, com três peças na última.
 
-Para priorizar a solicitação atual, pode-se executar apenas o **ciclo comercial**: 120 peças em 20 semanas no perfil único, ou 60 peças por público em 10 semanas por frente. Esses são modos alternativos de usar o mesmo acervo, não conteúdo adicional a somar. Não é necessário aumentar de seis para dez publicações semanais para acomodar a extensão.
+Para priorizar a solicitação atual, pode-se executar apenas o **ciclo comercial**: 150 peças em 25 semanas no perfil único, ou 75 peças por público em 13 semanas por frente (três peças na última). Esses são modos alternativos de usar o mesmo acervo, não conteúdo adicional a somar. Não é necessário aumentar de seis para dez publicações semanais para acomodar a extensão.
 
 No perfil, manter um destaque “Vendas” para a prática individual e outro “Equipes” para a contratação institucional. Usar capas que identifiquem a situação; nas peças corporativas, explicitar o papel do comprador no gancho, por exemplo “Você lidera uma equipe comercial?”. A chamada de um conteúdo para gestores não deve fazer o vendedor pensar que precisa contratar uma plataforma para si.
 
-Primeiro lote recomendado: uma peça de cada formato para vendedores e uma de cada formato para gestores. O Reel encena ou demonstra; o carrossel ajuda a organizar; o estático fixa uma pergunta ou comportamento. Revisar a qualidade das conversas antes de gravar os 40 novos vídeos em lote.
+Primeiro lote recomendado: uma peça de cada formato para vendedores e uma de cada formato para gestores. O Reel encena ou demonstra; o carrossel ajuda a organizar; o estático fixa uma pergunta ou comportamento. Revisar a qualidade das conversas antes de gravar os 50 vídeos comerciais em lote.
 
 Conteúdos de apoio sugeridos: enquete sobre etapa comercial mais difícil, bastidor de preparação de uma demonstração fictícia e caixa de perguntas sobre rotinas de capacitação. Responder com exemplos sem dados de compradores. Uma colaboração com instrutor de vendas pode revisar a pertinência do cenário; sua presença não comprova eficácia do Matraca nem o transforma em cliente.
+
+### Complemento editorial — IDs 51–55
+
+Para vendedores, os cinco novos temas tratam de retomada após interrupção, áudio breve em canal combinado, reparo de mal-entendido, indicação com consentimento e adaptação a um ambiente que dificulta compreender. São práticas para manter a conversa clara em situações menos previsíveis.
+
+Para organizações, os temas são atualização da narrativa, capacitação de parceiros de canal, aprendizagem com oportunidades perdidas em cenários fictícios, coordenação de múltiplos vendedores e manutenção dos critérios de prática. O foco é sustentar a capacitação quando pessoas, ofertas e contextos mudam.
+
+Cada tema tem vídeo, carrossel e estático com funções complementares. Os 30 novos IDs podem ocupar cinco semanas combinadas; esse complemento já está incluído nos calendários completos e comerciais, sem somar peças ou orçamento novamente.
 
 ## 7. Medição: o que muda para pessoa e empresa
 
