@@ -22,7 +22,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { AuthProvider, AuthenticatedArea, LoginPage, WorkspaceNavigation, sessionHome, useAuth } from './auth';
+import { AuthProvider, AuthenticatedArea, LoginPage, LoginConfirmationPage, WorkspaceNavigation, sessionHome, useAuth } from './auth';
 import { apiJson } from './api';
 import { OrganizationsPage, OrganizationSettingsPage, brandDisplayName, organizationTheme } from './organizations';
 
@@ -270,6 +270,7 @@ function AppShell() {
       '/': 'Matraca — Um espaço para a sua voz',
       '/status': 'Status do ambiente — Matraca',
       '/login': 'Acesso ao piloto — Matraca',
+      '/login/confirm': 'Confirmar entrada — Matraca',
       '/app': 'Área do aluno — Matraca',
       '/app/journey': 'Minha jornada — Matraca',
       '/app/evolution': 'Minha evolução — Matraca',
@@ -313,6 +314,7 @@ function AppShell() {
             <Route path="/" element={<HomeEntry />} />
             <Route path="/status" element={<StatusPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/login/confirm" element={<LoginConfirmationPage />} />
             <Route path="/app" element={<MemberEntry />} />
             <Route path="/app/journey" element={<JourneyPage />} />
             <Route path="/app/evolution" element={<EvolutionPage />} />

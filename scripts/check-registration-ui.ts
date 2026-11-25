@@ -81,6 +81,7 @@ try {
     assert.equal(new URL(mail.link).origin, base);
     // Never log the one-use link or session cookie.
     await page.goto(mail.link, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Confirmar entrada', exact: true }).click();
     await expect(page).toHaveURL(`${base}/app/journey`);
   }
   await consumeLatestMessage();

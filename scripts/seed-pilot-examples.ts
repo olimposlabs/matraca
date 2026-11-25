@@ -38,13 +38,16 @@ const priceTable = { mode: 'volume', tiers: [{ from: 1, to: 9, unitPriceCents: 1
 async function session(org: typeof direct, id: string): Promise<Session> {
   const raw = randomBytes(32).toString('base64url');
   const hash = createHash('sha256').update(raw).digest('hex');
+  const intent = randomBytes(32).toString('base64url');
+  const intentHash = createHash('sha256').update(intent).digest('hex');
   const token = await app.db.query(`
-    INSERT INTO auth_tokens(org_id,user_id,hostname,token_hash,purpose,expires_at)
-    SELECT org_id,id,$3,$4,'login',now()+interval '1 minute'
+    INSERT INTO auth_tokens(org_id,user_id,hostname,token_hash,purpose,expires_at,intent_hash)
+    SELECT org_id,id,$3,$4,'login',now()+interval '1 minute',$5
     FROM users WHERE org_id=$1 AND id=$2 AND status='active' AND archived_at IS NULL
-  `, [org.id, id, org.host, hash]);
+  `, [org.id, id, org.host, hash, intentHash]);
   if (!token.rowCount) throw new Error('Persona ativa do seed não encontrada.');
-  const login = await app.inject({ method: 'GET', url: `/api/auth/consume?token=${raw}`, headers: { host: org.host } });
+  const login = await app.inject({ method: 'POST', url: '/api/auth/consume',
+    headers: { host: org.host, cookie: `matraca_login_intent=${intent}`, 'x-matraca-request': '1' }, payload: { token: raw } });
   const cookie = login.cookies.find(item => item.name === 'matraca_session');
   if (!cookie) throw new Error('Não foi possível iniciar a sessão da persona sintética.');
   const credential = { host: org.host, cookie: `${cookie.name}=${cookie.value}` };

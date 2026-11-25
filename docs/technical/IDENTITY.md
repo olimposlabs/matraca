@@ -50,7 +50,9 @@ recurso. Um papel não concede acesso automático a todos os recursos de uma org
 | `GET /api/context` | Retorna `{org}` pública do hostname cadastrado |
 | `POST /api/auth/register` | Aceita apenas `{name,email}`; cadastra estudante convidado somente na org Matraca e prepara link local |
 | `POST /api/auth/request` | Aceita apenas `{email}`; responde 202 genérico para existente, inexistente, suspenso ou limitado |
-| `GET /api/auth/consume?token=...` | Consome token uma vez, ativa convidado, cria sessão nova e redireciona para `/app` ou `/backoffice` |
+| `GET/HEAD /api/auth/consume?token=...` | Abre a tela de confirmação sem criar sessão nem consumir token |
+| `POST /api/auth/preview` | Confere token e intenção do navegador para exibir a conta na confirmação |
+| `POST /api/auth/consume` | Confirma entrada com token e intenção. Ativa convidado, cria sessão e informa o destino |
 | `GET /api/auth/session` | Retorna `{user,org}` ou 401 |
 | `POST /api/auth/logout` | Revoga sessão daquele host, limpa cookie e retorna 204; repetição é segura |
 
@@ -61,11 +63,9 @@ seguintes. Cadastro repetido não altera nome, papéis nem status existentes.
 Tokens e sessões são segredos de 32 bytes aleatórios, codificados em base64url.
 O banco armazena somente SHA-256 desses valores. Tokens expiram após 15 minutos;
 sessões, após sete dias. Host, org, propósito e usuário estão vinculados no banco.
-Um link errado, expirado ou reutilizado redireciona para
-`/login?error=invalid_link`, sem criar cookie. O token inválido não entra no destino
-do redirecionamento e a resposta de consumo usa `Referrer-Policy: no-referrer`.
+A solicitação registra uma intenção de 15 minutos em cookie HTTP-only do host. O banco vincula seu hash ao token. A tela de confirmação recebe o token no fragmento da URL. A prévia e a confirmação exigem a intenção do navegador que pediu o link e usam `Referrer-Policy: no-referrer`. A interface oferece um novo pedido quando a confirmação falha.
 
-O consumo bloqueia as linhas de token e usuário na transação. Marcação de uso,
+O consumo bloqueia usuário e organização e marca o token somente se ainda estiver válido. Marcação de uso,
 ativação do convidado, criação da sessão e auditoria são confirmadas juntas. Dois
 consumos concorrentes do mesmo token não produzem duas sessões. Quando há uma
 sessão anterior no mesmo host, ela é revogada na troca.
@@ -80,10 +80,7 @@ com protocolo e host da requisição. A aplicação não habilita CORS aberto. O
 customizado impede envio de formulário cross-site simples; a checagem de origem
 também bloqueia requisições de outra organização.
 
-Os limites são persistentes e atômicos: cinco pedidos por combinação e-mail/host
-e cem pedidos por host a cada 15 minutos. Cadastro e pedido de login compartilham
-os limites. Excesso mantém 202 e não gera novo token nem e-mail. As chaves desses
-contadores são hashes, não endereços de e-mail em texto.
+As cotas de 15 minutos contabilizam 96 solicitações por origem, 48 por origem e host, 12 cadastros por origem e host e cinco entregas por destinatário conhecido no host. A origem vem do socket da API. Os contadores têm chaves em hash e expiram. Excesso mantém a resposta genérica 202, sem emissão de token nem e-mail.
 
 ## E-mail simulado privado
 
@@ -125,7 +122,7 @@ precisará de outbox e confirmação de envio próprios.
 
 `audit_events` registra criação de identidade, emissão de link, início e fim de
 sessão. Registra ator, organização e hostname, sem token, cookie ou corpo do pedido.
-O status do usuário ou da organização é revalidado na próxima requisição protegida.
+A migração 018 encerra sessões e links anteriores e preserva as contas. Suspender ou arquivar usuário ou suspender organização revoga sessões e links abertos na mesma transação. Após reativar, faça novo login. Para reversão, preserve as revogações e pause a emissão até restabelecer o fluxo de confirmação.
 
 A fase não implementa senha, SSO, MFA, serviço real de e-mail nem administração
 completa de convites. A caixa local é um recurso de desenvolvimento, não mecanismo

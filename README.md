@@ -28,7 +28,7 @@ Solicite um link na tela e consulte a caixa de e-mail local. Use o host da tela 
 npm run inbox -- --email ana@exemplo.test --host matraca.localhost
 ```
 
-Abra o link retornado. Cada link é de uso único. Para testar compra e pagamento pela primeira vez com um aluno sem matrícula, crie um cadastro sintético no portal Matraca.
+Abra o link retornado no mesmo navegador em que solicitou acesso e confirme a entrada. Cada link é de uso único. Para testar compra e pagamento pela primeira vez com um aluno sem matrícula, crie um cadastro sintético no portal Matraca.
 
 ## Exemplos e ambiente de teste
 

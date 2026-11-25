@@ -65,6 +65,7 @@ async function login(page: Page, base: string, email: string) {
     return Boolean(link);
   }).toBe(true);
   await page.goto(link);
+  await page.getByRole('button', { name: 'Confirmar entrada', exact: true }).click();
   await expect(page).toHaveURL(/\/(app(?:\/journey)?|backoffice)$/);
 }
 

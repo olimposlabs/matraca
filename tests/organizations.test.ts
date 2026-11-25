@@ -134,9 +134,12 @@ describe('organizações, branding e publicação isolada', () => {
     expect(files.length).toBe(1);
     const mail = JSON.parse(await readFile(join(inbox, files[0]), 'utf8'));
     const token = new URL(mail.link).searchParams.get('token');
-    const consumed = await app.inject({ method: 'GET', url: `/api/auth/consume?token=${encodeURIComponent(token!)}`, headers: { host } });
-    expect(consumed.headers.location).toBe('/app');
-    const cookie = String(consumed.headers['set-cookie']).split(';')[0];
+    const intent = linkRequest.cookies.find(item => item.name === 'matraca_login_intent')!;
+    const consumed = await app.inject({ method: 'POST', url: '/api/auth/consume', payload: { token },
+      headers: { host, 'x-matraca-request': '1', cookie: `${intent.name}=${intent.value}` } });
+    expect(consumed.json().destination).toBe('/app');
+    const session = consumed.cookies.find(item => item.name === 'matraca_session')!;
+    const cookie = `${session.name}=${session.value}`;
     const identity = await app.inject({ method: 'GET', url: '/api/auth/session', headers: { host, cookie } });
     expect(identity.statusCode).toBe(200);
     expect(identity.json().user.roles).toEqual(['org_admin']);

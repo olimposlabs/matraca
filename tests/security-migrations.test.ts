@@ -86,3 +86,36 @@ it('preserva os cursos anteriores e compartilha só a primeira versão autoral d
     try { await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); } finally { await control.close(); }
   }
 });
+
+it('a migração encerra credenciais legadas e preserva a conta', async () => {
+  const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const schema = `identity_upgrade_test_${randomUUID().replaceAll('-', '')}`;
+  const control = createDatabase(base);
+  const url = new URL(base);
+  url.searchParams.set('options', `-c search_path=${schema}`);
+  const db = createDatabase(url.href);
+  const directory = new URL('../server/migrations/', import.meta.url);
+  try {
+    await control.query(`CREATE SCHEMA ${schema}`);
+    const entries = (await readdir(directory)).filter(name => name.endsWith('.sql')).sort();
+    for (const entry of entries.filter(name => name < '018')) {
+      await db.query(await readFile(new URL(entry, directory), 'utf8'));
+    }
+    const org = randomUUID(), user = randomUUID();
+    await db.query("INSERT INTO orgs(id,slug,name,kind) VALUES($1,'identity-upgrade','Matraca teste','matraca')", [org]);
+    await db.query("INSERT INTO domains(hostname,org_id) VALUES('identity-upgrade.localhost',$1)", [org]);
+    await db.query("INSERT INTO users (id,org_id,email,name,roles,status) VALUES($1,$2,'tester@example.test','Pessoa teste',ARRAY['student'],'active')",
+      [user, org]);
+    await db.query("INSERT INTO sessions(org_id,user_id,hostname,token_hash,expires_at) VALUES($1,$2,'identity-upgrade.localhost',$3,clock_timestamp()+interval '1 hour')",
+      [org, user, '0'.repeat(64)]);
+    await db.query("INSERT INTO auth_tokens(org_id,user_id,hostname,token_hash,purpose,expires_at) VALUES($1,$2,'identity-upgrade.localhost',$3,'login',clock_timestamp()+interval '10 minutes')",
+      [org, user, '1'.repeat(64)]);
+    await db.query(await readFile(new URL(entries.find(name => name.startsWith('018_'))!, directory), 'utf8'));
+    expect((await db.query('SELECT id,status FROM users WHERE id=$1', [user])).rows).toEqual([{ id: user, status: 'active' }]);
+    expect((await db.query('SELECT 1 FROM sessions WHERE revoked_at IS NULL')).rowCount).toBe(0);
+    expect((await db.query('SELECT 1 FROM auth_tokens WHERE used_at IS NULL')).rowCount).toBe(0);
+  } finally {
+    await db.close();
+    try { await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); } finally { await control.close(); }
+  }
+});
