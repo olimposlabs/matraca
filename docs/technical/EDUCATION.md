@@ -184,4 +184,4 @@ de aluno preservados nesta fase.
 
 ## Gestão de pessoas por escola
 
-Leitura e mentoria continuam disponíveis para o professor atualmente atribuído. Alterar o cadastro, suspender ou arquivar um aluno exige administração da sua escola atual ou da organização. A gestão escolar pode editar dados de profissionais vinculados a uma escola administrada. Papéis e status de profissionais exigem o administrador da organização. A inclusão em grupos valida a gestão da pessoa e o vínculo com a escola do grupo.
+Leitura e mentoria continuam disponíveis para o professor atualmente atribuído. Alterar o cadastro, suspender ou arquivar um aluno exige administração da sua escola atual ou da organização. A gestão escolar pode editar dados de profissionais vinculados a uma escola administrada. Papéis e status de profissionais exigem o administrador da organização. A inclusão em grupos escolares exige a gestão do grupo e um vínculo atual da pessoa com a escola, como estudante ou profissional.

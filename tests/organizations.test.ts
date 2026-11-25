@@ -186,28 +186,31 @@ describe('organizações, branding e publicação isolada', () => {
     expect((await upload(current)).statusCode).toBe(403);
   });
 
-  it.each(['settings', 'branding', 'restore', 'logo'] as const)('reconfere o papel depois de aguardar %s', async operation => {
+  it.each(['settings', 'branding', 'restore', 'logo', 'centralSettings'] as const)('reconfere o papel depois de aguardar %s', async operation => {
     const admin = await tenant();
+    const central = operation === 'centralSettings';
+    const editor = central ? await actor(operator.orgId, operator.host, 'operator') : admin;
     const blocker = await db.pool.connect();
     let pending: Promise<{ statusCode: number }> | undefined;
     try {
       await blocker.query('BEGIN');
       await blocker.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4))', [admin.orgId]);
       const pid = (await blocker.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')).rows[0].pid;
-      const headers = requestHeaders(admin);
+      const headers = requestHeaders(editor);
       const operations = {
         settings: () => app.inject({ method: 'PATCH', url: '/api/org/settings', headers, payload: { coursesEnabled: false } }),
         branding: () => publish(admin, 0, { ...defaultBranding, displayName: 'Alteração após espera' }),
         restore: () => app.inject({ method: 'POST', url: '/api/org/branding/restore', headers, payload: { expectedRevision: 0, revision: 0 } }),
         logo: () => upload(admin),
+        centralSettings: () => app.inject({ method: 'PATCH', url: `/api/backoffice/orgs/${admin.orgId.toUpperCase()}`, headers, payload: { settings: { coursesEnabled: false } } }),
       };
       pending = Promise.resolve(operations[operation]());
       await expect.poll(async () => Boolean((await db.query<{ waiting: boolean }>(
         'SELECT EXISTS(SELECT 1 FROM pg_locks WHERE locktype=\'advisory\' AND NOT granted AND $1=ANY(pg_blocking_pids(pid))) AS waiting', [pid],
       )).rows[0].waiting)).toBe(true);
-      await blocker.query("UPDATE users SET roles=ARRAY['student'] WHERE org_id=$1 AND id=$2", [admin.orgId, admin.userId]);
+      await blocker.query("UPDATE users SET roles=ARRAY['student'] WHERE org_id=$1 AND id=$2", [editor.orgId, editor.userId]);
       await blocker.query('COMMIT');
-      expect((await pending).statusCode).toBe(403);
+      expect((await pending).statusCode).toBe(central ? 401 : 403);
       expect((await db.query('SELECT revision FROM org_branding_history WHERE org_id=$1', [admin.orgId])).rows).toEqual([{ revision: 0 }]);
       expect((await db.query('SELECT id FROM audit_events WHERE org_id=$1', [admin.orgId])).rowCount).toBe(0);
       expect((await db.query('SELECT id FROM logo_assets WHERE org_id=$1', [admin.orgId])).rowCount).toBe(0);

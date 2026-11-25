@@ -76,7 +76,7 @@ describe('cursos versionados e atribuição',()=>{
   expect((await call(native,'PUT',`/api/courses/manage/${id}`,{expectedRevision:1,document:draftV2})).statusCode).toBe(200);
   await publish(native,id,2);
   expect((await call(admin,'GET','/api/courses/base')).json().courses).toEqual(expect.arrayContaining([expect.objectContaining({id,version:1})]));
-  const copied=await call(admin,'POST','/api/courses/manage',{title:'Curso do parceiro',copyBaseCourseId:id});expect(copied.statusCode).toBe(201);expect((await call(operator,'PUT',sharePath,{versionId:null,expectedVersionId:v1.id})).statusCode).toBe(200);
+  const copied=await call(admin,'POST','/api/courses/manage',{title:'Curso do parceiro',copyBaseCourseId:id});expect(copied.statusCode).toBe(201);expect((await call(operator,'PUT',sharePath,{versionId:null,expectedVersionId:v1.id.toUpperCase()})).statusCode).toBe(200);
   expect((await call(admin,'POST','/api/courses/manage',options)).statusCode).toBe(404);
   const copyId=copied.json().course.id;expect(copyId).not.toBe(id);expect(copied.json().course.draft.modules).toEqual(example().modules);const view=await call(operator,'GET',`/api/backoffice/courses/${admin.orgId}/${copyId}`);expect(view.statusCode).toBe(200);expect((await call(admin,'GET',`/api/backoffice/courses/${native.orgId}/${id}`)).statusCode).toBe(403);});
 

@@ -289,7 +289,7 @@ export async function registerEducation(app: FastifyInstance): Promise<void> {
   }));
   app.post(`${base}/groups/:id/members`,async(request,reply)=>{
     const {userId}=parse(z.object({userId:id}).strict(),request.body);const result=await mutate(app,request,async(client,actor)=>{
-      const group=await getGroup(client,actor,param(request));await groupManager(client,actor,group);const person=await getPerson(client,actor,userId);live(person);await assertManagedPerson(client,actor,person.id);
+      const group=await getGroup(client,actor,param(request));await groupManager(client,actor,group);const person=await getPerson(client,actor,userId);live(person);await assertPerson(client,actor,person);
       if(group.schoolId && person.schoolId!==group.schoolId && !person.schoolIds.includes(group.schoolId)) throw new EducationError(409,'O participante precisa pertencer à escola do grupo.');
       const membership=(await client.query('INSERT INTO group_memberships(org_id,group_id,user_id) VALUES($1,$2,$3) ON CONFLICT(org_id,group_id,user_id) WHERE ended_at IS NULL DO UPDATE SET user_id=EXCLUDED.user_id RETURNING id,user_id AS "userId",ended_at AS "endedAt"',[actor.org.id,group.id,userId])).rows[0];await audit(client,actor,'group_member_added',userId);return {membership};
     });return reply.code(201).send(result);

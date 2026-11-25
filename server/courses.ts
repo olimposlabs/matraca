@@ -8,7 +8,7 @@ import { courseDocumentSchema,emptyCourse,validatePublication,type CourseDocumen
 import { assertStudentScope,managedSchoolIds } from './permissions.js';
 
 export class CourseError extends Error {constructor(public readonly statusCode:400|401|403|404|409,message:string){super(message);}}
-const uuid=z.uuid();
+const uuid=z.uuid().transform(value => value.toLowerCase());
 function parse<T>(schema:z.ZodType<T>,value:unknown):T{const result=schema.safeParse(value);if(!result.success)throw new CourseError(400,'Confira os campos e os limites do curso.');return result.data;}
 interface CourseRow {id:string;org_id:string;title:string;status:string;draft_revision:number;draft:CourseDocument}
 interface VersionRow {id:string;course_id:string;org_id:string;version:number;document:CourseDocument}

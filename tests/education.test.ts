@@ -230,6 +230,21 @@ describe('gestão escolar e autorização atual do aluno', () => {
     expect((await patch(manager, `/people/${student.id}`, { name: 'Edição autorizada' })).statusCode).toBe(200);
   });
 
+  it('inclui em grupo escolar professor que também é aluno com outro vínculo', async () => {
+    const { admin, location, teacher } = await taughtStudent();
+    const other = await school(admin, 'Escola de estudo');
+    const manager = await schoolActor(admin, location.id);
+    await db.transaction(async client => {
+      await client.query("UPDATE users SET roles=ARRAY['teacher','student'] WHERE id=$1 AND org_id=$2", [teacher.id, admin.orgId]);
+      await client.query('INSERT INTO student_schools(org_id,student_id,school_id) VALUES($1,$2,$3)', [admin.orgId, teacher.id, other.id]);
+    });
+    const type = await post(admin, '/group-types', { name: 'Grupo pedagógico' });
+    const created = await post(manager, '/groups', { name: 'Grupo escolar', typeId: type.json().groupType.id, schoolId: location.id });
+    expect(created.statusCode).toBe(201);
+    expect((await post(manager, `/groups/${created.json().group.id}/members`, { userId: teacher.id })).statusCode).toBe(201);
+    expect((await patch(manager, `/people/${teacher.id}`, { name: 'Alteração de cadastro' })).statusCode).toBe(403);
+  });
+
   it.each(['approval', 'assignment', 'school', 'user'] as const)('revogação %s remove imediatamente o acesso do professor', async reason => {
     const fixture = await taughtStudent();
     if (reason === 'approval') expect((await patch(fixture.admin, `/teachers/${fixture.teacher.id}`, { approvalStatus: 'suspended' })).statusCode).toBe(200);

@@ -189,7 +189,7 @@ async function operator(request: FastifyRequest, client?: PoolClient): Promise<A
   return identity;
 }
 function targetId(request: FastifyRequest): string {
-  return validate(z.object({ id: z.uuid() }).strict(), request.params).id;
+  return validate(z.object({ id: z.uuid() }).strict(), request.params).id.toLowerCase();
 }
 function validate<T>(schema: z.ZodType<T>, value: unknown): T {
   const parsed = schema.safeParse(value);
