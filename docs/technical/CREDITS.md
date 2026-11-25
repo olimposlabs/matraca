@@ -36,6 +36,8 @@ O núcleo trava o titular e depois a carteira, mantendo a ordem compatível com 
 
 `org_credit_policies` guarda `schoolExtrasEnabled` e `defaultSchoolMonthlyLimit`. Os valores padrão são `false` e `0`; consultar a política não cria registro. `school_credit_limits` pode substituir o teto de uma escola por outro inteiro entre zero e 1.000.000.000.
 
+A concessão central pode marcar um lote para avaliação real. Lotes existentes, pagamentos simulados e demais origens entram no saldo geral. Reservas reais prendem lotes habilitados e a liquidação os utiliza. Consumos comuns e ajustes preservam as quantidades já reservadas para pedidos reais. [Avaliação real](OPENAI.md)
+
 O teto limita créditos concedidos por gestores daquela escola no mês civil de `America/Sao_Paulo`. Cada recibo conserva a escola de origem e o mês da concessão. Transferir o aluno não move o gasto entre escolas. Concessões do administrador ou operador não utilizam essa delegação escolar. Ajuste e estorno não recompõem o teto de concessões; conceder um benefício e posteriormente consumir ou estornar uma avaliação são eventos distintos. Reduzir um teto abaixo do já utilizado não retira créditos; bloqueia novas concessões até existir disponibilidade.
 
 Pacotes administrativos são modelos de concessão com nome, quantidade, descrição e status. Não são ofertas de compra nem tabelas de preço. Arquivar um pacote impede uma nova concessão com esse pacote. Editar sua quantidade não altera concessões anteriores.
