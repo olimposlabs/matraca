@@ -1,6 +1,6 @@
 # Plano de marketing — serviço White Label Matraca
 
-Proposta de trabalho de 25/11/2026. O objetivo é conquistar organizações que queiram oferecer prática de comunicação sob sua marca, com metodologia e operação compatíveis com seu contexto. As 90 peças correspondentes estão em [CONTEUDO_WHITE_LABEL.md](CONTEUDO_WHITE_LABEL.md). Não há campanha, contratação ou envio de mensagens executado nesta entrega.
+Proposta de trabalho de 25/11/2026, ampliada para equipes comerciais. O objetivo é conquistar organizações que queiram oferecer prática de comunicação com metodologia e operação compatíveis com seu contexto, sob sua marca quando pertinente ao escopo. São 150 peças: as 90 de [CONTEUDO_WHITE_LABEL.md](CONTEUDO_WHITE_LABEL.md) e as 60 novas de [CONTEUDO_EQUIPES_COMERCIAIS.md](CONTEUDO_EQUIPES_COMERCIAIS.md). A [campanha comercial](EXTENSAO_COMERCIAL.md) detalha esse segundo percurso institucional. Não há campanha, contratação ou envio de mensagens executado nesta entrega.
 
 ## 1. Tese comercial e estágio real
 
@@ -16,7 +16,7 @@ O piloto técnico local na main atual inclui marca por organização, cursos/rub
 
 ## 2. Prioridade de mercado e comitê de compra
 
-Começar por escolas de oratória e consultorias de treinamento com método definido, turmas recorrentes e um responsável por aplicar o piloto. Uma escola pequena com dono presente pode aprender mais rapidamente que uma grande empresa sem patrocinador. RH corporativo e redes maiores são segunda frente, com ciclos e exigências próprios. Não supor que todo comprador enterprise quer white label: alguns priorizam integração, relatórios ou processos de compra que ainda não estão disponíveis.
+Trabalhar duas prioridades com jornadas próprias: escolas/consultorias com método e turmas recorrentes; equipes comerciais com um gestor patrocinador e uma situação de fala a desenvolver. A ampliação dá a equipes de vendas um acervo dedicado, utilizável em sprint próprio. Para empresas, começar por uma equipe delimitada de SDRs ou vendedores consultivos, com responsável e agenda de prática. Redes maiores e programas transversais ficam para expansão. A aderência ao piloto pesa mais que o tamanho da conta. Desenvolvimento interno de vendedores não exige revenda white label: confirmar se identidade própria é relevante e quais requisitos existem antes de discutir o escopo.
 
 | Segmento | Problema de negócio a investigar | Decisor/pagador | Usuário e influenciador | Prova que precisa ver | Motivo para adiar |
 | --- | --- | --- | --- | --- | --- |
@@ -83,13 +83,15 @@ Conteúdo de descoberta mostra um problema do programa; consideração explica u
 
 Perfil separado, se houver equipe para atendê-lo: nome sugerido “Matraca para organizações”, sujeito à disponibilidade. Bio: “Seu método, sua marca, prática entre encontros. Conheça o piloto white label Matraca. Envie PARCERIA.” Não é necessário criar uma segunda conta agora: no perfil único, usar capas “Para organizações”, destaque próprio e link com escolha de percurso.
 
-Fixados B2B: “Para quem é o white label”; “O percurso de uma prática”; “Como desenhar um piloto”. Destaques: Parceiros; Método; Operação; Demonstração; Consumo; Perguntas. O calendário independente usa 6 publicações semanais durante 15 semanas. No perfil único, usar o calendário combinado de 30 semanas para preservar espaço para as duas frentes.
+Fixados B2B: “Para quem é o white label”; “O percurso de uma prática”; “Como desenhar um piloto”. Destaques: Parceiros; Equipes; Método; Operação; Demonstração; Consumo; Perguntas. No sprint comercial, o primeiro fixado passa a “Como organizar a prática da equipe de vendas”. O calendário completo independente usa 6 publicações semanais durante 25 semanas. No perfil único, usar o calendário combinado de 50 semanas. O sprint dedicado usa apenas os 60 novos IDs 31–50 em 10 semanas independentes, ou 20 semanas compartilhadas com vendedores. São opções de execução do mesmo acervo.
 
 ## 6. Penetração e distribuição
 
-Montar lista de 30 organizações prioritárias com dados públicos profissionais: 12 escolas de oratória, 8 consultorias, 4 programas de formação superior, 3 academias corporativas e 3 associações. Esses números são desenho de pesquisa, não lista já prospectada. Não coletar contatos privados ou disparar mensagens em massa.
+Montar lista de 30 organizações prioritárias com dados públicos profissionais: 10 equipes comerciais com patrocinador identificável, 8 escolas de oratória, 6 consultorias, 3 programas de formação superior e 3 associações. Se a execução escolher o sprint comercial, começar pelas 10 contas desse segmento. Esses números são desenho de pesquisa, não lista já prospectada. Não coletar contatos privados ou disparar mensagens em massa.
 
 Para cada segmento, escolher uma dor e reunir três peças complementares. Escola: continuidade, professor e prática. Rede: versão, unidade e permissão. Consultoria: método, rubrica e entrega ao cliente. RH: cenário de liderança, avaliação do piloto e critérios de decisão. O mesmo Reel genérico sobre “IA que transforma treinamentos” não deve servir a todos.
+
+Equipes comerciais: problema do gestor → desenho de prática por função → acompanhamento humano com critérios → conversa sobre uma equipe piloto. A mensagem é “Transforme o discurso comercial em prática acompanhada”. Direção comercial decide prioridade e orçamento; Sales Enablement/T&D desenha o programa; gestão imediata acompanha; vendedores usam; RevOps ajuda a interpretar indicadores quando fizer sentido. O piloto comercial e o atendimento específico estão na [extensão](EXTENSAO_COMERCIAL.md). O marketing não presume integração com CRM nem atribui aumento de receita à prática sem evidência.
 
 Ações orgânicas propostas: comentários úteis em discussões pertinentes, conteúdo em colaboração com instrutores que aceitem participar, oficina aberta sobre desenho de prática e respostas a perguntas reais. Não insinuar parceria porque uma marca foi mencionada. Cases de concorrentes informam mercado; não são prova do Matraca.
 
@@ -144,7 +146,7 @@ Perguntas de encerramento: o aluno entendeu a próxima ação? O professor recon
 
 ## 10. Roteiro de execução comercial
 
-Semanas 1–2: preparar perfil, materiais, respostas e classificação de contas; ouvir cinco organizações pertinentes como meta interna de pesquisa, sem tratar o número como benchmark. Semanas 3–4: testar mensagens dos dois segmentos prioritários, produzir demonstração rotulada e registrar objeções. Semanas 5–8: oferecer pilotos apenas onde houver aderência e disponibilidade; manter o restante em acompanhamento consentido. Semanas 9–15: revisar proposta e conteúdo a partir de evidências, preparar casos somente se reais e autorizados e decidir se há condições de ampliar.
+Semanas 1–2: preparar perfil, materiais, respostas e classificação de contas; ouvir cinco organizações pertinentes como meta interna de pesquisa, sem tratar o número como benchmark. Semanas 3–4: testar mensagens dos segmentos escolhidos, produzir demonstração rotulada e registrar objeções. Semanas 5–8: oferecer pilotos apenas onde houver aderência e disponibilidade; manter o restante em acompanhamento consentido. Da semana 9 em diante, até completar o calendário escolhido: revisar proposta e conteúdo quinzenalmente, preparar casos somente se reais e autorizados e decidir se há condições de ampliar. O calendário de conteúdo não determina uma data de liberação comercial.
 
 Se o produto não estiver disponível, o calendário continua como educação e descoberta; as etapas de implantação e venda aguardam suas condições. Não usar data editorial para pressionar liberação técnica.
 

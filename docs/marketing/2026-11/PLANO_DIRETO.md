@@ -1,6 +1,6 @@
 # Plano de marketing — vendas diretas Matraca
 
-Proposta de trabalho de 25/11/2026. Mercado brasileiro, comunicação em português, aquisição pelo Instagram. Decisões de campanha abaixo são recomendações para teste, não resultados observados. Este documento orienta as 90 peças de [CONTEUDO_DIRETO.md](CONTEUDO_DIRETO.md), a operação comum e os calendários desta pasta.
+Proposta de trabalho de 25/11/2026, ampliada para vendedores. Mercado brasileiro, comunicação em português, aquisição pelo Instagram. Decisões de campanha abaixo são recomendações para teste, não resultados observados. Este documento orienta 150 peças: as 90 de [CONTEUDO_DIRETO.md](CONTEUDO_DIRETO.md) e as 60 novas de [CONTEUDO_VENDEDORES.md](CONTEUDO_VENDEDORES.md). A [campanha comercial](EXTENSAO_COMERCIAL.md) detalha a prioridade de vendas; operação e calendários são comuns.
 
 ## 1. Objetivo e ponto de partida
 
@@ -32,7 +32,7 @@ Tom: acolhedor, direto, inteligente, com humor de situações profissionais. O n
 
 ## 3. Públicos e prioridades
 
-Produzir uma biblioteca ampla não exige abrir todas as frentes de aquisição de uma vez. Nas primeiras quatro semanas, priorizar líderes em início de gestão e profissionais especialistas que precisam explicar assuntos complexos. Advogados, médicos e professores entram como testes de mensagem contextual; a verba só se expande após sinais de interesse qualificado.
+Produzir uma biblioteca ampla não exige abrir todas as frentes de aquisição de uma vez. A ampliação coloca vendedores entre as prioridades de aquisição, com uma campanha própria: começar por prospecção B2B e venda consultiva de serviços/varejo, testando situações concretas. Na cadência completa, intercalar essa pauta com líderes em início de gestão e especialistas que explicam assuntos complexos; no sprint comercial, concentrar o feed nas duas verticais de vendas. Advogados, médicos e professores continuam no acervo; a verba só se expande após sinais de interesse qualificado. Essa prioridade é uma decisão de campanha, não uma conclusão de eficácia comparativa.
 
 | Público | Situação que dispara a busca | Dor formulada pelo público | Conteúdo de entrada | Evidência de interesse | Objeção e resposta |
 | --- | --- | --- | --- | --- | --- |
@@ -94,17 +94,19 @@ Uma página de interesse, quando for criada, terá dois caminhos: “Quero prati
 
 ## 6. Pilares e organização editorial
 
-Distribuição sugerida entre as 90 peças: 30 com reconhecimento de problema, 30 com exercício aplicável, 15 com funcionamento/limites do método, 10 com objeções e 5 com convite ao próximo passo. Essa é uma orientação de equilíbrio, não uma classificação automática por formato. Um Reel também pode qualificar; um post estático também pode ensinar.
+Distribuição sugerida para a base original de 90 peças: 30 com reconhecimento de problema, 30 com exercício aplicável, 15 com funcionamento/limites do método, 10 com objeções e 5 com convite ao próximo passo. A extensão de 60 acrescenta 20 temas comerciais, cada um com Reel, carrossel e estático: prospecção, descoberta, demonstração, negociação, objeções, acompanhamento e continuidade. A classificação de público, etapa, objetivo e métrica está em cada peça. Um Reel também pode qualificar; um post estático também pode ensinar.
 
-Os 30 Reels mostram comportamento e mudança; os 30 carrosséis organizam raciocínio e oferecem material consultável; os 30 posts fixam uma ideia ou tarefa visual. Repetir um tema entre formatos é intencional se cada um acrescentar utilidade. Evitar publicar a mesma mensagem três vezes seguidas ou apenas transformar legenda em páginas.
+Os 50 Reels mostram comportamento e mudança; os 50 carrosséis organizam raciocínio e oferecem material consultável; os 50 posts fixam uma ideia ou tarefa visual. Repetir um tema entre formatos é intencional se cada um acrescentar utilidade. Evitar publicar a mesma mensagem três vezes seguidas ou apenas transformar legenda em páginas.
 
-Cadência independente de 15 semanas: segunda e quinta Reel, terça e sexta carrossel, quarta e sábado estático; domingo reservado a respostas e leitura. A publicação de 6 peças por semana é uma hipótese de capacidade, não uma regra do algoritmo. O calendário combinado oferece alternativa de 30 semanas com um único perfil e 6 publicações totais por semana.
+Cadência completa independente de 25 semanas: segunda e quinta Reel, terça e sexta carrossel, quarta e sábado estático; domingo reservado a respostas e leitura. A publicação de 6 peças por semana é uma hipótese de capacidade, não uma regra do algoritmo. O calendário combinado oferece alternativa de 50 semanas com um único perfil e 6 publicações totais por semana. O sprint exclusivo para vendedores usa os IDs 31–50 em 10 semanas independentes ou 20 semanas compartilhadas com equipes comerciais; ele é uma alternativa ao ciclo completo.
 
 Horários iniciais de teste: 12h30 e 19h30 em GMT-3. Alternar grupos comparáveis por duas semanas, registrar exposição e ajustar pelos dados da conta; não anunciar “melhor horário universal”. Stories e collabs seguem o manual operacional.
 
 ## 7. Penetração por profissão
 
 Cada profissão merece um pequeno percurso, não somente um figurino. Exemplo para líderes: Reel de pedido ambíguo → carrossel de estrutura de alinhamento → post de pergunta de confirmação → DM com situação → convite ao piloto. Para professores: instrução longa → objetivo verificável → exemplo de fechamento → exercício de 30 segundos. Para advogados: excesso de termos → explicação com condição → conclusão com próximo passo. Para saúde: explicação fictícia → checagem de entendimento → escuta; sem prescrição, pacientes ou promessa clínica.
+
+Para vendedores: cena de uma etapa comercial → exercício com frase e pergunta → cartão de preparação → TREINO com contexto VENDA → prática individual compatível. Segmentar SDR/BDR, executivo de contas, especialista técnico, varejo/serviços, representantes e renovação. A mensagem de entrada é “Prepare a próxima conversa comercial”. O vendedor pode ser usuário pagante, influenciador ou participante de programa empresarial; identificar quem pretende contratar antes de encaminhar a oferta. Materiais e respostas prontos estão na [campanha comercial](EXTENSAO_COMERCIAL.md).
 
 Parcerias editoriais potenciais: professores de oratória, comunidades profissionais, especialistas em carreira e associações. Selecionar por qualidade da audiência e capacidade de exemplificar, não apenas seguidores. Antes de contratar creator, pedir composição do público, alcance recente comparável, direitos de uso e exemplos de comunicação responsável. Não há contratação ou contato realizado nesta entrega.
 
