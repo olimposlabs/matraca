@@ -249,3 +249,5 @@ A [PR #24](https://github.com/olimposlabs/matraca/pull/24) foi integrada em `a97
 ## SPI de segurança · S05
 
 Base `ad4e054c4ba79fb1a44de7873f28a00179381a28`. O PostgreSQL local usa credenciais geradas, banco próprio por sandbox e papéis separados de bootstrap, migração e execução. O runtime rejeita credencial antiga e privilégios administrativos. [Operações](OPERATIONS.md)
+
+A [PR #26](https://github.com/olimposlabs/matraca/pull/26) foi integrada em `1f9a88c3511002602ea45a230186e5133755a8a0`. A revisão independente conferiu as correções e o [CI do head final](https://github.com/olimposlabs/matraca/actions/runs/45544114049) passou. A suíte local passou com 370 testes. No merge, o ensaio PostgreSQL validou restauração sintética, isolamento, rotação e visibilidade do faturamento. A jornada Chromium confirmou persistência, isolamento e reset em sandbox novo. A integração acionou somente [CI](https://github.com/olimposlabs/matraca/actions/runs/45544457983). Os ambientes anteriores foram preservados.
