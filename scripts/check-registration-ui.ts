@@ -81,10 +81,28 @@ try {
     assert.equal(new URL(mail.link).origin, base);
     // Never log the one-use link or session cookie.
     await page.goto(mail.link, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Confirmar entrada', exact: true }).click();
     await expect(page).toHaveURL(`${base}/app/journey`);
   }
   await consumeLatestMessage();
   const session = await (await page.request.get(`${base}/api/auth/session`)).json();
+  const firstRequests = await browser.newContext();
+  try {
+    const earlier = await readdir(mailbox);
+    const issued = await Promise.all(Array.from({ length: 2 }, () => firstRequests.request.post(`${base}/api/auth/request`, {
+      headers: { 'x-matraca-request': '1' }, data: { email: identity.email },
+    })));
+    assert.deepEqual(issued.map(response => response.status()), [202, 202]);
+    const added = (await readdir(mailbox)).filter(file => !earlier.includes(file));
+    assert.equal(added.length, 2);
+    const tabs = await Promise.all(added.map(() => firstRequests.newPage()));
+    await Promise.all(tabs.map(async (tab, index) => {
+      const mail = JSON.parse(await readFile(join(mailbox, added[index]), 'utf8')) as { link: string };
+      await tab.goto(mail.link);
+      await expect(tab.getByRole('button', { name: 'Confirmar entrada', exact: true })).toBeVisible();
+    }));
+    assert.equal((await firstRequests.request.get(`${base}/api/auth/session`)).status(), 401);
+  } finally { await firstRequests.close(); }
   assert.equal(session.user.email, identity.email); assert.deepEqual(session.user.roles, ['student']); assert.equal(session.org.id, orgId);
   const studentId = session.user.id as string;
   async function balance() { return (await (await page.request.get(`${base}/api/wallet`)).json()).wallet; }

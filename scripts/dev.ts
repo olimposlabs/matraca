@@ -1,10 +1,12 @@
 import { spawn, execFileSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { startLocalDatabase } from './db-start.js';
 if (process.argv.includes('--openai')) process.env.EVALUATION_PROVIDER = 'openai';
 try {
   if (!process.env.DATABASE_URL) startLocalDatabase();
   for (const script of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', script], { stdio: 'inherit' });
 } catch { process.stderr.write('Não foi possível preparar o banco local. Confira Docker ou DATABASE_URL.\n'); process.exit(1); }
+process.env.MATRACA_DEV_PROXY_SECRET = randomBytes(32).toString('base64url');
 const children = ['dev:api', 'dev:web'].map(script => spawn('npm', ['run', script], { stdio: 'inherit', detached: true }));
 let stopping = false;
 function stop(code: number) {

@@ -1,12 +1,13 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.js';
 import { localDatabaseUrl } from '../server/config.js';
 import { createDatabase } from '../server/db.js';
+import { clientAddressHeader, clientProofHeader, signDevAddress } from '../server/request-origin.js';
 
 const hosts = ['localhost', 'parceiro.localhost', 'empresa.localhost', 'backoffice.localhost'] as const;
 type Host = typeof hosts[number];
@@ -74,9 +75,10 @@ describe('identidade isolada por organização e host', () => {
     return { path, files };
   }
 
-  async function requestLink(host: Host, email: string) {
+  const intentions = new Map<string, string>();
+  async function requestLink(host: Host, email: string, remoteAddress?: string) {
     const before = await mailbox(host);
-    const response = await app.inject({ method: 'POST', url: '/api/auth/request', headers: headers(host), payload: { email } });
+    const response = await app.inject({ method: 'POST', url: '/api/auth/request', headers: headers(host), payload: { email }, remoteAddress });
     expect(response.statusCode).toBe(202);
     expect(response.body.includes('token=')).toBe(false);
     const after = await mailbox(host);
@@ -88,11 +90,15 @@ describe('identidade isolada por organização e host', () => {
     expect(mail.hostname).toBe(host);
     const token = new URL(mail.link).searchParams.get('token');
     expect(Boolean(token)).toBe(true);
-    return { token: token!, file, mail };
+    const intent = cookie(response.headers['set-cookie']);
+    intentions.set(token!, intent);
+    return { token: token!, file, mail, intent };
   }
 
-  function consume(host: Host, token: string) {
-    return app.inject({ method: 'GET', url: `/api/auth/consume?token=${encodeURIComponent(token)}`, headers: { host } });
+  function consume(host: Host, token: string, intent = intentions.get(token), previous?: string) {
+    const cookies = [intent, previous].filter(Boolean).join('; ');
+    return app.inject({ method: 'POST', url: '/api/auth/consume',
+      headers: { ...headers(host), ...(cookies ? { cookie: cookies } : {}) }, payload: { token } });
   }
 
   function cookie(header: string | string[] | number | undefined) {
@@ -104,8 +110,8 @@ describe('identidade isolada por organização e host', () => {
   async function login(host: Host, email: string) {
     const mail = await requestLink(host, email);
     const response = await consume(host, mail.token);
-    expect(response.statusCode).toBe(302);
-    expect(response.headers.location).toBe(host === 'backoffice.localhost' ? '/backoffice' : '/app');
+    expect(response.statusCode).toBe(200);
+    expect(response.json().destination).toBe(host === 'backoffice.localhost' ? '/backoffice' : '/app');
     return { cookie: cookie(response.headers['set-cookie']), response, ...mail };
   }
 
@@ -210,16 +216,40 @@ describe('identidade isolada por organização e host', () => {
     const account = await user('localhost');
     const mail = await requestLink('localhost', account.email);
     const wrong = await consume('parceiro.localhost', mail.token);
-    expect(wrong.headers.location).toBe('/login?error=invalid_link');
+    expect(wrong.statusCode).toBe(400);
     expect(wrong.headers['set-cookie']).toBeUndefined();
-    expect((await consume('localhost', mail.token)).headers.location).toBe('/app');
+    expect((await consume('localhost', mail.token)).json().destination).toBe('/app');
+  });
+
+  it('pré-carrega link sem consumir e exige confirmação no navegador de origem', async () => {
+    const former = await user('localhost'), next = await user('localhost');
+    const signed = await login('localhost', former.email);
+    const issued = await requestLink('localhost', next.email);
+    const cookies = `${signed.cookie}; ${issued.intent}`;
+    const url = `/api/auth/consume?token=${issued.token}`;
+    for (const method of ['GET', 'HEAD'] as const) {
+      const opened = await app.inject({ method, url, headers: { host: 'localhost', cookie: cookies } });
+      expect(opened.statusCode).toBe(303);
+      expect(opened.headers.location).toMatch(/^\/login\/confirm#/u);
+      expect(opened.headers['set-cookie']).toBeUndefined();
+    }
+    expect((await session('localhost', signed.cookie)).json().user.id).toBe(former.id);
+    expect((await consume('localhost', issued.token, 'matraca_login_intent_fixture=' + randomBytes(32).toString('base64url'))).statusCode).toBe(400);
+    const preview = await app.inject({ method: 'POST', url: '/api/auth/preview',
+      headers: { ...headers('localhost'), cookie: cookies }, payload: { token: issued.token } });
+    expect(preview.json()).toEqual({ email: next.email });
+    expect((await session('localhost', signed.cookie)).json().user.id).toBe(former.id);
+    const confirmed = await consume('localhost', issued.token, issued.intent, signed.cookie);
+    expect(confirmed.statusCode).toBe(200);
+    expect((await session('localhost', signed.cookie)).statusCode).toBe(401);
+    expect((await session('localhost', cookie(confirmed.headers['set-cookie']))).json().user.id).toBe(next.id);
   });
 
   it('token consumido não pode ser usado novamente', async () => {
     const account = await user('localhost');
     const signedIn = await login('localhost', account.email);
     const replay = await consume('localhost', signedIn.token);
-    expect(replay.headers.location).toBe('/login?error=invalid_link');
+    expect(replay.statusCode).toBe(400);
     expect(replay.headers['set-cookie']).toBeUndefined();
   });
 
@@ -227,7 +257,7 @@ describe('identidade isolada por organização e host', () => {
     const account = await user('localhost');
     const mail = await requestLink('localhost', account.email);
     const responses = await Promise.all([consume('localhost', mail.token), consume('localhost', mail.token)]);
-    expect(responses.map(response => response.headers.location).sort()).toEqual(['/app', '/login?error=invalid_link']);
+    expect(responses.map(response => response.statusCode).sort()).toEqual([200, 400]);
     expect(responses.filter(response => response.headers['set-cookie']).length).toBe(1);
     expect((await db.query('SELECT id FROM sessions WHERE user_id=$1', [account.id])).rowCount).toBe(1);
   });
@@ -236,7 +266,7 @@ describe('identidade isolada por organização e host', () => {
     const account = await user('localhost');
     const mail = await requestLink('localhost', account.email);
     await db.query("UPDATE auth_tokens SET created_at=now()-interval '30 minutes', expires_at=now()-interval '1 minute' WHERE user_id=$1", [account.id]);
-    expect((await consume('localhost', mail.token)).headers.location).toBe('/login?error=invalid_link');
+    expect((await consume('localhost', mail.token)).statusCode).toBe(400);
     expect((await db.query('SELECT id FROM sessions WHERE user_id=$1', [account.id])).rowCount).toBe(0);
   });
 
@@ -244,7 +274,7 @@ describe('identidade isolada por organização e host', () => {
     const account = await user('localhost');
     const mail = await requestLink('localhost', account.email);
     await db.query("UPDATE users SET status='suspended' WHERE id=$1", [account.id]);
-    expect((await consume('localhost', mail.token)).headers.location).toBe('/login?error=invalid_link');
+    expect((await consume('localhost', mail.token)).statusCode).toBe(400);
     expect((await db.query('SELECT id FROM sessions WHERE user_id=$1', [account.id])).rowCount).toBe(0);
   });
 
@@ -263,6 +293,9 @@ describe('identidade isolada por organização e host', () => {
     const signedIn = await login('parceiro.localhost', account.email);
     await db.query("UPDATE users SET status='suspended' WHERE id=$1", [account.id]);
     expect((await session('parceiro.localhost', signedIn.cookie)).statusCode).toBe(401);
+    await db.query("UPDATE users SET status='active' WHERE id=$1", [account.id]);
+    expect((await session('parceiro.localhost', signedIn.cookie)).statusCode).toBe(401);
+    expect((await login('parceiro.localhost', account.email)).cookie).toMatch(/^matraca_session=/u);
   });
 
   it('suspender organização bloqueia as sessões existentes', async () => {
@@ -274,6 +307,7 @@ describe('identidade isolada por organização e host', () => {
     } finally {
       await db.query("UPDATE orgs SET status='active' WHERE id=$1", [orgIds.get('empresa.localhost')]);
     }
+    expect((await session('empresa.localhost', signedIn.cookie)).statusCode).toBe(401);
   });
 
   it('papéis atuais são lidos do banco a cada consulta da sessão', async () => {
@@ -332,6 +366,45 @@ describe('identidade isolada por organização e host', () => {
     expect((await stat((await mailbox('localhost')).path)).mode & 0o777).toBe(0o700);
     const exposed = await app.inject({ method: 'GET', url: '/api/mailbox', headers: { host: 'localhost' } });
     expect(exposed.statusCode).toBe(404);
+  });
+
+  it('a cota de uma origem preserva o login de outra e volta a valer após a janela', async () => {
+    const first = await user('localhost'), second = await user('localhost');
+    const source = '127.0.0.44';
+    const digest = createHash('sha256').update(['host-origin', 'localhost', source].join('\0')).digest('hex');
+    await db.query('INSERT INTO auth_rate_limits(key_hash,attempts) VALUES($1,48)', [digest]);
+    const prior = (await mailbox('localhost')).files;
+    const throttled = await app.inject({ method: 'POST', url: '/api/auth/request',
+      headers: { ...headers('localhost'), 'x-forwarded-for': '127.0.0.45' }, payload: { email: first.email }, remoteAddress: source });
+    expect(throttled.statusCode).toBe(202);
+    expect((await mailbox('localhost')).files).toEqual(prior);
+    await requestLink('localhost', second.email, '127.0.0.45');
+    await db.query("UPDATE auth_rate_limits SET window_started_at=clock_timestamp()-interval '16 minutes' WHERE key_hash=$1", [digest]);
+    await requestLink('localhost', first.email, source);
+    expect((await db.query('SELECT attempts FROM auth_rate_limits WHERE key_hash=$1', [digest])).rows[0].attempts).toBe(1);
+  });
+
+  it('reconhece a origem assinada pelo proxy local e ignora cabeçalhos sem prova', async () => {
+    const account = await user('localhost');
+    const address = '127.0.0.46';
+    const secret = randomBytes(32).toString('base64url');
+    const saturated = createHash('sha256').update(['host-origin', 'localhost', '127.0.0.1'].join('\0')).digest('hex');
+    const before = (await mailbox('localhost')).files;
+    vi.stubEnv('MATRACA_DEV_PROXY_SECRET', secret);
+    await db.query('INSERT INTO auth_rate_limits(key_hash,attempts) VALUES($1,48) ON CONFLICT(key_hash) DO UPDATE SET attempts=48', [saturated]);
+    try {
+      const request = (proof: string) => app.inject({ method: 'POST', url: '/api/auth/request', remoteAddress: '127.0.0.1',
+        headers: { ...headers('localhost'), [clientAddressHeader]: address, [clientProofHeader]: proof }, payload: { email: account.email } });
+      const untrusted = await request('0'.repeat(64));
+      expect(untrusted.statusCode).toBe(202);
+      expect((await mailbox('localhost')).files).toEqual(before);
+      const trusted = await request(signDevAddress(secret, address, 'localhost'));
+      expect(trusted.statusCode).toBe(202);
+      expect((await mailbox('localhost')).files.length).toBe(before.length + 1);
+    } finally {
+      vi.unstubAllEnvs();
+      await db.query('DELETE FROM auth_rate_limits WHERE key_hash=$1', [saturated]);
+    }
   });
 
   it('repetir pedidos além do limite não produz mais links nem revela o bloqueio', async () => {

@@ -57,6 +57,7 @@ try {
     const message = messages.find(item => item.to === email); assert.ok(message);
     const link = new URL(message.link); assert.equal(link.hostname, host); link.port = String(port);
     await page.goto(link.toString());
+    await page.getByRole('button', { name: 'Confirmar entrada', exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/${host === centralHost ? 'backoffice' : 'app(?:/journey)?'}$`));
     const session = await context.request.get(`${base}/api/auth/session`); assert.equal(session.status(), 200);
     assert.equal((await session.json()).org.id, orgId);

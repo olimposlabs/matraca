@@ -126,7 +126,7 @@ export function LoginPage() {
   const invalidLink = searchParams.get('error') === 'invalid_link';
 
   if (status !== 'ready' || !org) return <AccessState />;
-  if (user) return <Navigate to={sessionHome(org)} replace />;
+  if (user && searchParams.get('switch') !== '1') return <Navigate to={sessionHome(org)} replace />;
 
   const allowRegister = org.kind === 'matraca';
   const registering = allowRegister && mode === 'register';
@@ -168,7 +168,7 @@ export function LoginPage() {
             <span className="eyebrow">SOLICITAÇÃO RECEBIDA</span>
             <h2>O próximo passo está no seu e-mail.</h2>
             <p>Se o acesso estiver disponível para <strong>{email.trim()}</strong>, você receberá um link para entrar em {org.name}.</p>
-            <div className="local-mail-notice"><span className="local-mail-label">E-mail simulado · Piloto local</span><p>No piloto local, consulte a mensagem com <code>npm run inbox</code>.</p><p>Abra o link da mensagem para concluir o acesso. Nenhum e-mail externo é enviado nesta etapa.</p></div>
+            <div className="local-mail-notice"><span className="local-mail-label">E-mail simulado · Piloto local</span><p>No piloto local, consulte a mensagem com <code>npm run inbox</code>.</p><p>Abra o link neste navegador e confirme a entrada. Nenhum e-mail externo é enviado nesta etapa.</p></div>
             <button type="button" className="button button-secondary auth-full-width" onClick={() => { setRequested(false); setError(null); }}>Usar outro e-mail</button>
             <p className="auth-fine-print">O link é de uso único. Se ele expirar, solicite outro acesso.</p>
           </div>
@@ -200,6 +200,55 @@ const roleNames: Record<string, string> = {
   org_admin: 'Administrador da organização',
   operator: 'Operação Matraca',
 };
+
+export function LoginConfirmationPage() {
+  const { status, org, user } = useAuth();
+  const { hash } = useLocation();
+  const token = hash.slice(1);
+  const [preview, setPreview] = useState<{ token: string; email: string } | null>(null);
+  const email = preview?.token === token ? preview.email : null;
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    setPreview(null);
+    setError(null);
+    void apiJson<{ email: string }>('/api/auth/preview', {
+      method: 'POST', body: { token }, signal: controller.signal,
+    }).then(result => setPreview({ token, email: result.email })).catch(cause => {
+      if (!controller.signal.aborted) setError(messageFrom(cause));
+    });
+    return () => controller.abort();
+  }, [token]);
+
+  async function confirm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !email) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await apiJson<{ destination: '/app' | '/backoffice' }>('/api/auth/consume', {
+        method: 'POST', body: { token },
+      });
+      window.location.replace(result.destination);
+    } catch (cause) {
+      setError(messageFrom(cause));
+      setBusy(false);
+    }
+  }
+
+  if (status !== 'ready' || !org) return <AccessState />;
+  return <section className="access-state container">
+    <span className="access-state-icon"><LockKeyhole size={24} aria-hidden="true" /></span>
+    <h1>Confirme sua entrada</h1>
+    {email ? <p>Entre em {org.name} com <strong>{email}</strong>.</p> : !error && <p role="status">Conferindo o link…</p>}
+    {error && <p role="alert" className="form-error">{error}</p>}
+    {email && <form onSubmit={confirm}>
+      <button className="button button-primary" disabled={busy}>{busy ? 'Entrando…' : 'Confirmar entrada'}</button>
+    </form>}
+    <Link to={user ? '/login?switch=1' : '/login'} className="button button-text">Solicitar novo link</Link>
+  </section>;
+}
 
 export function LogoutButton() {
   const { logout } = useAuth();
