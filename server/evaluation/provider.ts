@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
 
+export const maxEvaluationAttempts = 3;
 export const evaluationScenarios = ['success', 'delay', 'transient', 'permanent', 'timeout', 'invalid'] as const;
 export type EvaluationScenario = typeof evaluationScenarios[number];
 
@@ -36,6 +37,7 @@ export interface EvaluationProvider {
   readonly timeoutMs?: number;
   evaluate(context: EvaluationContext, options: {
     attempt: number;
+    leaseToken?: string;
     signal: AbortSignal;
     scenario: EvaluationScenario;
   }): Promise<unknown>;
@@ -96,7 +98,7 @@ export type EvaluationReport = z.infer<typeof reportSchema> & {
 
 export class EvaluationProviderError extends Error {
   constructor(
-    readonly code: 'temporary' | 'permanent' | 'timeout' | 'invalid' | 'credentials' | 'quota' | 'media',
+    readonly code: 'temporary' | 'permanent' | 'timeout' | 'invalid' | 'credentials' | 'quota' | 'media' | 'authorization' | 'budget',
     readonly retryable: boolean,
   ) {
     super(code);

@@ -70,10 +70,10 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
   const [error, setError] = useState('');
   const pending = useRef(false);
   const sessionKeys = useRef(new Map<string, string>());
-  const [capabilities, setCapabilities] = useState<{ provider: 'mock' | 'openai'; maximumSeconds: number } | null>(null);
+  const [capabilities, setCapabilities] = useState<{ provider: 'mock' | 'openai'; maximumSeconds: number; enabled: boolean; availableCredits?: number } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    apiJson<{ provider: 'mock' | 'openai'; maximumSeconds: number }>('/api/evaluation-capabilities', { signal: controller.signal })
+    apiJson<{ provider: 'mock' | 'openai'; maximumSeconds: number; enabled: boolean; availableCredits?: number }>('/api/evaluation-capabilities', { signal: controller.signal })
       .then(setCapabilities).catch(cause => { if (!controller.signal.aborted) setError(errorText(cause)); });
     return () => controller.abort();
   }, []);
@@ -81,9 +81,11 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
   const customLabel = singular ? org?.branding.creditSingular : org?.branding.creditPlural;
   const label = typeof customLabel === 'string' ? customLabel : singular ? 'crédito' : 'créditos';
 
+  const creditAvailable = capabilities?.provider !== 'openai' || (capabilities.availableCredits ?? 0) >= recording.estimatedCredits;
+
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (pending.current || !capabilities) return;
+    if (pending.current || !capabilities?.enabled || !creditAvailable) return;
     pending.current = true;
     setBusy(true);
     setError('');
@@ -116,6 +118,9 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       <p>Esta solicitação reserva {recording.estimatedCredits} {label}. O saldo é debitado quando o relatório fica pronto.</p>
       {capabilities?.provider === 'openai' && <p>Ao solicitar, o áudio, quadros do vídeo e o contexto da sua prática serão enviados à OpenAI para gerar o feedback. Limite de cinco minutos; a análise visual usa quadros amostrados.</p>}
     </div>
+    {capabilities?.provider === 'openai' && <p role="status">{!capabilities.enabled
+      ? 'Esta conta ainda não tem acesso à avaliação real.'
+      : `Saldo habilitado para avaliação real: ${capabilities.availableCredits ?? 0}.`}</p>}
     {capabilities?.provider === 'mock' && <label>Cenário do simulador
       <select value={scenario} onChange={event => setScenario(event.target.value as EvaluationScenario | 'configured')} disabled={busy}>
         <option value="configured">Padrão da organização</option>
@@ -123,7 +128,7 @@ export function EvaluationAction({ recording }: { recording: { id: string; estim
       </select>
     </label>}
     {error && <p className="evaluation-error" role="alert">{error}</p>}
-    <button type="submit" className="button button-primary" disabled={busy || !capabilities}>
+    <button type="submit" className="button button-primary" disabled={busy || !capabilities?.enabled || !creditAvailable}>
       {busy ? 'Enviando…' : 'Solicitar avaliação'} <ArrowRight size={16} aria-hidden="true" />
     </button>
   </form>;

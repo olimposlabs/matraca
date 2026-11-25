@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { liveLimitsSchema } from './live-policy.js';
 
 const execute = promisify(execFile);
 export const liveEvaluationMaximumSeconds = 300;
@@ -10,6 +11,11 @@ export function evaluationConfiguration(env: NodeJS.ProcessEnv = process.env) {
   if (kind !== 'mock' && kind !== 'openai') throw new Error('EVALUATION_PROVIDER deve ser mock ou openai.');
   return {
     kind,
+    liveLimits: liveLimitsSchema.parse({
+      requests: Number(env.OPENAI_24H_REQUESTS ?? 0),
+      minutes: Number(env.OPENAI_24H_MINUTES ?? 0),
+      calls: Number(env.OPENAI_24H_CALLS ?? 0),
+    }),
     audioModel: env.OPENAI_AUDIO_MODEL ?? 'gpt-audio-1.5',
     reportModel: env.OPENAI_REPORT_MODEL ?? 'gpt-4.1-mini',
   } as const;

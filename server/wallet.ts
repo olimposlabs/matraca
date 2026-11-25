@@ -14,6 +14,7 @@ export interface CreditReservation {
   id: string; org_id: string; user_id: string; request_id: string; duration_us: string;
   amount: number; status: 'reserved' | 'consumed' | 'released'; consumption_entry_id: string | null;
   release_reason: string | null; created_at: Date; settled_at: Date | null;
+  provider: 'mock' | 'openai';
 }
 export class CreditError extends Error {
   constructor(public readonly statusCode: 400 | 402 | 404 | 409, message: string) { super(message); this.name = 'CreditError'; }
@@ -49,12 +50,30 @@ async function lockWallet(client: PoolClient, target: CreditTarget): Promise<Wal
   const result = await client.query<{balance:number;reserved:number}>('SELECT balance,reserved FROM wallets WHERE org_id=$1 AND user_id=$2 FOR UPDATE', [target.orgId,target.userId]);
   return state(result.rows[0]);
 }
+// The wallet lock serializes changes. Ordinary debits cannot spend lots already committed to real jobs.
+const freeLotsSql = `SELECT l.entry_id,(l.remaining-COALESCE((
+  SELECT sum(rl.amount) FROM credit_reservation_lots rl JOIN credit_reservations r ON r.id=rl.reservation_id
+  WHERE rl.lot_entry_id=l.entry_id AND rl.org_id=l.org_id AND rl.user_id=l.user_id AND r.status='reserved'
+),0))::integer AS remaining FROM credit_lots l
+WHERE l.org_id=$1 AND l.user_id=$2 AND l.remaining>0 AND (NOT $3::boolean OR l.live_eligible)
+ORDER BY l.created_at,l.entry_id`;
+
+async function freeLots(client: PoolClient, target: CreditTarget, liveOnly = false) {
+  return (await client.query<{ entry_id: string; remaining: number }>(freeLotsSql, [target.orgId, target.userId, liveOnly]))
+    .rows.filter(lot => lot.remaining > 0);
+}
+
+export async function getLiveCreditAvailable(db: Database, target: CreditTarget) {
+  const row = (await db.query<{ available: number }>(`SELECT LEAST(w.balance-w.reserved,
+    (SELECT COALESCE(sum(GREATEST(remaining,0)),0) FROM (${freeLotsSql}) lots))::integer AS available
+    FROM wallets w WHERE w.org_id=$1 AND w.user_id=$2`, [target.orgId, target.userId, true])).rows[0];
+  return row?.available ?? 0;
+}
+
 async function allocateDebit(client: PoolClient,target: CreditTarget,entryId: string,amount: number) {
-  const lots = await client.query<{entry_id:string;remaining:number}>(
-    'SELECT entry_id,remaining FROM credit_lots WHERE org_id=$1 AND user_id=$2 AND remaining>0 ORDER BY created_at,entry_id FOR UPDATE',
-    [target.orgId,target.userId]);
+  const lots = await freeLots(client, target);
   let needed = amount;
-  for (const lot of lots.rows) {
+  for (const lot of lots) {
     if (!needed) break;
     const used = Math.min(needed,lot.remaining);
     await client.query('UPDATE credit_lots SET remaining=remaining-$2 WHERE entry_id=$1',[lot.entry_id,used]);
@@ -69,7 +88,7 @@ export async function getWallet(db: Database, target: CreditTarget): Promise<Wal
 }
 type Movement = CreditTarget & {
   delta: number; kind: 'grant' | 'adjustment'; source: CreditSource; sourceRef: string;
-  eventKey: string; reason: string; actorUserId?: string;
+  eventKey: string; reason: string; actorUserId?: string; liveEligible?: boolean;
 };
 async function applyMovement(db: Database, input: Movement): Promise<WalletEntry> {
   try { return await db.transaction(client=>applyMovementInTransaction(client,input)); }
@@ -81,7 +100,11 @@ async function applyMovement(db: Database, input: Movement): Promise<WalletEntry
 async function applyMovementInTransaction(client:PoolClient,input:Movement):Promise<WalletEntry> {
   quantity(input.delta,input.kind==='adjustment');
   text(input.eventKey,200,'Identificador do evento'); text(input.sourceRef,160,'Origem'); text(input.reason,500,'Motivo');
-  const signature = fingerprint([input.userId,input.delta,input.kind,input.source,input.sourceRef,input.reason,input.actorUserId??null]);
+  if (input.liveEligible && (input.kind !== 'grant' || input.source !== 'manual' || !input.actorUserId)) {
+    throw new CreditError(400, 'Crédito para avaliação real exige concessão administrativa.');
+  }
+  const signature = fingerprint([input.userId,input.delta,input.kind,input.source,input.sourceRef,input.reason,input.actorUserId??null,
+    ...(input.liveEligible ? ['openai'] : [])]);
       const wallet = await lockWallet(client,input);
       const duplicate = await client.query<WalletEntry>('SELECT * FROM wallet_entries WHERE org_id=$1 AND event_key=$2',[input.orgId,input.eventKey]);
       if (duplicate.rows[0]) {
@@ -95,12 +118,12 @@ async function applyMovementInTransaction(client:PoolClient,input:Movement):Prom
         `INSERT INTO wallet_entries (org_id,user_id,delta,kind,source,source_ref,event_key,fingerprint,actor_user_id,reason)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
         [input.orgId,input.userId,input.delta,input.kind,input.source,input.sourceRef,input.eventKey,signature,input.actorUserId??null,input.reason]);
-      if (input.delta>0) await client.query('INSERT INTO credit_lots (entry_id,org_id,user_id,quantity,remaining) VALUES ($1,$2,$3,$4,$4)',[result.rows[0].id,input.orgId,input.userId,input.delta]);
+      if (input.delta>0) await client.query('INSERT INTO credit_lots (entry_id,org_id,user_id,quantity,remaining,live_eligible) VALUES ($1,$2,$3,$4,$4,$5)',[result.rows[0].id,input.orgId,input.userId,input.delta,input.liveEligible ?? false]);
       else await allocateDebit(client,input,result.rows[0].id,-input.delta);
       await client.query('UPDATE wallets SET balance=$3,updated_at=now() WHERE org_id=$1 AND user_id=$2',[input.orgId,input.userId,next]);
       return result.rows[0];
 }
-type GrantInput = CreditTarget & { amount: number; source: CreditSource; sourceRef: string; eventKey: string; reason: string; actorUserId?: string };
+type GrantInput = CreditTarget & { amount: number; source: CreditSource; sourceRef: string; eventKey: string; reason: string; actorUserId?: string; liveEligible?: boolean };
 type AdjustmentInput = CreditTarget & { delta: number; eventKey: string; reason: string; actorUserId: string };
 function grantMovement(input:GrantInput):Movement {
   if (!['initial','lesson','module','course','purchase','manual','leaderboard'].includes(input.source)) throw new CreditError(400,'Origem de concessão inválida.');
@@ -121,7 +144,7 @@ export function grantInitialCreditInTransaction(client:PoolClient,target:CreditT
 export function grantInitialCredit(db: Database,target: CreditTarget) {
   return grantCredits(db,{...target,amount:1,source:'initial',sourceRef:target.userId,eventKey:`initial:${target.userId}`,reason:'Crédito inicial para diagnóstico'});
 }
-type ReserveCreditInput = CreditTarget & { requestId: string; durationMicroseconds: number };
+type ReserveCreditInput = CreditTarget & { requestId: string; durationMicroseconds: number; provider?: 'mock' | 'openai' };
 
 export async function reserveCredits(db: Database, input: ReserveCreditInput): Promise<CreditReservation> {
   try {
@@ -136,6 +159,7 @@ export async function reserveCredits(db: Database, input: ReserveCreditInput): P
 
 export async function reserveCreditsInTransaction(client: PoolClient, input: ReserveCreditInput): Promise<CreditReservation> {
   const amount = creditsForDuration(input.durationMicroseconds);
+  const provider = input.provider ?? 'mock';
   text(input.requestId, 160, 'Pedido');
   const wallet = await lockWallet(client, input);
   const found = await client.query<CreditReservation>(
@@ -143,16 +167,30 @@ export async function reserveCreditsInTransaction(client: PoolClient, input: Res
   );
   const existing = found.rows[0];
   if (existing) {
-    if (existing.user_id !== input.userId || Number(existing.duration_us) !== input.durationMicroseconds) {
+    if (existing.user_id !== input.userId || Number(existing.duration_us) !== input.durationMicroseconds || existing.provider !== provider) {
       throw new CreditError(409, 'Pedido já associado a outra reserva.');
     }
     return existing;
   }
   if (wallet.available < amount) throw new CreditError(402, 'Créditos disponíveis insuficientes para avaliar esta gravação.');
+  const lots = provider === 'openai' ? await freeLots(client, input, true) : [];
+  if (provider === 'openai' && lots.reduce((total, lot) => total + lot.remaining, 0) < amount) {
+    throw new CreditError(402, 'Saldo insuficiente de créditos habilitados para avaliação real.');
+  }
   const inserted = await client.query<CreditReservation>(
-    'INSERT INTO credit_reservations (org_id,user_id,request_id,duration_us,amount) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-    [input.orgId, input.userId, input.requestId, input.durationMicroseconds, amount],
+    'INSERT INTO credit_reservations (org_id,user_id,request_id,duration_us,amount,provider) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+    [input.orgId, input.userId, input.requestId, input.durationMicroseconds, amount, provider],
   );
+  let needed = amount;
+  for (const lot of lots) {
+    const reserved = Math.min(needed, lot.remaining);
+    await client.query(
+      'INSERT INTO credit_reservation_lots(reservation_id,lot_entry_id,org_id,user_id,amount) VALUES($1,$2,$3,$4,$5)',
+      [inserted.rows[0].id, lot.entry_id, input.orgId, input.userId, reserved],
+    );
+    needed -= reserved;
+    if (!needed) break;
+  }
   await client.query('UPDATE wallets SET reserved=reserved+$3,updated_at=now() WHERE org_id=$1 AND user_id=$2', [input.orgId, input.userId, amount]);
   return inserted.rows[0];
 }
@@ -175,7 +213,22 @@ export async function consumeReservationInTransaction(client: PoolClient,input: 
       `INSERT INTO wallet_entries (org_id,user_id,delta,kind,source,source_ref,event_key,fingerprint,reason)
        VALUES ($1,$2,$3,'consumption','evaluation',$4,$5,$6,$7) RETURNING *`,
       [input.orgId,input.userId,-item.amount,item.request_id,eventKey,fingerprint([item.id,item.amount]),'Avaliação concluída']);
-    await allocateDebit(client,input,entry.rows[0].id,item.amount);
+    if (item.provider === 'openai') {
+      const allocated = await client.query<{ lot_entry_id: string; amount: number }>(
+        'SELECT lot_entry_id,amount FROM credit_reservation_lots WHERE reservation_id=$1 AND org_id=$2 AND user_id=$3',
+        [item.id, input.orgId, input.userId],
+      );
+      if (allocated.rows.reduce((sum, lot) => sum + lot.amount, 0) !== item.amount) {
+        throw new CreditError(409, 'A reserva real precisa de conciliação.');
+      }
+      for (const lot of allocated.rows) {
+        await client.query('UPDATE credit_lots SET remaining=remaining-$2 WHERE entry_id=$1', [lot.lot_entry_id, lot.amount]);
+        await client.query('INSERT INTO credit_allocations(debit_entry_id,lot_entry_id,amount,org_id,user_id) VALUES ($1,$2,$3,$4,$5)',
+          [entry.rows[0].id, lot.lot_entry_id, lot.amount, input.orgId, input.userId]);
+      }
+    } else {
+      await allocateDebit(client,input,entry.rows[0].id,item.amount);
+    }
     await client.query('UPDATE wallets SET balance=balance-$3,reserved=reserved-$3,updated_at=now() WHERE org_id=$1 AND user_id=$2',[input.orgId,input.userId,item.amount]);
     const result = await client.query<CreditReservation>("UPDATE credit_reservations SET status='consumed',consumption_entry_id=$2,settled_at=now() WHERE id=$1 RETURNING *",[item.id,entry.rows[0].id]);
     return result.rows[0];

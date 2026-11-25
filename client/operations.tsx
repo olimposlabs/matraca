@@ -5,6 +5,7 @@ import { Activity, ArrowRight, Building2, CalendarDays, Check, ChevronLeft, Chev
 import { ApiError, apiJson } from './api';
 import { AuthenticatedArea, LogoutButton } from './auth';
 import type { OperationPolicy } from '../server/operation-policy';
+import type { LiveLimits } from '../server/evaluation/live-policy';
 import './operations.css';
 
 type Org = { id: string; name: string; kind: string; status: string; branding: Record<string, unknown> };
@@ -26,8 +27,8 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 type Job = { id: string; studentId: string; name: string; status: string; scenario: string; credits: number; errorCode: string | null; state: string; attempts: number; availableAt: string; leaseUntil: string | null; createdAt: string; canRetry: boolean };
 type Reservation = { id: string; studentId: string; name: string; requestId: string; amount: number; createdAt: string; evaluationStatus: string | null; jobState: string | null; canRelease: boolean };
 type Audit = { id: string; event: string; createdAt: string; actor: string | null; details: { targetOrgId?: string; studentId?: string; requestId?: string; revision?: number; reason?: string } };
-type Tab = 'overview' | 'policy' | 'jobs' | 'reservations' | 'audit';
-const tabs: { id: Tab; label: string; icon: typeof Activity }[] = [{ id: 'overview', label: 'Visão geral', icon: Gauge }, { id: 'policy', label: 'Políticas e simuladores', icon: SlidersHorizontal }, { id: 'jobs', label: 'Fila de avaliações', icon: ListChecks }, { id: 'reservations', label: 'Reservas de créditos', icon: Coins }, { id: 'audit', label: 'Auditoria', icon: FileClock }];
+type Tab = 'overview' | 'policy' | 'live' | 'jobs' | 'reservations' | 'audit';
+const tabs: { id: Tab; label: string; icon: typeof Activity }[] = [{ id: 'overview', label: 'Visão geral', icon: Gauge }, { id: 'policy', label: 'Políticas e simuladores', icon: SlidersHorizontal }, { id: 'live', label: 'Avaliação real', icon: ShieldCheck }, { id: 'jobs', label: 'Fila de avaliações', icon: ListChecks }, { id: 'reservations', label: 'Reservas de créditos', icon: Coins }, { id: 'audit', label: 'Auditoria', icon: FileClock }];
 const statusLabels: Record<string, string> = { queued: 'Na fila', processing: 'Em processamento', completed: 'Concluída', failed: 'Falhou', cancelled: 'Cancelada', leased: 'Em execução', done: 'Encerrada', active: 'Ativa', suspended: 'Suspensa', invited: 'Convidado' };
 const evaluationLabels: Record<OperationPolicy['evaluationScenario'], string> = { success: 'Resposta normal', delay: 'Resposta demorada', transient: 'Falha recuperável', permanent: 'Falha definitiva', timeout: 'Tempo excedido', invalid: 'Resposta inválida' };
 const message = (error: unknown) => error instanceof ApiError ? error.message : 'Não foi possível concluir esta operação. Tente novamente.';
@@ -60,8 +61,92 @@ function OrganizationOperations({ org, dirtyChanged }: { org: Org; dirtyChanged:
   const base = `/api/backoffice/ops/${org.id}`; const { data, loading, error } = useResource<Metrics>(`${base}?${query}`, revision);
   function chooseTab(next: Tab) { if (next === tab) return; if (policyDirty && !window.confirm('Há alterações de política não salvas. Deseja descartá-las e mudar de aba?')) return; setPolicyDirty(false); dirtyChanged(false); setTab(next); }
   function dirty(value: boolean) { setPolicyDirty(value); dirtyChanged(value); }
-  return <><nav className="operations-tabs" aria-label="Áreas da operação">{tabs.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} aria-current={tab === item.id ? 'page' : undefined} onClick={() => chooseTab(item.id)}><item.icon size={16} />{item.label}</button>)}</nav>{tab === 'overview' && <ScopeFilters base={base} schools={data?.schools ?? []} scope={scope} period={data?.period} busy={loading} change={setScope} />}{tab === 'overview' || tab === 'policy' ? loading || error || !data ? <LoadingState error={error} retry={() => setRevision(value => value + 1)} /> : tab === 'overview' ? <Overview org={org} data={data} scope={scope} refresh={() => setRevision(value => value + 1)} selectStudent={student => setScope({ ...scope, student })} /> : <PolicyEditor key={data.policy.revision} org={org} base={base} policy={data.policy} changed={dirty} saved={() => { dirty(false); setRevision(value => value + 1); }} reload={() => { dirty(false); setRevision(value => value + 1); }} /> : tab === 'jobs' ? <JobsPanel base={base} org={org} /> : tab === 'reservations' ? <ReservationsPanel base={base} org={org} /> : <AuditPanel base={base} />}</>;
+  return <><nav className="operations-tabs" aria-label="Áreas da operação">{tabs.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} aria-current={tab === item.id ? 'page' : undefined} onClick={() => chooseTab(item.id)}><item.icon size={16} />{item.label}</button>)}</nav>{tab === 'overview' && <ScopeFilters base={base} schools={data?.schools ?? []} scope={scope} period={data?.period} busy={loading} change={setScope} />}{tab === 'overview' || tab === 'policy' ? loading || error || !data ? <LoadingState error={error} retry={() => setRevision(value => value + 1)} /> : tab === 'overview' ? <Overview org={org} data={data} scope={scope} refresh={() => setRevision(value => value + 1)} selectStudent={student => setScope({ ...scope, student })} /> : <PolicyEditor key={data.policy.revision} org={org} base={base} policy={data.policy} changed={dirty} saved={() => { dirty(false); setRevision(value => value + 1); }} reload={() => { dirty(false); setRevision(value => value + 1); }} /> : tab === 'live' ? <LivePolicyPanel base={base} changed={dirty} /> : tab === 'jobs' ? <JobsPanel base={base} org={org} /> : tab === 'reservations' ? <ReservationsPanel base={base} org={org} /> : <AuditPanel base={base} />}</>;
 }
+type LivePolicy = { revision: number; enabled: boolean; organization: LiveLimits; student: LiveLimits };
+const quotaLabels = { requests: 'Pedidos', minutes: 'Minutos', calls: 'Chamadas à OpenAI' };
+
+function LivePolicyPanel({ base, changed }: { base: string; changed: (dirty: boolean) => void }) {
+  const [revision, setRevision] = useState(0);
+  const [student, setStudent] = useState<Student | null>(null);
+  const [choosing, setChoosing] = useState(false);
+  const { data, loading, error } = useResource<{ policy: LivePolicy; instance: LiveLimits }>(`${base}/live-policy`, revision);
+  const reload = () => setRevision(revision + 1);
+  if (loading || error || !data) return <LoadingState error={error} retry={reload} />;
+  return <section className="operations-panel">
+    <LivePolicyForm key={data.policy.revision} base={base} policy={data.policy} instance={data.instance} changed={changed} saved={reload} />
+    {data.policy.revision > 0 && <div className="operations-section-heading">
+      <h3>Participantes da avaliação real</h3>
+      <button className="button button-secondary" type="button" onClick={() => setChoosing(true)}>Selecionar aluno</button>
+    </div>}
+    {student && <LiveParticipant key={student.id} base={base} student={student} />}
+    {choosing && <StudentPicker base={base} close={() => setChoosing(false)} select={value => { setStudent(value); setChoosing(false); }} />}
+  </section>;
+}
+
+function LivePolicyForm({ base, policy, instance, changed, saved }: {
+  base: string; policy: LivePolicy; instance: LiveLimits; changed: (dirty: boolean) => void; saved: () => void;
+}) {
+  const [draft, setDraft] = useState(policy);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await apiJson(`${base}/live-policy`, { method: 'PUT', body: {
+        expectedRevision: policy.revision, enabled: draft.enabled, organization: draft.organization, student: draft.student,
+      } });
+      changed(false);
+      saved();
+    } catch (cause) { setError(message(cause)); }
+    finally { setBusy(false); }
+  }
+  return <form className="organization-form" onSubmit={submit}>
+    <h2>Limites da avaliação real</h2>
+    <p>Em 24 horas, esta instância permite até {instance.requests} pedidos, {instance.minutes} minutos e {instance.calls} chamadas.</p>
+    <label><input type="checkbox" checked={draft.enabled} disabled={busy} onChange={event => {
+      setDraft({ ...draft, enabled: event.target.checked }); changed(true);
+    }} /> Permitir avaliação real nesta organização</label>
+    {(['organization', 'student'] as const).map(scope => <fieldset key={scope} className="operations-policy-grid" disabled={busy}>
+      <legend>{scope === 'organization' ? 'Por organização' : 'Por aluno autorizado'}</legend>
+      {(Object.keys(quotaLabels) as (keyof LiveLimits)[]).map(field => <label key={field}>
+        {quotaLabels[field]}<input type="number" required min={draft.enabled ? 1 : 0} max={100_000} value={draft[scope][field]}
+          onChange={event => { setDraft({ ...draft, [scope]: { ...draft[scope], [field]: Number(event.target.value) } }); changed(true); }} />
+      </label>)}
+    </fieldset>)}
+    {error && <p role="alert" className="form-error">{error}</p>}
+    <button type="submit" className="button button-primary" disabled={busy}>Salvar limites da avaliação real</button>
+  </form>;
+}
+
+function LiveParticipant({ base, student }: { base: string; student: Student }) {
+  const route = `${base}/live-students/${student.id}`;
+  const [revision, setRevision] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const { data, loading, error } = useResource<{ enabled: boolean }>(route, revision);
+  if (loading || error || !data) return <LoadingState error={error} retry={() => setRevision(revision + 1)} />;
+  async function change(enabled: boolean) {
+    setBusy(true);
+    setSaveError('');
+    try {
+      await apiJson(route, { method: 'PUT', body: { enabled } });
+      setRevision(revision + 1);
+    } catch (cause) { setSaveError(message(cause)); }
+    finally { setBusy(false); }
+  }
+  return <div>
+    <p>{student.name} · {data.enabled ? 'Autorizado' : 'Sem autorização'}</p>
+    <button type="button" className="button button-secondary" disabled={busy} onClick={() => void change(!data.enabled)}>
+      {data.enabled ? 'Revogar acesso à avaliação real' : 'Autorizar avaliação real'}
+    </button>
+    {saveError && <p role="alert" className="form-error">{saveError}</p>}
+  </div>;
+}
+
 function ScopeFilters({ base, schools, scope, period, busy, change }: { base: string; schools: School[]; scope: Scope; period?: Metrics['period']; busy: boolean; change: (scope: Scope) => void }) {
   const [schoolId, setSchoolId] = useState(scope.schoolId); const [student, setStudent] = useState(scope.student); const [from, setFrom] = useState(scope.from); const [through, setThrough] = useState(scope.through); const [choosing, setChoosing] = useState(false); const [error, setError] = useState('');
   useEffect(() => { setSchoolId(scope.schoolId); setStudent(scope.student); setFrom(scope.from); setThrough(scope.through); }, [scope]);

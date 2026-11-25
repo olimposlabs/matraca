@@ -16,7 +16,7 @@ const id=z.uuid();
 const amount=z.number().int().min(1).max(1_000_000);
 const reason=z.string().trim().min(1).max(500);
 const eventBase={eventId:id,reason};
-const grantInput=z.object({...eventBase,amount:amount.optional(),packageId:id.optional()}).strict()
+const grantInput=z.object({...eventBase,amount:amount.optional(),packageId:id.optional(),liveEligible:z.boolean().optional()}).strict()
   .refine(data=>(data.amount!==undefined)!==(data.packageId!==undefined));
 const adjustInput=z.object({...eventBase,delta:z.number().int().min(-1_000_000).max(1_000_000).refine(n=>n!==0)}).strict();
 const refundInput=z.object({...eventBase,entryId:id}).strict();
@@ -220,6 +220,7 @@ async function move(client:PoolClient,access:Access,userId:string,operation:Oper
   const target={orgId:access.org.id,userId},actorUserId=access.actor.user.id,eventKey=`administrative:${input.eventId}`;
   if(operation==='grant'){
     const grant=input as z.infer<typeof grantInput>;
+    if (grant.liveEligible && !access.central) throw new CreditsAccessError(403,'Somente o backoffice concede créditos para avaliação real.');
     let quantity=grant.amount!,sourceRef=`manual:${input.eventId}`;
     if(grant.packageId){const item=await grantPackage(client,access.org.id,grant.packageId);if(item.status!=='active')throw new CreditsAccessError(409,'O pacote está arquivado.');quantity=item.amount;sourceRef=`package:${item.id}`;}
     ensureGrantLimit(quantity);
@@ -230,7 +231,7 @@ async function move(client:PoolClient,access:Access,userId:string,operation:Oper
       if(quantity>limit.remaining)throw new CreditsAccessError(409,'O limite mensal de concessões da escola seria excedido.');
       schoolId=student.schoolId;budgetMonth=`${limit.month}-01`;
     }
-    result=await grantCreditsInTransaction(client,{...target,amount:quantity,source:'manual',sourceRef,eventKey,reason:input.reason,actorUserId});
+    result=await grantCreditsInTransaction(client,{...target,amount:quantity,source:'manual',sourceRef,eventKey,reason:input.reason,actorUserId,liveEligible:grant.liveEligible});
   }else if(operation==='adjust'){
     const delta = (input as z.infer<typeof adjustInput>).delta;
     ensureGrantLimit(delta);

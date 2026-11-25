@@ -19,6 +19,7 @@ import { registerCommerce } from './commerce.js';
 import { registerBilling } from './billing.js';
 import { financialClock, readOperationPolicy } from './operation-policy.js';
 import { registerOperations } from './operations.js';
+import type { LiveLimits } from './evaluation/live-policy.js';
 import staticFiles from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -28,6 +29,7 @@ export interface AppOptions {
   storageRoot?: string;
   clientRoot?: string;
   evaluationProvider?: 'mock' | 'openai';
+  liveLimits?: LiveLimits;
   /** Trusted server-side clock for the local financial simulator. */
   billingNow?: (orgId: string) => Date | Promise<Date>;
 }
@@ -75,7 +77,7 @@ export async function createApp(options: AppOptions = {}) {
   await registerCourseAssets(app);
   await registerCourseManagementReads(app);
   await registerRecordings(app);
-  await registerEvaluations(app, options.evaluationProvider ?? 'mock');
+  await registerEvaluations(app, options.evaluationProvider ?? 'mock', options.liveLimits);
   await registerJourney(app);
   await registerMentoring(app);
   await registerGamification(app);
@@ -85,7 +87,7 @@ export async function createApp(options: AppOptions = {}) {
   await registerBilling(app, {
     now: options.billingNow ?? (async orgId => financialClock((await readOperationPolicy(db, orgId)).config)),
   });
-  await registerOperations(app);
+  await registerOperations(app, options.liveLimits);
   const clientRoot = resolve(options.clientRoot ?? 'dist/client');
   if (existsSync(resolve(clientRoot, 'index.html'))) {
     await app.register(staticFiles, { root: clientRoot, wildcard: false });

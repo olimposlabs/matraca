@@ -12,6 +12,7 @@ import { MockEvaluationProvider, type EvaluationProvider } from '../server/evalu
 import { runEvaluationJob } from '../server/evaluation/worker.js';
 import { privateEvaluationMedia } from '../server/evaluation/openai-media.js';
 import { isOpenAIAttemptActive } from '../server/evaluation/openai-runtime.js';
+import { authorizeLiveDispatch, type LiveLimits } from '../server/evaluation/live-policy.js';
 import { EvaluationProviderError } from '../server/evaluation/provider.js';
 import { getWallet, grantCredits } from '../server/wallet.js';
 
@@ -74,6 +75,23 @@ describe('fila, relatórios e reserva atômica', () => {
     return { orgId, userId, host, cookie: `matraca_session=${token}` };
   }
 
+  const standardLimits = { requests: 30, minutes: 120, calls: 180 };
+  const liveApp = (liveLimits: LiveLimits = standardLimits) => createApp({
+    databaseUrl: url.toString(), storageRoot, evaluationProvider: 'openai', liveLimits,
+  });
+  async function admitStudent(actor: Student, credits = 0) {
+    await db.query(`INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision)
+      VALUES($1,true,$2,$2,1) ON CONFLICT DO NOTHING`, [actor.orgId, standardLimits]);
+    await db.query('INSERT INTO live_evaluation_members(org_id,student_id) VALUES($1,$2)', [actor.orgId, actor.userId]);
+    if (credits) await grantCredits(db, { ...actor, amount: credits, source: 'manual', sourceRef: 'pilot',
+      eventKey: randomUUID(), reason: 'Concessão sintética para avaliação real', actorUserId: actor.userId, liveEligible: true });
+  }
+  function liveRequest(live: FastifyInstance, actor: Student, recordingId: string) {
+    return live.inject({ method: 'POST', url: '/api/evaluations',
+      headers: { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' },
+      payload: { recordingId, clientKey: randomUUID(), expectedProvider: 'openai' } });
+  }
+
   async function recording(actor: Student, duration = 30_000_000, purpose = 'free') {
     const id = randomUUID();
     await db.query(
@@ -106,8 +124,9 @@ describe('fila, relatórios e reserva atômica', () => {
   }
 
   it('isola filas por provedor, mantém lease real e não cobra sem relatório válido', async () => {
-    const live = await createApp({ databaseUrl: url.toString(), storageRoot, evaluationProvider: 'openai' });
-    const actor = await student(4);
+    const live = await liveApp();
+    const actor = await student(0);
+    await admitStudent(actor, 4);
     const media = await recording(actor);
     const headers = { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' };
     const post = (payload: object) => live.inject({ method: 'POST', url: '/api/evaluations', headers, payload });
@@ -144,6 +163,72 @@ describe('fila, relatórios e reserva atômica', () => {
       expect(await runEvaluationJob(db, { kind: 'openai', evaluate: provider.evaluate.bind(provider) }, { requestId: next })).toBe(true);
       expect(await read(actor, next)).toMatchObject({ status: 'failed', errorCode: 'invalid' });
       expect(await getWallet(db, actor)).toMatchObject({ balance: 4, reserved: 0 });
+    } finally { await live.close(); }
+  });
+
+  it('só aceita saldo elegível no piloto real e preserva o saldo de demonstração', async () => {
+    const actor = await student(2);
+    const media = await recording(actor);
+    const live = await liveApp();
+    try {
+      expect((await liveRequest(live, actor, media)).statusCode).toBe(403);
+      await admitStudent(actor);
+      await grantCredits(db, { ...actor, amount: 5, source: 'purchase', sourceRef: 'simulated-order',
+        eventKey: randomUUID(), reason: 'Compra de demonstração' });
+      expect((await liveRequest(live, actor, media)).statusCode).toBe(402);
+      expect(await getWallet(db, actor)).toEqual({ balance: 7, reserved: 0, available: 7 });
+      expect((await db.query('SELECT id FROM evaluation_requests WHERE student_id=$1', [actor.userId])).rowCount).toBe(0);
+      expect((await submit(actor, media)).status).toBe('queued');
+      expect(await runEvaluationJob(db, provider)).toBe(true);
+    } finally { await live.close(); }
+  });
+
+  it('aplica a mesma cota entre organizações e o cancelamento preserva despachos', async () => {
+    const previous = (await db.query<{ total: number }>('SELECT count(*)::integer AS total FROM live_evaluation_admissions')).rows[0].total;
+    const instance = { ...standardLimits, requests: previous + 1 };
+    const live = await liveApp(instance);
+    try {
+      const actors = [await student(0), await student(0)];
+      for (const actor of actors) await admitStudent(actor, 2);
+      const recordings = await Promise.all(actors.map(actor => recording(actor)));
+      const requests = await Promise.all(actors.map((actor, i) => liveRequest(live, actor, recordings[i])));
+      expect(requests.map(response => response.statusCode).sort()).toEqual([202, 429]);
+      const index = requests.findIndex(response => response.statusCode === 202);
+      const id = requests[index].json().evaluation.id;
+      const actor = actors[index];
+      let calls = 0;
+      const liveProvider: EvaluationProvider = { kind: 'openai', async evaluate(context, options) {
+        await authorizeLiveDispatch(db, { requestId: context.requestId, attempt: options.attempt, leaseToken: options.leaseToken!, callIndex: 0, instance });
+        calls++;
+        const cancelled = await call(actor, 'POST', `/api/evaluations/${id}/cancel`);
+        expect(cancelled.statusCode).toBe(200);
+        await expect(authorizeLiveDispatch(db, { requestId: id, attempt: options.attempt, leaseToken: options.leaseToken!, callIndex: 1, instance }))
+          .rejects.toMatchObject({ code: 'authorization' });
+        throw new EvaluationProviderError('authorization', false);
+      } };
+      expect(await runEvaluationJob(db, liveProvider, { requestId: id })).toBe(true);
+      expect(calls).toBe(1);
+      expect((await db.query('SELECT request_id FROM live_evaluation_dispatches WHERE request_id=$1', [id])).rowCount).toBe(1);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 2, reserved: 0 });
+    } finally { await live.close(); }
+  });
+
+  it('encerra sem saída o pedido real que perdeu autorização na fila', async () => {
+    const live = await liveApp();
+    try {
+      const actor = await student(0);
+      await admitStudent(actor, 2);
+      const response = await liveRequest(live, actor, await recording(actor));
+      expect(response.statusCode).toBe(202);
+      const id = response.json().evaluation.id;
+      await db.query("UPDATE orgs SET status='suspended' WHERE id=$1", [actor.orgId]);
+      let prepared = false;
+      expect(await runEvaluationJob(db, { kind: 'openai', async evaluate() { prepared = true; } }, { requestId: id })).toBe(true);
+      expect(prepared).toBe(false);
+      expect((await db.query('SELECT status,error_code FROM evaluation_requests WHERE id=$1', [id])).rows[0])
+        .toEqual({ status: 'failed', error_code: 'authorization' });
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 2, reserved: 0 });
+      expect((await db.query('SELECT request_id FROM live_evaluation_dispatches WHERE request_id=$1', [id])).rowCount).toBe(0);
     } finally { await live.close(); }
   });
 
