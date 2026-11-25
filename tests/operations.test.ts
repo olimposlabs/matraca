@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
@@ -16,7 +16,7 @@ interface Actor { orgId: string; userId: string; host: string; cookie: string }
 
 describe('controles operacionais e reconciliação', () => {
   const schema = `operations_test_${randomUUID().replaceAll('-', '')}`;
-  const database = process.env.DATABASE_URL ?? localDatabaseUrl;
+  const database = testDatabaseUrl();
   const isolated = new URL(database);
   isolated.searchParams.set('options', `-c search_path=${schema}`);
   const control = createDatabase(database);

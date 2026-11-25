@@ -8,8 +8,8 @@ O fundador aprovou o plano em 10 de novembro de 2026 e definiu AWS como destino 
 | --- | --- |
 | Interface | React, React Router e Vite, estilos por variáveis CSS |
 | API | Node 24 LTS, TypeScript e Fastify |
-| Dados | PostgreSQL 17 local em Docker, acesso pg e migrações SQL versionadas |
-| Objetos | Filesystem privado em .data/objects com streaming e leitura por faixas |
+| Dados | PostgreSQL 17 local em Docker, banco por ambiente, papéis de migração e execução, migrações SQL versionadas |
+| Objetos | Filesystem privado em .data/local/objects com streaming e leitura por faixas |
 | Processamento | Jobs e outbox duráveis no banco, worker local com lease e recuperação |
 | Avaliação | Adaptadores mock e OpenAI, selecionados no servidor e persistidos por pedido, separados de crédito e persistência |
 | E-mail e pagamento | Caixa de e-mail local e eventos idempotentes de pagamento simulado |

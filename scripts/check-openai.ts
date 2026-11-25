@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -12,7 +12,10 @@ import type { LightMyRequestResponse } from 'fastify';
 import { chromium, expect, type Browser } from '@playwright/test';
 import { createApp } from '../server/app.js';
 import { createDatabase } from '../server/db.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { localDatabaseConnection, localDatabaseNames } from '../server/local-database-config.js';
+import { requireRuntimeDatabase } from '../server/db-runtime.js';
+import { provisionLocalDatabase } from './provision-local-db.js';
+import { startPostgresCluster } from './db-start.js';
 import { evaluationConfiguration } from '../server/evaluation/openai-config.js';
 import { createOpenAIProvider } from '../server/evaluation/openai-runtime.js';
 import type { EvaluationReport } from '../server/evaluation/provider.js';
@@ -27,20 +30,23 @@ if (!apiKey || apiKey === process.env.OPENAI_API_KEY?.trim()) {
 }
 const config = evaluationConfiguration();
 const execute = promisify(execFile);
-const schema = `openai_smoke_${randomUUID().replaceAll('-', '')}`;
+startPostgresCluster();
 const directory = await mkdtemp(join(tmpdir(), 'matraca-openai-smoke-'));
-const control = createDatabase(process.env.DATABASE_URL ?? localDatabaseUrl);
-const databaseUrl = new URL(process.env.DATABASE_URL ?? localDatabaseUrl);
-databaseUrl.searchParams.set('options', `-c search_path=${schema}`);
-const db = createDatabase(databaseUrl.toString());
+const profile = join(directory, 'database');
+const names = localDatabaseNames(profile);
+const control = createDatabase(localDatabaseConnection('bootstrap'));
+let runtimeDb: ReturnType<typeof createDatabase> | undefined;
 let app: Awaited<ReturnType<typeof createApp>> | undefined;
 let browser: Browser | undefined;
 try {
-  await control.query(`CREATE SCHEMA ${schema}`);
-  const migrations = new URL('../server/migrations/', import.meta.url);
-  for (const file of (await readdir(migrations)).filter(name => name.endsWith('.sql')).sort()) {
-    await db.query(await readFile(new URL(file, migrations), 'utf8'));
-  }
+  const profileDb = await provisionLocalDatabase(profile);
+  const databaseUrl = profileDb.runtimeUrl;
+  await execute('npm', ['run', 'db:migrate'], {
+    env: { PATH: process.env.PATH, HOME: process.env.HOME, APP_MODE: 'local', MATRACA_MIGRATION_DATABASE_URL: profileDb.migrationUrl },
+    timeout: 30000,
+  });
+  const db = runtimeDb = createDatabase(databaseUrl);
+  await requireRuntimeDatabase(db, databaseUrl);
   const orgId = randomUUID(), userId = randomUUID(), token = randomBytes(32).toString('base64url');
   await db.query("INSERT INTO orgs(id,slug,name,kind) VALUES($1,'openai-smoke','Matraca · teste sintético','matraca')", [orgId]);
   await db.query("INSERT INTO domains(hostname,org_id) VALUES('127.0.0.1',$1)", [orgId]);
@@ -50,7 +56,7 @@ try {
   await db.query('INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision) VALUES($1,true,$2,$2,1)', [orgId, instance]);
   await db.query('INSERT INTO live_evaluation_members(org_id,student_id) VALUES($1,$2)', [orgId,userId]);
   await grantCredits(db, { orgId, userId, liveEligible: true, actorUserId: userId, amount: 6, source: 'manual', sourceRef: 'synthetic-smoke', eventKey: randomUUID(), reason: 'Validação sintética da OpenAI' });
-  app = await createApp({ databaseUrl: databaseUrl.toString(), storageRoot: join(directory, 'objects'), evaluationProvider: 'openai', liveLimits: instance });
+  app = await createApp({ databaseUrl, storageRoot: join(directory, 'objects'), evaluationProvider: 'openai', liveLimits: instance });
   const address = await app.listen({ host: '127.0.0.1', port: 0 });
   const headers = { host: new URL(address).host, cookie: `matraca_session=${token}`, 'x-matraca-request': '1' };
   const provider = createOpenAIProvider(db, app.storage, {
@@ -111,8 +117,12 @@ try {
 } finally {
   await browser?.close();
   await app?.close();
-  await db.close();
-  await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-  await control.close();
-  await rm(directory, { recursive: true, force: true });
+  await runtimeDb?.close();
+  try {
+    await control.query(`DROP DATABASE IF EXISTS ${names.name}`);
+    await control.query(`DROP ROLE IF EXISTS ${names.runtime},${names.migration}`);
+  } finally {
+    await control.close();
+    await rm(directory, { recursive: true, force: true });
+  }
 }

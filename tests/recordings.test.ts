@@ -10,7 +10,7 @@ import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { emptyCourse, type CourseDocument } from '../server/course-model.js';
 import { createDatabase } from '../server/db.js';
 
@@ -27,7 +27,7 @@ describe('gravações privadas e upload real', () => {
   let video: Buffer, audio: Buffer, capture: Buffer, longAudio: Buffer, fiveMinutes: Buffer, tooLong: Buffer;
 
   beforeAll(async () => {
-    const base = process.env.DATABASE_URL ?? localDatabaseUrl;
+    const base = testDatabaseUrl();
     control = createDatabase(base);
     await control.query(`CREATE SCHEMA ${schema}`);
     const url = new URL(base); url.searchParams.set('options', `-c search_path=${schema}`); databaseUrl = url.toString();

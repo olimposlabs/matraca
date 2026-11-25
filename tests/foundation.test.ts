@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 
 describe('fundação local do Matraca', () => {
   let app: FastifyInstance;
@@ -12,7 +13,7 @@ describe('fundação local do Matraca', () => {
   beforeAll(async () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'matraca-foundation-'));
     app = await createApp({
-      ...(process.env.DATABASE_URL ? { databaseUrl: process.env.DATABASE_URL } : {}),
+      databaseUrl: testDatabaseUrl(),
       storageRoot,
     });
   });

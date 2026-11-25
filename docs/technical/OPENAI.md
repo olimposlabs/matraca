@@ -6,12 +6,15 @@ Em 24/11/2026, o fundador autorizou conectar a OpenAI real no ambiente local. E-
 
 ```sh
 npm ci
+npm run db:start
+npm run db:migrate
+npm run db:seed
 npm run media:build
 npm run media:verify
 npm run dev:openai
 ```
 
-O comando prepara banco, migrações e seed e inicia API e Vite com `EVALUATION_PROVIDER=openai`. `npm run dev` mantém o mock como padrão para demonstração e testes. Para servir um build: `EVALUATION_PROVIDER=openai APP_PUBLIC_PORT=3001 npm start`. Reinicie a API após alterar provedor, modelos ou chave. A avaliação real exige os três limites positivos `OPENAI_24H_REQUESTS`, `OPENAI_24H_MINUTES` e `OPENAI_24H_CALLS`. O padrão de cada um é zero. Na aba **Avaliação real** das operações do backoffice, salve os limites da organização e por aluno e autorize participantes. Na carteira, a concessão do backoffice tem uma opção explícita para habilitar o lote para avaliação real.
+O comando inicia API e Vite com `EVALUATION_PROVIDER=openai`. `npm run dev` mantém o mock como padrão para demonstração e testes. Para servir um build: `EVALUATION_PROVIDER=openai APP_PUBLIC_PORT=3001 npm start`. Reinicie a API após alterar provedor, modelos ou chave. A avaliação real exige os três limites positivos `OPENAI_24H_REQUESTS`, `OPENAI_24H_MINUTES` e `OPENAI_24H_CALLS`. O padrão de cada um é zero. Na aba **Avaliação real** das operações do backoffice, salve os limites da organização e por aluno e autorize participantes. Na carteira, a concessão do backoffice tem uma opção explícita para habilitar o lote para avaliação real.
 
 A API usa `OPENAI_API_KEY` quando disponível no ambiente do servidor. No macOS, sem essa variável, lê o item de senha genérica do Chaves: serviço `Matraca IA DEV - OpenAI`, conta `OPENAI_API_KEY`. `OPENAI_KEYCHAIN_SERVICE` permite outro nome. O segredo fica na memória da API; não é copiado para arquivo, frontend, banco ou Git. A leitura falha de forma explícita se o item não estiver acessível. Não há fallback silencioso para avaliações simuladas. Os testes automatizados não consultam o cofre.
 

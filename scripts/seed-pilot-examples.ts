@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { basename, dirname, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import type { HTTPMethods, LightMyRequestResponse } from 'fastify';
@@ -11,6 +12,8 @@ import type { CourseDocument } from '../server/course-model.js';
 import { MockEvaluationProvider } from '../server/evaluation/provider.js';
 import { runEvaluationJob } from '../server/evaluation/worker.js';
 import { seedId } from './seed-id.js';
+import { sandboxPaths } from './sandbox-paths.js';
+import { localDatabaseNames } from '../server/local-database-config.js';
 
 const { values } = parseArgs({ options: { invoice: { type: 'boolean', default: false } } });
 const config = configuration();
@@ -18,8 +21,14 @@ const database = new URL(config.databaseUrl);
 if (!['127.0.0.1', 'localhost', '[::1]'].includes(database.hostname)) {
   throw new Error('Exemplos sintéticos exigem um PostgreSQL local.');
 }
-const schema = new URLSearchParams(database.search).get('options')?.match(/^-c search_path=(matraca_sandbox_[a-z][a-z0-9_]*)$/)?.[1];
-if (values.invoice && !schema) throw new Error('Emita a fatura de exemplo em um sandbox para preservar a competência principal.');
+if (values.invoice) {
+  const sandbox = sandboxPaths(basename(dirname(config.storageRoot)));
+  const expected = localDatabaseNames(sandbox.storage);
+  if (config.storageRoot !== resolve(sandbox.storage, 'objects') || database.pathname !== `/${expected.name}`
+    || database.username !== expected.runtime || localPartnerDomainSuffix() !== sandbox.domainSuffix) {
+    throw new Error('Emita a fatura de exemplo em um sandbox para preservar a competência principal.');
+  }
+}
 
 const app = await createApp(config);
 const guard = await app.db.pool.connect();

@@ -2,9 +2,10 @@ import { execFileSync, spawn } from 'node:child_process';
 import { mkdir, realpath, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { localDatabaseUrl } from '../server/config.js';
+import { localDatabaseConnection, localDatabaseNames } from '../server/local-database-config.js';
+import { provisionLocalDatabase } from './provision-local-db.js';
 import { createDatabase } from '../server/db.js';
-import { startLocalDatabase } from './db-start.js';
+import { startPostgresCluster } from './db-start.js';
 import { sandboxPaths } from './sandbox-paths.js';
 
 const { values, positionals } = parseArgs({
@@ -25,8 +26,9 @@ if (action === 'reset' && values.confirm !== name) throw new Error('Para apagar 
 const { storage, schema, domainSuffix } = sandboxPaths(name);
 const objects = resolve(storage, 'objects');
 const clientRoot = resolve(storage, 'client');
-startLocalDatabase();
-const control = createDatabase(localDatabaseUrl);
+startPostgresCluster();
+const control = createDatabase(localDatabaseConnection('bootstrap'));
+const database = localDatabaseNames(storage);
 const guard = await control.pool.connect();
 try {
   const lock = await guard.query<{ locked: boolean }>('SELECT pg_try_advisory_lock(hashtextextended($1,14)) AS locked', [schema]);
@@ -37,21 +39,24 @@ try {
       throw error;
     });
     if (canonical !== storage) throw new Error('O caminho do sandbox contém um link simbólico. Reset recusado.');
-    await guard.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+    await guard.query(`DROP DATABASE IF EXISTS ${database.name}`);
+    await guard.query(`DROP ROLE IF EXISTS ${database.runtime},${database.migration}`);
     await rm(storage, { recursive: true, force: true });
     process.stdout.write(`Sandbox ${name} removido.\n`);
   } else {
-    await guard.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
     await mkdir(storage, { recursive: true, mode: 0o700 });
     if (await realpath(storage) !== storage) throw new Error('O caminho do sandbox contém um link simbólico.');
-    const database = new URL(localDatabaseUrl);
-    database.searchParams.set('options', `-c search_path=${schema}`);
-    const env = {
-      ...process.env, APP_MODE: 'local', DATABASE_URL: database.toString(), STORAGE_ROOT: objects,
+    const { runtimeUrl, migrationUrl } = await provisionLocalDatabase(storage);
+    const env: NodeJS.ProcessEnv = {
+      ...process.env, APP_MODE: 'local', DATABASE_URL: runtimeUrl, STORAGE_ROOT: objects,
       PORT: String(port), APP_PUBLIC_PORT: String(port), APP_CLIENT_ROOT: clientRoot,
       APP_PARTNER_DOMAIN_SUFFIX: domainSuffix,
     };
-    for (const task of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', task], { env, stdio: 'inherit' });
+    delete env.MATRACA_MIGRATION_DATABASE_URL;
+    delete env.TEST_DATABASE_URL;
+    for (const task of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', task], {
+      env: { ...env, MATRACA_MIGRATION_DATABASE_URL: migrationUrl }, stdio: 'inherit',
+    });
     if (values.examples) execFileSync('npm', ['run', 'db:seed:examples', '--', '--invoice'], { env, stdio: 'inherit' });
     const domains = [domainSuffix, `parceiro.${domainSuffix}`, `backoffice.${domainSuffix}`];
     execFileSync('npm', ['run', 'build', '--', '--outDir', clientRoot], { env, stdio: 'inherit' });

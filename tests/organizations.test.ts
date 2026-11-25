@@ -6,7 +6,7 @@ import type { FastifyInstance } from 'fastify';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 
 const defaultBranding = {
@@ -33,7 +33,7 @@ describe('organizações, branding e publicação isolada', () => {
 
   beforeAll(async () => {
     root = await mkdtemp(join(tmpdir(), 'matraca-organizations-'));
-    const baseUrl = process.env.DATABASE_URL ?? localDatabaseUrl;
+    const baseUrl = testDatabaseUrl();
     controlDb = createDatabase(baseUrl);
     await controlDb.query(`CREATE SCHEMA ${schema}`);
     const isolatedUrl = new URL(baseUrl);

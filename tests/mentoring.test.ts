@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { registerMentoring } from '../server/mentoring.js';
 import { consumeReservation, getWallet, grantCredits, reserveCredits } from '../server/wallet.js';
@@ -20,7 +20,7 @@ describe('mentorias, revisão humana e plano individual', () => {
   const schema = `mentoring_test_${randomUUID().replaceAll('-', '')}`;
   let app: FastifyInstance, db: ReturnType<typeof createDatabase>, control: ReturnType<typeof createDatabase>, root: string;
   beforeAll(async () => {
-    const base = process.env.DATABASE_URL ?? localDatabaseUrl; control = createDatabase(base);
+    const base = testDatabaseUrl(); control = createDatabase(base);
     await control.query(`CREATE SCHEMA ${schema}`);
     const url = new URL(base); url.searchParams.set('options', `-c search_path=${schema}`); db = createDatabase(url.toString());
     const migrations = new URL('../server/migrations/', import.meta.url);

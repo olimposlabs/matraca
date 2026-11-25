@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
-import { localDatabaseUrl } from '../server/config.js';
+import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
 import { requireStudentScope } from '../server/education.js';
 
@@ -25,7 +25,7 @@ describe('gestão escolar e autorização atual do aluno', () => {
 
   beforeAll(async () => {
     root = await mkdtemp(join(tmpdir(), 'matraca-education-'));
-    const originalUrl = process.env.DATABASE_URL ?? localDatabaseUrl;
+    const originalUrl = testDatabaseUrl();
     controlDb = createDatabase(originalUrl);
     await controlDb.query(`CREATE SCHEMA ${schema}`);
     const url = new URL(originalUrl);

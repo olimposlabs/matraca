@@ -1,13 +1,35 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { startLocalDatabase } from './db-start.js';
+import { configuration } from '../server/config.js';
+import { migrationDatabaseUrl } from '../server/local-database-config.js';
 if (process.argv.includes('--openai')) process.env.EVALUATION_PROVIDER = 'openai';
 try {
-  if (!process.env.DATABASE_URL) startLocalDatabase();
-  for (const script of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', script], { stdio: 'inherit' });
-} catch { process.stderr.write('Não foi possível preparar o banco local. Confira Docker ou DATABASE_URL.\n'); process.exit(1); }
+  if (process.env.MATRACA_MIGRATION_DATABASE_URL && !process.env.DATABASE_URL) {
+    throw new Error('Defina as conexões de runtime e migração para o mesmo banco.');
+  }
+  if (process.env.EVALUATION_PROVIDER !== 'openai' && (!process.env.DATABASE_URL || process.env.MATRACA_MIGRATION_DATABASE_URL)) {
+    if (!process.env.DATABASE_URL) await startLocalDatabase();
+    const location = (uri: string) => {
+      const url = new URL(uri);
+      return [url.hostname, url.port || '5432', url.pathname, url.searchParams.get('options')].join('|');
+    };
+    if (location(configuration().databaseUrl) !== location(migrationDatabaseUrl())) {
+      throw new Error('As conexões de migração e runtime apontam para bancos ou schemas diferentes.');
+    }
+    for (const script of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', script], { stdio: 'inherit' });
+  }
+} catch { process.stderr.write('Não foi possível preparar o banco local. Confira Docker e as conexões de runtime e migração do mesmo banco.\n'); process.exit(1); }
 process.env.MATRACA_DEV_PROXY_SECRET = randomBytes(32).toString('base64url');
-const children = ['dev:api', 'dev:web'].map(script => spawn('npm', ['run', script], { stdio: 'inherit', detached: true }));
+const runtimeEnvironment: NodeJS.ProcessEnv = { ...process.env, DATABASE_URL: configuration().databaseUrl };
+delete runtimeEnvironment.MATRACA_MIGRATION_DATABASE_URL;
+delete runtimeEnvironment.TEST_DATABASE_URL;
+const webEnvironment: NodeJS.ProcessEnv = { ...runtimeEnvironment };
+delete webEnvironment.DATABASE_URL;
+delete webEnvironment.OPENAI_API_KEY;
+delete webEnvironment.OPENAI_SMOKE_API_KEY;
+const children = [spawn('npm', ['run', 'dev:api'], { env: runtimeEnvironment, stdio: 'inherit', detached: true }),
+  spawn('npm', ['run', 'dev:web'], { env: webEnvironment, stdio: 'inherit', detached: true })];
 let stopping = false;
 function stop(code: number) {
   if (stopping) return;

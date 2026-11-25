@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFile, spawn, type ChildProcess } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rmdir, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -11,6 +11,8 @@ import { sandboxPaths } from './sandbox-paths.js';
 const port = 3020;
 const name = `persist_${randomUUID().slice(0, 8)}`;
 const { storage: folder, domainSuffix } = sandboxPaths(name);
+const legacy = resolve('.data', 'sandboxes', name);
+const legacyMarker = resolve(legacy, 'preserve.txt');
 const direct = `http://${domainSuffix}:${port}`;
 const partner = `http://parceiro.${domainSuffix}:${port}`;
 const office = `http://backoffice.${domainSuffix}:${port}`;
@@ -92,6 +94,8 @@ async function assess(page: Page, url: string, objective: string) {
 
 const browser = await chromium.launch({ channel: 'chromium', headless: true });
 try {
+  await mkdir(legacy, { recursive: true, mode: 0o700 });
+  await writeFile(legacyMarker, 'histórico sintético', { flag: 'wx', mode: 0o600 });
   await start(true);
   const ids = JSON.parse(output.match(/^\{"orderId".+\}$/m)?.[0] ?? '{}');
   for (const key of ['orderId', 'evaluationId', 'recordingId', 'mentoringId', 'invoiceId']) assert.ok(ids[key], key);
@@ -274,6 +278,7 @@ try {
   await stop();
   await run(process.execPath, [...command, ...reset]);
   await assert.rejects(readdir(folder), { code: 'ENOENT' });
+  assert.equal(await readFile(legacyMarker, 'utf8'), 'histórico sintético');
   process.stdout.write('J05, J08, J10, J11 e J19: diagnóstico, mentoria com nova tentativa, isolamento, persistência e reset verificados.\n');
 } catch (error) {
   process.stderr.write(output);
@@ -282,4 +287,6 @@ try {
   await browser.close();
   await stop();
   await run(process.execPath, [...command, ...reset]);
+  await unlink(legacyMarker).catch(() => {});
+  await rmdir(legacy).catch(() => {});
 }
