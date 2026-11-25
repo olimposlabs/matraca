@@ -78,3 +78,15 @@ O endpoint de auditoria `GET /api/backoffice/ops/:orgId/sensitive-access` expõe
 ## Transição do banco local
 
 A instância nova tem volume e porta próprios. Os sandboxes novos usam `.data/sandboxes-v2`. O código preserva a pasta dos sandboxes legados para que a recuperação possa ser validada antes da transferência. A verificação `npm run test:database` prepara dois bancos sintéticos, restaura um backup, reaplica grants, valida os dados com a conexão restrita e ensaia a rotação. Para dados existentes, preserve o ambiente anterior até validar backup, restauração, migração e acesso com o papel novo. Encerre o acesso antigo após conferir a cópia, conforme o uso autorizado do ambiente. Use somente a conexão restrita durante avaliações reais. O faturamento consulta transações pendentes da API e do worker no mesmo papel. Para rotacionar a credencial de runtime do ambiente principal, encerre seus processos, use `npm run db:start -- --rotate-runtime` e inicie novamente. O comando grava a nova senha no banco e no arquivo privado e retoma a rotação se for interrompido.
+
+## Proteção do navegador e dos insumos
+
+O documento compilado usa CSP, bloqueio de enquadramento e scripts da própria origem. As diretivas permitem os estilos da marca, mídia privada e prévias locais por blob. No Vite, o hash do preâmbulo React permite a atualização durante o desenvolvimento, com WebSocket do host local. `npm run test:web-security` verifica os cabeçalhos do build e a conexão de HMR no Chromium após compilar.
+
+Em uma instalação nova, o provisionador obtém o digest efetivo do Compose e baixa a mesma imagem PostgreSQL antes de iniciar o contêiner.
+
+O CI executa `npm run security:check` antes da instalação. A rotina exige Actions por SHA e imagens por digest, consulta os advisories do lockfile e examina somente o índice do Git com Gitleaks. Falha de consulta e alerta detectado aparecem com mensagens distintas. O scanner roda com o UID e GID do processo, sem rede e com os arquivos versionados montados para leitura. A etapa de mídia verifica o FFmpeg 8.1.3 e o checksum nativo no executor fixado. O Chromium do Playwright roda o teste de cabeçalhos e HMR depois do build. [Executor de mídia](technical/OPENAI.md#fluxo-e-limites)
+
+A exceção em `.gitleaks.toml`, registrada pela engenharia do Matraca em 25/11/2026, abrange o digest público exato usado para rejeitar a credencial de demonstração aposentada em `server/db-runtime.ts`. A exceção termina quando esse bloqueio for removido e deve ser revista na próxima atualização do scanner. [Configuração de exceções no Gitleaks](https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#configuration)
+
+Para atualizar um insumo, confirme SHA ou digest na origem, registre a versão, execute a verificação nativa e repita o CI. A reversão usa o último insumo verificado. O build pode revisar uma diretiva para recuperar um fluxo, mantendo o bloqueio de frames.

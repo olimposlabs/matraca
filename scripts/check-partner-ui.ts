@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium, expect, type Browser, type Locator, type Page } from '@playwright/test';
+import sharp from 'sharp';
 import { createApp } from '../server/app.js';
 import { testDatabaseUrl } from '../server/local-database-config.js';
 import { createDatabase } from '../server/db.js';
@@ -102,10 +103,20 @@ try {
   await admin.getByLabel('Cor principal', { exact: true }).fill('#24514a');
   await admin.getByLabel('Nome no singular', { exact: true }).fill('voz');
   await admin.getByLabel('Nome no plural', { exact: true }).fill('vozes');
+  const logo = await sharp({ create: { width: 32, height: 32, channels: 3, background: '#24514a' } }).png().toBuffer();
+  await mutation(admin, '/api/org/logo', 'POST', () => admin.getByLabel('Selecionar logo', { exact: true })
+    .setInputFiles({ name: 'logo-sintetico.png', mimeType: 'image/png', buffer: logo }));
   await mutation(admin, '/api/org/branding', 'PUT', () => admin.getByRole('button', { name: 'Publicar identidade', exact: true }).click(), 200);
   await expect(admin.getByRole('status').filter({ hasText: 'Identidade publicada' })).toBeVisible();
   const publishedBranding = await admin.context().request.get(`${partnerBase}/api/context`);
   assert.equal((await publishedBranding.json()).org.branding.creditPlural, 'vozes');
+  await admin.reload();
+  const partnerLogo = admin.getByRole('img', { name: 'Prévia do logo', exact: true });
+  await expect.poll(() => partnerLogo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(32);
+  await operator.goto(`${centralBase}/backoffice?org=${orgId}`);
+  const centralLogo = operator.getByRole('img', { name: 'Prévia do logo', exact: true });
+  await expect(centralLogo).toHaveAttribute('src', new RegExp(`^/api/backoffice/orgs/${orgId}/logo`));
+  await expect.poll(() => centralLogo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(32);
   await admin.screenshot({ path: resolve('.data/phase14-partner-branding.png'), fullPage: true });
   await admin.goto(`${partnerBase}/admin/courses`);
   await admin.getByRole('button', { name: 'Criar curso', exact: true }).click();
@@ -267,7 +278,7 @@ try {
   const copied = (await db.query('SELECT source_course_id,draft FROM courses WHERE org_id=$1 AND id=$2', [orgId, courseId])).rows[0];
   assert.equal(copied.source_course_id, baseCourseId); assert.equal(copied.draft.modules.flatMap((module: { units: unknown[] }) => module.units).length, 48);
   assert.deepEqual(pageErrors, []);
-  const result = { journeys: ['J06', 'J07', 'J09'], observedAt: new Date().toISOString(), browser: 'Chromium', port, bootstrapFixtures: ['backoffice and Matraca organizations', 'operator identity', 'published full Matraca base course'], ui: ['magic-link logins for operator/admin/manager/teacher/student', 'partner, hostname and administrator creation', 'contract preview and publication', 'partner branding publication', 'independent 48-unit base copy and publication', 'school creation', 'manager delegation', 'teacher pending gate, certification and approval', 'school creates student and two classes', 'same student enrolled in both classes', 'approved teacher assigned to both classes and sees student', 'student sees both classes and retained closed-class history', 'administrator transfers student to second school', 'former school and teacher immediately lose student access', 'distinct destination manager sees retained class and school history'], assertions: { activeEnrollmentsBeforeClosure: 2, closedClassEnrollmentStates: enrollmentStates, finalEnrollmentStates: transferredStates, formerTeacherMentoring: 403, formerManagerMentoring: 403, destinationManagerMentoring: 200, identityAndWalletPreserved: true, copiedUnits: 48, pageErrors: pageErrors.length, unauthorizedSchoolCreation: 403, studentBackofficeAccess: 403 }, externalMocks: ['private local email delivery; no proof of email ownership'], cleanup: 'isolated schema and private temporary storage removed in finally' };
+  const result = { journeys: ['J06', 'J07', 'J09'], observedAt: new Date().toISOString(), browser: 'Chromium', port, bootstrapFixtures: ['backoffice and Matraca organizations', 'operator identity', 'published full Matraca base course'], ui: ['magic-link logins for operator/admin/manager/teacher/student', 'partner, hostname and administrator creation', 'contract preview and publication', 'partner branding publication and same-origin logo previews after reload', 'independent 48-unit base copy and publication', 'school creation', 'manager delegation', 'teacher pending gate, certification and approval', 'school creates student and two classes', 'same student enrolled in both classes', 'approved teacher assigned to both classes and sees student', 'student sees both classes and retained closed-class history', 'administrator transfers student to second school', 'former school and teacher immediately lose student access', 'distinct destination manager sees retained class and school history'], assertions: { activeEnrollmentsBeforeClosure: 2, closedClassEnrollmentStates: enrollmentStates, finalEnrollmentStates: transferredStates, formerTeacherMentoring: 403, formerManagerMentoring: 403, destinationManagerMentoring: 200, identityAndWalletPreserved: true, copiedUnits: 48, pageErrors: pageErrors.length, unauthorizedSchoolCreation: 403, studentBackofficeAccess: 403 }, externalMocks: ['private local email delivery; no proof of email ownership'], cleanup: 'isolated schema and private temporary storage removed in finally' };
   await writeFile(resultFile, `${JSON.stringify(result, null, 2)}\n`);
   console.log(JSON.stringify({ passed: true, journeys: result.journeys, resultFile, assertions: result.assertions }));
 } catch (error) {

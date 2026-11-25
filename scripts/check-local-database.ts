@@ -12,6 +12,10 @@ import { localDatabaseConnection, localDatabaseNames } from '../server/local-dat
 import { provisionLocalDatabase } from './provision-local-db.js';
 
 const dockerHost = startPostgresCluster();
+const runningImage = execFileSync('docker', [dockerHost, 'inspect', '--format={{.Config.Image}}', 'matraca-secure-db-postgres-1'], {
+  encoding: 'utf8', timeout: 10000,
+}).trim();
+assert.match(runningImage, /^postgres:17-alpine@sha256:[a-f0-9]{64}$/u);
 const temporary = await mkdtemp(join(tmpdir(), 'matraca-runtime-check-'));
 const profiles = ['pilot', 'other'].map(name => join(temporary, name));
 const bootstrap = createDatabase(localDatabaseConnection('bootstrap'));

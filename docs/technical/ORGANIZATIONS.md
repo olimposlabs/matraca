@@ -123,6 +123,9 @@ o logo publicado da organização ativa do hostname. Retorna `image/webp`,
 não publicado ou ausente retorna 404. Não há rota pública de listagem ou leitura
 arbitrária do armazenamento; sua barreira HTTP continua válida.
 
+A prévia do backoffice usa `GET /api/backoffice/orgs/:id/logo` na própria origem.
+O endpoint exige sessão de operador e serve somente o logo publicado de uma organização ativa.
+
 MIME/assinatura incompatível retorna 415; arquivo corrompido ou dimensões inválidas,
 400; excesso de tamanho, 413. Se persistir o registro falhar depois de gravar o
 arquivo, a rotina remove o asset novo. Um encerramento abrupto pode deixar arquivo
