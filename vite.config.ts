@@ -1,9 +1,27 @@
+import { createHash } from 'node:crypto';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { clientAddressHeader, clientProofHeader, signDevAddress } from './server/request-origin.js';
+import { localHostname } from './server/config.js';
+import { webContentSecurity } from './server/web-security.js';
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), {
+    name: 'matraca:document-security',
+    configureServer(server) {
+      const fastRefreshHash = createHash('sha256').update(react.preambleCode.replace('__BASE__', server.config.base)).digest('base64');
+      server.middlewares.use((request, response, next) => {
+        const host = request.headers.host;
+        if (host && localHostname(host)) {
+          response.setHeader('Content-Security-Policy', webContentSecurity({ scriptHash: fastRefreshHash, websocket: `ws://${host}` }));
+          response.setHeader('X-Frame-Options', 'DENY');
+        }
+        next();
+      });
+    },
+  }],
+  preview: { headers: { 'Content-Security-Policy': webContentSecurity(), 'X-Frame-Options': 'DENY' } },
   server: {
     port: 5173, strictPort: true,
     allowedHosts: ['.localhost', 'localhost', '127.0.0.1'],

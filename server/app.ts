@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import { configuration, localHostname } from './config.js';
+import { webContentSecurity } from './web-security.js';
 import { createDatabase } from './db.js';
 import { LocalStorage } from './storage.js';
 import { UploadCapacity } from './upload-capacity.js';
@@ -56,6 +57,8 @@ export async function createApp(options: AppOptions = {}) {
   cleanup.unref();
   app.addHook('onClose', async () => { clearInterval(cleanup); await db.close(); });
   app.addHook('onRequest', async (request, reply) => {
+    reply.header('Content-Security-Policy', webContentSecurity());
+    reply.header('X-Frame-Options', 'DENY');
     if (!localHostname(request.headers.host)) return reply.code(400).send({ error: 'Domínio não permitido' });
     if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers['x-matraca-request'] !== '1') {
       return reply.code(403).send({ error: 'Solicitação não autorizada' });

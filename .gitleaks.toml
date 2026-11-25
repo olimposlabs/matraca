@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Digest público fixo da credencial legada rejeitada pelo runtime"
+condition = "AND"
+paths = ['''(^|/)server/db-runtime\.ts$''']
+regexes = ['''^686182b231c6a07cbce84d2d9017b29a5c20be739e43d3756e6267928f6e1a49$''']

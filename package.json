@@ -17,6 +17,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "security:check": "node scripts/check-supply-chain.mjs",
+    "test:web-security": "tsx scripts/check-web-security.ts",
     "test:database": "tsx scripts/check-local-database.ts",
     "media:build": "docker build -t matraca-media:8.1.3 infra/media",
     "media:verify": "tsx scripts/verify-media-executor.ts",

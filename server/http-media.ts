@@ -2,7 +2,7 @@ import type { FastifyReply,FastifyRequest } from 'fastify';
 import type { LocalStorage } from './storage.js';
 /** Single-range streaming for authenticated private files. */
 export function streamPrivateFile(request:FastifyRequest,reply:FastifyReply,storage:LocalStorage,file:{key:string;size:number;mimeType:string;filename?:string}){
- reply.type(file.mimeType).header('Accept-Ranges','bytes').header('Content-Security-Policy',"default-src 'none'; sandbox");
+ reply.type(file.mimeType).header('Accept-Ranges','bytes').header('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'; sandbox");
  if(file.filename)reply.header('Content-Disposition',`${file.mimeType==='application/pdf'?'attachment':'inline'}; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
  const requested=request.headers.range;
  let start=0;let end=file.size-1;
