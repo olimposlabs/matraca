@@ -317,7 +317,11 @@ describe('organizações, branding e publicação isolada', () => {
     expect(logo.contentType).toBe('image/webp');
     expect(logo.width).toBeGreaterThan(0);
     const getLogo = (host: string) => app.inject({ method: 'GET', url: '/api/branding/logo', headers: { host } });
+    const centralLogo = (actor: Actor, orgId = first.orgId) => app.inject({
+      method: 'GET', url: `/api/backoffice/orgs/${orgId}/logo`, headers: requestHeaders(actor),
+    });
     expect((await getLogo(first.host)).statusCode).toBe(404);
+    expect((await centralLogo(operator)).statusCode).toBe(404);
     expect((await manage(first)).org.branding._revision).toBe(baseline.org.branding._revision);
     expect((await publish(first, baseline.org.branding._revision, { ...defaultBranding, logoKey: logo.logoKey })).statusCode).toBe(200);
     const publicLogo = await getLogo(first.host);
@@ -325,6 +329,11 @@ describe('organizações, branding e publicação isolada', () => {
     expect(publicLogo.headers['content-type']).toContain('image/webp');
     expect(publicLogo.headers['x-content-type-options']).toBe('nosniff');
     expect(publicLogo.rawPayload.length).toBeGreaterThan(0);
+    const preview = await centralLogo(operator);
+    expect(preview.statusCode).toBe(200);
+    expect(preview.rawPayload).toEqual(publicLogo.rawPayload);
+    expect((await centralLogo(first)).statusCode).toBe(403);
+    expect((await centralLogo(operator, second.orgId)).statusCode).toBe(404);
     expect((await getLogo(second.host)).statusCode).toBe(404);
     const secondState = await manage(second);
     const stolen = await publish(second, secondState.org.branding._revision, { ...defaultBranding, logoKey: logo.logoKey });
@@ -333,6 +342,7 @@ describe('organizações, branding e publicação isolada', () => {
     const suspended = await app.inject({ method: 'PATCH', url: `/api/backoffice/orgs/${first.orgId}`, headers: requestHeaders(operator), payload: { status: 'suspended' } });
     expect(suspended.statusCode).toBe(200);
     expect((await getLogo(first.host)).statusCode).toBe(404);
+    expect((await centralLogo(operator)).statusCode).toBe(404);
   });
 
   it('SVG, conteúdo disfarçado, MIME incompatível e upload acima2MiB são rejeitados', async () => {

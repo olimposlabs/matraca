@@ -116,12 +116,6 @@ function safePortalUrl(value: string | undefined): string | null {
   } catch { return null; }
 }
 
-function publishedLogo(org: ManagedOrganization): string | undefined {
-  if (!org.branding.logoKey) return undefined;
-  const portal = safePortalUrl(org.portalUrl);
-  return portal ? `${portal}/api/branding/logo?v=${Number(org.branding._revision) || 0}` : undefined;
-}
-
 async function uploadLogo(path: string, file: File): Promise<{ logoKey: string }> {
   const data = new FormData();
   data.set('file', file);
@@ -293,7 +287,8 @@ function OrganizationEditor({ organizationId, back }: { organizationId?: string;
   const issues = brandingIssues(draft);
   const dirty = JSON.stringify(draft) !== JSON.stringify(readBranding(data.org));
   const portal = safePortalUrl(data.org.portalUrl);
-  const logo = draft.logoKey ? logoPreview ?? (draft.logoKey === data.org.branding.logoKey ? publishedLogo(data.org) : undefined) : undefined;
+  const logoUrl = `${central ? logoEndpoint : '/api/branding/logo'}?v=${revision}`;
+  const logo = draft.logoKey ? logoPreview ?? (draft.logoKey === data.org.branding.logoKey ? logoUrl : undefined) : undefined;
   const change = <Key extends keyof Branding>(key: Key, value: Branding[Key]) => setDraft(current => current ? { ...current, [key]: value } : current);
 
   return <section className="organization-page container">

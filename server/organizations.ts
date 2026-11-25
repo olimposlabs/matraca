@@ -66,7 +66,6 @@ interface QueryClient {
 interface OrgRow extends IdentityOrg {
   status: 'active' | 'suspended'; hostname?: string; user_count?: number;
 }
-interface LogoAsset { key: string; content_type: string; width: number; height: number; bytes: number }
 
 export class OrganizationError extends Error {
   constructor(public readonly statusCode: 400 | 403 | 404 | 409 | 413 | 415, message: string) {
@@ -164,19 +163,26 @@ export async function registerOrganizations(app: FastifyInstance): Promise<void>
   app.get('/api/branding/logo', async (request, reply) => {
     const current = request.identityContext;
     if (!current || current.status !== 'active') throw new OrganizationError(404, 'Logo não encontrado.');
-    const found = await app.db.query<LogoAsset>(
-      `SELECT a.key,a.content_type,a.width,a.height,a.bytes FROM logo_assets a
-       JOIN orgs o ON o.id=a.org_id AND o.branding->>'logoKey'=a.key
-       WHERE a.org_id=$1 AND o.status='active'`, [current.org.id],
-    );
-    const asset = found.rows[0];
-    if (!asset) throw new OrganizationError(404, 'Logo não encontrado.');
-    try { await app.storage.info(asset.key); }
-    catch { throw new OrganizationError(404, 'Logo não encontrado.'); }
-    return reply.type('image/webp').header('X-Content-Type-Options', 'nosniff')
-      .header('Content-Security-Policy', "default-src 'none'; sandbox")
-      .header('Content-Disposition', 'inline; filename="logo.webp"').send(app.storage.read(asset.key));
+    return sendPublishedLogo(app, reply, current.org.id);
   });
+  app.get('/api/backoffice/orgs/:id/logo', async (request, reply) => {
+    await operator(request);
+    return sendPublishedLogo(app, reply, targetId(request));
+  });
+}
+
+async function sendPublishedLogo(app: FastifyInstance, reply: FastifyReply, orgId: string) {
+  const found = await app.db.query<{ key: string }>(
+    `SELECT a.key FROM logo_assets a JOIN orgs o ON o.id=a.org_id AND o.branding->>'logoKey'=a.key
+     WHERE a.org_id=$1 AND o.status='active'`, [orgId],
+  );
+  const asset = found.rows[0];
+  if (!asset) throw new OrganizationError(404, 'Logo não encontrado.');
+  try { await app.storage.info(asset.key); }
+  catch { throw new OrganizationError(404, 'Logo não encontrado.'); }
+  return reply.type('image/webp').header('X-Content-Type-Options', 'nosniff')
+    .header('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; sandbox")
+    .header('Content-Disposition', 'inline; filename="logo.webp"').send(app.storage.read(asset.key));
 }
 
 const orgSelect = `SELECT o.*,
