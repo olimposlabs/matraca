@@ -78,6 +78,33 @@ describe('controles operacionais e reconciliação', () => {
     await grantCredits(db, { ...who, amount: 5, source: 'manual', sourceRef: 'fixture', eventKey: randomUUID(), reason: 'Teste operacional' });
   }
 
+  it('registra leitura e recusa por organização com campos operacionais mínimos', async () => {
+    const student = await actor('student');
+    const classmate = await actor('student', student.orgId);
+    const other = await actor('student');
+    const operator = await actor('operator');
+    await fund(student);
+    const request = await call(student, 'POST', '/api/evaluations', {
+      recordingId: await recording(student), clientKey: randomUUID(),
+    });
+    expect(request.statusCode, request.body).toBe(202);
+    const id = request.json().evaluation.id;
+    await runEvaluationJob(db, new MockEvaluationProvider(), { requestId: id });
+    expect((await call(student, 'GET', `/api/evaluations/${id}`)).statusCode).toBe(200);
+    expect((await call(student, 'GET', `/api/evaluations/${id}`)).statusCode).toBe(200);
+    expect((await call(classmate, 'GET', `/api/evaluations/${id}`)).statusCode).toBe(403);
+    expect((await call(student, 'GET', `${ops(student)}/sensitive-access`)).statusCode).toBe(403);
+    const response = await call(operator, 'GET', `${ops(student)}/sensitive-access`);
+    expect(response.statusCode).toBe(200);
+    const entries = response.json().events;
+    expect(entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ actorId: student.userId, targetId: id, action: 'evaluation_report', outcome: 'allowed', reason: null }),
+      expect.objectContaining({ actorId: classmate.userId, targetId: id, action: 'evaluation_report', outcome: 'denied', reason: 'scope_denied' }),
+    ]));
+    expect(entries.every((entry: object) => Object.keys(entry).sort().join() === 'action,actorId,id,occurredAt,outcome,reason,targetId')).toBe(true);
+    expect((await call(operator, 'GET', `${ops(other)}/sensitive-access`)).json()).toEqual({ events: [] });
+  });
+
   it('só o backoffice controla a autorização e pode retirar vínculo de ex-aluno', async () => {
     const student = await actor('student');
     const operator = await actor('operator');

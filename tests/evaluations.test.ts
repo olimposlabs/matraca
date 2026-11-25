@@ -1,7 +1,11 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { LocalStorage } from '../server/storage.js';
+import { mailboxRoot } from '../server/auth.js';
+import { applyPrivacy, privacyPlan } from '../server/privacy-retention.js';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../server/app.js';
@@ -11,6 +15,8 @@ import { createDatabase } from '../server/db.js';
 import { MockEvaluationProvider, type EvaluationProvider } from '../server/evaluation/provider.js';
 import { drainLiveEvaluations, runEvaluationJob } from '../server/evaluation/worker.js';
 import { privateEvaluationMedia } from '../server/evaluation/openai-media.js';
+import { evaluationNoticeVersion } from '../server/evaluation/privacy-notice.js';
+const consent = { accepted: true, version: evaluationNoticeVersion };
 import { verifiedMediaExecutor } from '../server/media/executor.js';
 import { isOpenAIAttemptActive } from '../server/evaluation/openai-runtime.js';
 import { authorizeLiveDispatch, type LiveLimits } from '../server/evaluation/live-policy.js';
@@ -32,6 +38,7 @@ describe('fila, relatórios e reserva atômica', () => {
   url.searchParams.set('options', `-c search_path=${schema}`);
   const db = createDatabase(url.toString());
   const provider = new MockEvaluationProvider();
+  let fixtureRoot: string;
   let storageRoot: string;
   let app: FastifyInstance;
 
@@ -41,7 +48,8 @@ describe('fila, relatórios e reserva atômica', () => {
     for (const file of (await readdir(migrations)).filter(name => name.endsWith('.sql')).sort()) {
       await db.query(await readFile(new URL(file, migrations), 'utf8'));
     }
-    storageRoot = await mkdtemp(join(tmpdir(), 'matraca-evaluation-'));
+    fixtureRoot = await mkdtemp(join(tmpdir(), 'matraca-evaluation-'));
+    storageRoot = join(fixtureRoot, 'objects');
     app = await createApp({ databaseUrl: url.toString(), storageRoot });
   });
 
@@ -50,7 +58,7 @@ describe('fila, relatórios e reserva atômica', () => {
     await db.close();
     await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
     await control.close();
-    if (storageRoot) await rm(storageRoot, { recursive: true, force: true });
+    if (fixtureRoot) await rm(fixtureRoot, { recursive: true, force: true });
   });
 
   async function student(credits = 2, settings = {}, orgId: string = randomUUID()): Promise<Student> {
@@ -90,7 +98,7 @@ describe('fila, relatórios e reserva atômica', () => {
   function liveRequest(live: FastifyInstance, actor: Student, recordingId: string) {
     return live.inject({ method: 'POST', url: '/api/evaluations',
       headers: { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' },
-      payload: { recordingId, clientKey: randomUUID(), expectedProvider: 'openai' } });
+      payload: { recordingId, clientKey: randomUUID(), expectedProvider: 'openai', consent } });
   }
 
   async function recording(actor: Student, duration = 30_000_000, purpose = 'free') {
@@ -130,11 +138,14 @@ describe('fila, relatórios e reserva atômica', () => {
     await admitStudent(actor, 4);
     const media = await recording(actor);
     const headers = { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' };
-    const post = (payload: object) => live.inject({ method: 'POST', url: '/api/evaluations', headers, payload });
+    const post = (payload: object) => live.inject({ method: 'POST', url: '/api/evaluations', headers, payload: { consent, ...payload } });
     try {
       expect((await live.inject({ method: 'GET', url: '/api/evaluation-capabilities', headers })).json()).toMatchObject({ provider: 'openai', simulated: false, maximumSeconds: 300 });
       expect((await post({ recordingId: media, clientKey: randomUUID(), expectedProvider: 'mock' })).statusCode).toBe(409);
       expect((await post({ recordingId: media, clientKey: randomUUID(), scenario: 'success' })).statusCode).toBe(400);
+      expect(await getWallet(db, actor)).toMatchObject({ reserved: 0 });
+      const rejected = await live.inject({ method: 'POST', url: '/api/evaluations', headers, payload: { recordingId: media, clientKey: randomUUID() } });
+      expect(rejected.statusCode).toBe(428);
       expect(await getWallet(db, actor)).toMatchObject({ reserved: 0 });
       const key = randomUUID();
       const submitted = await post({ recordingId: media, clientKey: key, expectedProvider: 'openai' });
@@ -142,6 +153,7 @@ describe('fila, relatórios e reserva atômica', () => {
       const id = submitted.json().evaluation.id;
       expect(await isOpenAIAttemptActive(db, id, 1)).toBe(false);
       expect(submitted.json().evaluation.simulated).toBe(false);
+      expect((await db.query('SELECT notice_version,recording_id FROM live_evaluation_consents WHERE request_id=$1',[id])).rows[0]).toEqual({ notice_version: evaluationNoticeVersion, recording_id: media });
       expect(await runEvaluationJob(db, provider, { requestId: id })).toBe(false);
       const liveProvider: EvaluationProvider = { kind: 'openai', timeoutMs: 240_000, evaluate: async (context, options) => {
         expect(await isOpenAIAttemptActive(db, id, options.attempt)).toBe(true);
@@ -157,7 +169,8 @@ describe('fila, relatórios e reserva atômica', () => {
       expect(await getWallet(db, actor)).toMatchObject({ balance: 4, reserved: 0 });
       expect(await read(actor, id)).toMatchObject({ status: 'failed', simulated: false, errorCode: 'credentials', attempts: 1 });
       expect(await isOpenAIAttemptActive(db, id, 1)).toBe(false);
-      expect((await post({ recordingId: media, clientKey: key })).json().evaluation.id).toBe(id);
+      const replay = await live.inject({ method: 'POST', url: '/api/evaluations', headers, payload: { recordingId: media, clientKey: key } });
+      expect(replay.json().evaluation.id).toBe(id);
 
       const next = (await post({ recordingId: media, clientKey: randomUUID() })).json().evaluation.id;
       // A provider mismatch is rejected rather than spending credits on a mock result.
@@ -181,6 +194,37 @@ describe('fila, relatórios e reserva atômica', () => {
       expect((await db.query('SELECT id FROM evaluation_requests WHERE student_id=$1', [actor.userId])).rowCount).toBe(0);
       expect((await submit(actor, media)).status).toBe('queued');
       expect(await runEvaluationJob(db, provider)).toBe(true);
+    } finally { await live.close(); }
+  });
+
+  it('vincula a autorização da experiência ao pedido e revalida a política a cada envio', async () => {
+    const live = await liveApp();
+    const actor = await student(0);
+    await admitStudent(actor, 2);
+    await db.query("UPDATE users SET profile=profile||'{\"experience\":\"advanced\"}' WHERE id=$1", [actor.userId]);
+    const media = await recording(actor);
+    const headers = { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' };
+    const submitLive = (authorization: object) => live.inject({ method: 'POST', url: '/api/evaluations', headers,
+      payload: { recordingId: media, clientKey: randomUUID(), consent: authorization } });
+    try {
+      expect((await submitLive({ ...consent, version: 'aviso-anterior' })).statusCode).toBe(428);
+      expect((await submitLive({ ...consent, includeExperience: true })).statusCode).toBe(409);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 2, reserved: 0 });
+      await db.query('UPDATE live_evaluation_policies SET include_experience=true WHERE org_id=$1', [actor.orgId]);
+      const response = await submitLive({ ...consent, includeExperience: true });
+      expect(response.statusCode, response.body).toBe(202);
+      const id = response.json().evaluation.id;
+      const fixture: EvaluationProvider = { kind: 'openai', async evaluate(context, options) {
+        expect(context.learner).toEqual({ experience: 'advanced' });
+        const dispatch = { requestId: id, attempt: options.attempt, leaseToken: options.leaseToken!, instance: standardLimits };
+        await authorizeLiveDispatch(db, { ...dispatch, callIndex: 0 });
+        await db.query('UPDATE live_evaluation_policies SET include_experience=false WHERE org_id=$1', [actor.orgId]);
+        await expect(authorizeLiveDispatch(db, { ...dispatch, callIndex: 1 })).rejects.toMatchObject({ code: 'authorization' });
+        throw new EvaluationProviderError('authorization', false);
+      } };
+      expect(await runEvaluationJob(db, fixture, { requestId: id })).toBe(true);
+      expect(await getWallet(db, actor)).toMatchObject({ balance: 2, reserved: 0 });
+      expect((await db.query('SELECT call_index FROM live_evaluation_dispatches WHERE request_id=$1', [id])).rows).toEqual([{ call_index: 0 }]);
     } finally { await live.close(); }
   });
 
@@ -274,7 +318,7 @@ describe('fila, relatórios e reserva atômica', () => {
     const media = await recording(actor, 300_000_000);
     await db.query('UPDATE recordings SET maximum_seconds=301,duration_us=300000001 WHERE id=$1', [media]);
     try {
-      const response = await live.inject({ method: 'POST', url: '/api/evaluations', headers: { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' }, payload: { recordingId: media, clientKey: randomUUID() } });
+      const response = await live.inject({ method: 'POST', url: '/api/evaluations', headers: { host: actor.host, cookie: actor.cookie, 'x-matraca-request': '1' }, payload: { recordingId: media, clientKey: randomUUID(), consent } });
       expect(response.statusCode).toBe(400);
       expect(await getWallet(db, actor)).toMatchObject({ balance: 10, reserved: 0 });
     } finally { await live.close(); }
@@ -589,4 +633,90 @@ describe('fila, relatórios e reserva atômica', () => {
     expect(evolution.json().attempts).toMatchObject([{ id: success.id, rubricVersion: `${versionId}:lesson:v1`, scores: [{ criterionId: 'clarity' }] }]);
   });
 
+
+  async function privacyMedia(actor: Student) {
+    const id = await recording(actor);
+    await app.storage.put(`recordings/${id}`, Readable.from([Buffer.alloc(100, 42)]));
+    return id;
+  }
+
+  async function privacyMail(actor: Student, expired: boolean) {
+    const id = randomUUID();
+    const root = join(mailboxRoot(app.storage.root), actor.orgId);
+    await mkdir(root, { recursive: true, mode: 0o700 });
+    const path = join(root, `${id}.json`);
+    await writeFile(path, JSON.stringify({
+      orgId: actor.orgId, to: `${actor.userId}@example.test`, userId: actor.userId,
+      expiresAt: new Date(Date.now() + (expired ? -48 : 1) * 3600_000).toISOString(),
+    }), { mode: 0o600 });
+    return path;
+  }
+
+  it('aplica os prazos globais sem remover mídia em uso nem mudar o razão', async () => {
+    const actor = await student(2);
+    const media = await privacyMedia(actor), active = await privacyMedia(actor);
+    const old = await submit(actor, media);
+    await runEvaluationJob(db, provider, { requestId: old.id });
+    const pending = await submit(actor, active);
+    await db.query("UPDATE recordings SET created_at=now()-interval '31 days' WHERE id=ANY($1::uuid[])", [[media, active]]);
+    await db.query("UPDATE evaluation_results SET created_at=now()-interval '370 days' WHERE request_id=$1", [old.id]);
+    await db.query("UPDATE evaluation_requests SET created_at=now()-interval '370 days' WHERE id=$1", [old.id]);
+    const expired = await privacyMail(actor, true), recent = await privacyMail(actor, false);
+    const preview = await privacyPlan(db, app.storage, {});
+    expect(preview).toMatchObject({ recordings: 1, reports: 1, mailboxFiles: 1 });
+    expect(await applyPrivacy(db, app.storage, {}, preview.fingerprint)).toEqual({ recordingsRemoved: 1 });
+    await expect(app.storage.info(`recordings/${media}`)).rejects.toMatchObject({ code: 'ENOENT' });
+    expect((await app.storage.info(`recordings/${active}`)).size).toBe(100);
+    await expect(readFile(expired)).rejects.toMatchObject({ code: 'ENOENT' });
+    expect((await readFile(recent)).length).toBeGreaterThan(0);
+    expect(await read(actor, old.id)).toMatchObject({ status: 'completed', report: null, mediaAvailable: false });
+    expect((await db.query('SELECT report,consumption_entry_id,report_removed_at FROM evaluation_results WHERE request_id=$1', [old.id])).rows[0])
+      .toMatchObject({ report: {}, consumption_entry_id: expect.any(String), report_removed_at: expect.any(Date) });
+    expect(await read(actor, pending.id)).toMatchObject({ status: 'queued', mediaAvailable: true });
+    expect(await getWallet(db, actor)).toMatchObject({ balance: 1, reserved: 1 });
+    await call(actor, 'POST', `/api/evaluations/${pending.id}/cancel`);
+  });
+
+  it('confirma o escopo, reabre a limpeza após falha e preserva outro aluno', async () => {
+    const removed = await student(1);
+    const kept = await student(1, {}, removed.orgId);
+    const other = await student(1);
+    const media = await privacyMedia(removed), otherMedia = await privacyMedia(kept);
+    const pending = await submit(removed, media);
+    const mailboxFile = await privacyMail(removed, false);
+    const keptFile = await privacyMail(kept, false);
+    const scope = { orgId: removed.orgId, studentId: removed.userId };
+    const teacherId = randomUUID();
+    await db.query("INSERT INTO users(id,org_id,email,name,roles,status) VALUES($1,$2,'professor@example.test','Professor sintético',ARRAY['teacher'],'active')", [teacherId, removed.orgId]);
+    await db.query(`INSERT INTO mentoring_sessions(org_id,student_id,teacher_id,client_key,fingerprint,occurred_at,difficulties,guidance,actions)
+      VALUES($1,$2,$3,$4,'registro-sintetico',now(),'["Dificuldade de teste"]','Orientação pessoal sintética','[]')`, [removed.orgId, removed.userId, teacherId, randomUUID()]);
+    const mismatched = await privacyPlan(db, app.storage, { orgId: kept.orgId, studentId: kept.userId });
+    await expect(applyPrivacy(db, app.storage, scope, mismatched.fingerprint)).rejects.toThrow('A seleção mudou');
+    await expect(privacyPlan(db, app.storage, { orgId: other.orgId, studentId: removed.userId })).rejects.toThrow('Aluno não encontrado');
+    const preview = await privacyPlan(db, app.storage, scope);
+    expect(preview).toMatchObject({ accounts: 1, recordings: 1, mailboxFiles: 1 });
+    const simulatedFailure = new LocalStorage(app.storage.root);
+    simulatedFailure.removeUploadObject = async () => { throw new Error('Disco sintético indisponível'); };
+    await expect(applyPrivacy(db, simulatedFailure, scope, preview.fingerprint)).rejects.toThrow('Disco sintético indisponível');
+    expect((await call(removed, 'GET', `/api/recordings/${media}/media`)).statusCode).toBe(401);
+    await expect(db.query("UPDATE users SET status='active' WHERE id=$1", [removed.userId])).rejects.toMatchObject({ code: '23514' });
+    const retry = await privacyPlan(db, app.storage, scope);
+    expect(await applyPrivacy(db, app.storage, scope, retry.fingerprint)).toEqual({ recordingsRemoved: 1 });
+    expect((await db.query('SELECT name,profile,privacy_erased_at FROM users WHERE id=$1', [removed.userId])).rows[0])
+      .toMatchObject({ name: 'Conta removida', profile: {}, privacy_erased_at: expect.any(Date) });
+    expect((await db.query('SELECT guidance,difficulties FROM mentoring_sessions WHERE student_id=$1', [removed.userId])).rows[0])
+      .toEqual({ guidance: 'Conteúdo removido', difficulties: [] });
+    expect((await db.query('SELECT status,context FROM evaluation_requests WHERE id=$1', [pending.id])).rows[0])
+      .toEqual({ status: 'cancelled', context: {} });
+    expect(await getWallet(db, removed)).toMatchObject({ balance: 1, reserved: 0 });
+    await expect(readFile(mailboxFile)).rejects.toMatchObject({ code: 'ENOENT' });
+    expect((await readFile(keptFile)).length).toBeGreaterThan(0);
+    expect((await call(kept, 'GET', `/api/recordings/${otherMedia}/media`)).statusCode).toBe(200);
+    const tenant = await privacyPlan(db, app.storage, { orgId: kept.orgId });
+    expect(tenant).toMatchObject({ accounts: 3 });
+    await applyPrivacy(db, app.storage, { orgId: kept.orgId }, tenant.fingerprint);
+    expect((await call(kept, 'GET', `/api/recordings/${otherMedia}/media`)).statusCode).toBe(401);
+    expect((await call(other, 'GET', '/api/journey')).statusCode).toBe(200);
+    await expect(db.query("UPDATE orgs SET status='active' WHERE id=$1", [kept.orgId])).rejects.toMatchObject({ code: '23514' });
+  });
 });

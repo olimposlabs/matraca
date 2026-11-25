@@ -63,7 +63,7 @@ function OrganizationOperations({ org, dirtyChanged }: { org: Org; dirtyChanged:
   function dirty(value: boolean) { setPolicyDirty(value); dirtyChanged(value); }
   return <><nav className="operations-tabs" aria-label="Áreas da operação">{tabs.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} aria-current={tab === item.id ? 'page' : undefined} onClick={() => chooseTab(item.id)}><item.icon size={16} />{item.label}</button>)}</nav>{tab === 'overview' && <ScopeFilters base={base} schools={data?.schools ?? []} scope={scope} period={data?.period} busy={loading} change={setScope} />}{tab === 'overview' || tab === 'policy' ? loading || error || !data ? <LoadingState error={error} retry={() => setRevision(value => value + 1)} /> : tab === 'overview' ? <Overview org={org} data={data} scope={scope} refresh={() => setRevision(value => value + 1)} selectStudent={student => setScope({ ...scope, student })} /> : <PolicyEditor key={data.policy.revision} org={org} base={base} policy={data.policy} changed={dirty} saved={() => { dirty(false); setRevision(value => value + 1); }} reload={() => { dirty(false); setRevision(value => value + 1); }} /> : tab === 'live' ? <LivePolicyPanel base={base} changed={dirty} /> : tab === 'jobs' ? <JobsPanel base={base} org={org} /> : tab === 'reservations' ? <ReservationsPanel base={base} org={org} /> : <AuditPanel base={base} />}</>;
 }
-type LivePolicy = { revision: number; enabled: boolean; organization: LiveLimits; student: LiveLimits };
+type LivePolicy = { revision: number; enabled: boolean; includeExperience: boolean; organization: LiveLimits; student: LiveLimits };
 const quotaLabels = { requests: 'Pedidos', minutes: 'Minutos', calls: 'Chamadas à OpenAI' };
 
 function LivePolicyPanel({ base, changed }: { base: string; changed: (dirty: boolean) => void }) {
@@ -98,6 +98,7 @@ function LivePolicyForm({ base, policy, instance, changed, saved }: {
     try {
       await apiJson(`${base}/live-policy`, { method: 'PUT', body: {
         expectedRevision: policy.revision, enabled: draft.enabled, organization: draft.organization, student: draft.student,
+        includeExperience: draft.includeExperience,
       } });
       changed(false);
       saved();
@@ -110,6 +111,9 @@ function LivePolicyForm({ base, policy, instance, changed, saved }: {
     <label><input type="checkbox" checked={draft.enabled} disabled={busy} onChange={event => {
       setDraft({ ...draft, enabled: event.target.checked }); changed(true);
     }} /> Permitir avaliação real nesta organização</label>
+    <label><input type="checkbox" checked={draft.includeExperience} disabled={busy} onChange={event => {
+      setDraft({ ...draft, includeExperience: event.target.checked }); changed(true);
+    }} /> Permitir que o aluno inclua o nível de experiência declarado</label>
     {(['organization', 'student'] as const).map(scope => <fieldset key={scope} className="operations-policy-grid" disabled={busy}>
       <legend>{scope === 'organization' ? 'Por organização' : 'Por aluno autorizado'}</legend>
       {(Object.keys(quotaLabels) as (keyof LiveLimits)[]).map(field => <label key={field}>

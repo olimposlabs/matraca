@@ -74,6 +74,7 @@ export async function cancelEvaluationInTransaction(client: PoolClient, target: 
   const status = current.rows[0].status;
   if (status !== 'queued' && status !== 'processing') return status;
   await releaseReservationInTransaction(client, { ...target, userId: target.studentId, reason });
+  await client.query('UPDATE live_evaluation_consents SET revoked_at=clock_timestamp() WHERE request_id=$1 AND revoked_at IS NULL', [target.requestId]);
   await finishJob(client, target.requestId, 'cancelled');
   return 'cancelled';
 }

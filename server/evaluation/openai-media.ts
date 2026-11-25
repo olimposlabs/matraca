@@ -59,7 +59,7 @@ export function privateEvaluationMedia(db: Database, storage: LocalStorage, exec
       `SELECT m.object_key,m.duration_us,m.has_audio,m.has_video,m.container
        FROM evaluation_requests r JOIN recordings m
          ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
-       WHERE r.id=$1 AND m.id=$2 AND r.provider='openai' AND r.status='processing'`,
+       WHERE r.id=$1 AND m.id=$2 AND m.media_retired_at IS NULL AND r.provider='openai' AND r.status='processing'`,
       [context.requestId, context.recording.id],
     );
     const row = found.rows[0];

@@ -8,6 +8,7 @@ import { localHostname } from './config.js';
 import type { CourseDocument, CourseUnit } from './course-model.js';
 import { streamPrivateFile } from './http-media.js';
 import { uploadDeadline } from './upload-capacity.js';
+import { recordSensitiveAccess } from './sensitive-access.js';
 import { probeMedia, MediaProbeError, type MediaProbeResult } from './media/probe.js';
 import { assertStudentScope, type EducationQuery } from './permissions.js';
 import { creditsForDuration } from './wallet.js';
@@ -43,7 +44,7 @@ export interface StoredRecording {
   container: 'mp4' | 'webm' | 'wav' | 'mp3'; probe: MediaProbeResult;
   objective: string; purpose: 'free' | 'diagnostic' | 'course'; enrollment_id: string | null;
   version_id: string | null; unit_id: string | null; scenario: z.infer<typeof scenario>;
-  maximum_seconds: number; source: 'upload' | 'capture'; created_at: Date;
+  maximum_seconds: number; source: 'upload' | 'capture'; created_at: Date; media_retired_at: Date | null;
 }
 export class RecordingError extends Error {
   constructor(public readonly statusCode: 400 | 401 | 403 | 404 | 409 | 413 | 415 | 422, message: string) {
@@ -65,7 +66,7 @@ export function publicRecording(row: StoredRecording) {
     hasAudio: row.has_audio, hasVideo: row.has_video, objective: row.objective, purpose: row.purpose,
     enrollmentId: row.enrollment_id, versionId: row.version_id, unitId: row.unit_id,
     scenario: row.scenario, maximumSeconds: row.maximum_seconds, source: row.source, createdAt: row.created_at,
-    estimatedCredits: creditsForDuration(Number(row.duration_us)),
+    estimatedCredits: creditsForDuration(Number(row.duration_us)), mediaAvailable: !row.media_retired_at,
   };
 }
 
@@ -238,7 +239,31 @@ export async function registerRecordings(app: FastifyInstance): Promise<void> {
     return { recording: publicRecording(recording) };
   });
   app.get('/api/recordings/:id/media', async (request, reply) => {
-    const { recording } = await requireRecordingScope(request, recordingId(request));
+    const id = recordingId(request);
+    const actor = await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']);
+    let recording: StoredRecording;
+    try {
+      recording = await loadRecording(app.db, actor.org.id, id);
+      await assertStudentScope(app.db, actor, recording.student_id);
+    } catch (error) {
+      const status = (error as { statusCode?: number }).statusCode;
+      if (status === 403) await recordSensitiveAccess(app.db, actor, 'recording_media', id, 'denied', 'scope_denied');
+      if (status === 404) await recordSensitiveAccess(app.db, actor, 'recording_media', null, 'denied', 'not_found');
+      throw error;
+    }
+    if (recording.media_retired_at) {
+      await recordSensitiveAccess(app.db, actor, 'recording_media', id, 'unavailable', 'retention');
+      throw new RecordingError(404, 'A mídia foi removida pela política de retenção.');
+    }
+    const available = await app.storage.info(recording.object_key).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!available?.isFile()) {
+      await recordSensitiveAccess(app.db, actor, 'recording_media', id, 'unavailable', 'not_found');
+      throw new RecordingError(404, 'A mídia está indisponível.');
+    }
+    await recordSensitiveAccess(app.db, actor, 'recording_media', id, 'allowed');
     return streamPrivateFile(request, reply, app.storage, {
       key: recording.object_key, size: Number(recording.byte_length), mimeType: recording.mime_type, filename: recording.filename,
     });

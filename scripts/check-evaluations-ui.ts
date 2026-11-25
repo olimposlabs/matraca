@@ -86,8 +86,33 @@ try {
   assert.deepEqual(await getWallet(db, { orgId, userId }), { balance: 3, reserved: 0, available: 3 });
   await page.getByRole('link', { name: 'Minhas avaliações' }).click();
   await expect(page.locator('.evaluation-list li')).toHaveCount(4);
+
+  await stopWorker();
+  stopWorker = undefined;
+  await app.close();
+  const limits = { requests: 5, minutes: 10, calls: 30 };
+  await db.query(`INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision,include_experience)
+    VALUES($1,true,$2,$2,1,true)`, [orgId, limits]);
+  await db.query('INSERT INTO live_evaluation_members(org_id,student_id) VALUES($1,$2)', [orgId, userId]);
+  await grantCredits(db, { orgId, userId, amount: 1, eventKey: 'evaluation-ui-consent', reason: 'Validação local',
+    source: 'manual', sourceRef: 'fixture', actorUserId: userId, liveEligible: true });
+  // No real worker or transport is started. The browser exercises admission and cancellation.
+  app = await createApp({ databaseUrl: url.toString(), storageRoot: join(temp, 'objects'), evaluationProvider: 'openai', liveLimits: limits });
+  await app.listen({ host: '127.0.0.1', port: 3008 });
+  await page.goto(`${base}/app/recordings`);
+  await page.getByRole('button', { name: new RegExp(objective.replace('.', '\\.')) }).click();
+  const confirm = page.getByRole('checkbox', { name: /Autorizo o envio/ });
+  await expect(confirm).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: /Incluir também o nível/ })).not.toBeChecked();
+  await expect(page.getByRole('button', { name: 'Solicitar avaliação' })).toBeDisabled();
+  await confirm.check();
+  await page.getByRole('button', { name: 'Solicitar avaliação' }).click();
+  await expect(page.getByRole('heading', { name: 'Aguardando processamento' })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancelar avaliação' }).click();
+  await expect(page.getByText('A avaliação foi cancelada e a reserva foi liberada.')).toBeVisible();
+  assert.deepEqual(await getWallet(db, { orgId, userId }), { balance: 4, reserved: 0, available: 4 });
   assert.deepEqual(errors, []);
-  process.stdout.write('F08 UI: upload real, relatório, áudio por faixa, evidência temporal, saldo, falha, cancelamento, retry e histórico passaram.\n');
+  process.stdout.write('F08 UI: upload, relatório simulado, mídia por faixa, saldo, retries e histórico passaram. S06: consentimento e cancelamento sem chamadas externas.\n');
 } finally {
   await browser?.close();
   await stopWorker?.();

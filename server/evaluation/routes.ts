@@ -5,16 +5,18 @@ import { z } from 'zod';
 import { requireIdentity, type AuthIdentity } from '../auth.js';
 import type { CourseDocument } from '../course-model.js';
 import { assertStudentScope } from '../permissions.js';
+import { recordSensitiveAccess } from '../sensitive-access.js';
 import { requireStudyForEvaluation } from '../journey-progress.js';
 import { readOperationPolicy } from '../operation-policy.js';
 import { getLiveCreditAvailable, reserveCreditsInTransaction } from '../wallet.js';
 import { evaluationScenarios, type EvaluationContext, type EvaluationCriterion } from './provider.js';
 import { cancelEvaluationInTransaction } from './worker.js';
 import { liveEvaluationMaximumSeconds } from './openai-config.js';
-import { admitLiveEvaluation, liveEnabledForStudent, noLiveLimits, type LiveLimits } from './live-policy.js';
+import { declaredExperience, evaluationNotice, evaluationNoticeVersion } from './privacy-notice.js';
+import { admitLiveEvaluation, liveEnabledForStudent, noLiveLimits, readLivePolicy, type LiveLimits } from './live-policy.js';
 
 class EvaluationError extends Error {
-  constructor(readonly statusCode: 400 | 403 | 404 | 409 | 429, message: string) {
+  constructor(readonly statusCode: 400 | 403 | 404 | 409 | 428 | 429, message: string) {
     super(message);
   }
 }
@@ -24,6 +26,7 @@ const createInput = z.object({
   clientKey: z.uuid(),
   scenario: z.enum(evaluationScenarios).optional(),
   expectedProvider: z.enum(['mock', 'openai']).optional(),
+  consent: z.object({ accepted: z.literal(true), version: z.string().max(100), includeExperience: z.boolean().optional() }).strict().optional(),
 }).strict();
 const listQuery = z.object({
   studentId: z.uuid().optional(),
@@ -68,10 +71,11 @@ const summary = `r.id,r.student_id AS "studentId",r.recording_id AS "recordingId
   r.created_at AS "createdAt",r.completed_at AS "completedAt",j.attempts,r.error_code AS "errorCode",
   m.purpose,m.objective,m.duration_us::double precision AS "durationMicroseconds",m.unit_id AS "unitId",
   m.version_id AS "versionId",m.enrollment_id AS "enrollmentId",m.has_audio AS "hasAudio",m.has_video AS "hasVideo",
+  (m.media_retired_at IS NULL) AS "mediaAvailable",
   (er.report->>'overallLevel')::double precision AS "overallLevel",r.provider,(r.provider='mock') AS simulated`;
 const joined = `FROM evaluation_requests r JOIN evaluation_jobs j ON j.request_id=r.id
   JOIN recordings m ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
-  LEFT JOIN evaluation_results er ON er.request_id=r.id`;
+  LEFT JOIN evaluation_results er ON er.request_id=r.id AND er.report_removed_at IS NULL`;
 
 function errorMessage(code: string | null): string | null {
   switch (code) {
@@ -88,7 +92,7 @@ function errorMessage(code: string | null): string | null {
   }
 }
 
-async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Recording, id: string, provider: 'mock' | 'openai'): Promise<EvaluationContext> {
+async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Recording, id: string, provider: 'mock' | 'openai', includeExperience = false): Promise<EvaluationContext> {
   let criteria = defaultCriteria;
   let rubricVersion = 'matraca-pilot-v1';
   let activity: EvaluationContext['activity'] = null;
@@ -113,8 +117,10 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
     rubricVersion = `${recording.version_id}:${unit.id}:v${version.version}`;
   }
   if (!criteria.length) throw new EvaluationError(409, 'Esta atividade está sem critérios de avaliação.');
-  const person = await client.query<{ profile: unknown }>('SELECT profile FROM users WHERE id=$1 AND org_id=$2', [actor.user.id, actor.org.id]);
-  const learner = learnerProfile.safeParse(person.rows[0]?.profile);
+  const person = provider === 'mock' || includeExperience ? await client.query<{ profile: unknown }>(
+    'SELECT profile FROM users WHERE id=$1 AND org_id=$2', [actor.user.id, actor.org.id],
+  ) : null;
+  const learner = learnerProfile.safeParse(person?.rows[0]?.profile);
   const history = await client.query<{ rubricVersion: string; score: number | null }>(
     `SELECT report->>'rubricVersion' AS "rubricVersion",(report->>'overallLevel')::double precision AS score
      FROM evaluation_results WHERE org_id=$1 AND student_id=$2 AND report->>'provider'=$3 ORDER BY created_at DESC,request_id DESC LIMIT 5`,
@@ -132,7 +138,7 @@ async function contextFor(client: PoolClient, actor: AuthIdentity, recording: Re
     activity,
     rubricVersion,
     criteria,
-    learner: learner.success ? learner.data : {},
+    learner: provider === 'mock' ? (learner.success ? learner.data : {}) : includeExperience ? declaredExperience(learner.success ? learner.data.experience : undefined) : {},
     recentResults: history.rows,
   };
 }
@@ -154,7 +160,8 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
     if (provider === 'mock') return { provider, simulated: true, maximumSeconds: 1800, enabled: true };
     const enabled = actor.user.roles.includes('student') && await liveEnabledForStudent(app.db, actor.org.id, actor.user.id, instance);
     return {
-      provider, simulated: false, maximumSeconds: liveEvaluationMaximumSeconds, enabled,
+      provider, simulated: false, maximumSeconds: liveEvaluationMaximumSeconds, enabled, consent: { version: evaluationNoticeVersion, text: evaluationNotice },
+      includeExperience: enabled && (await readLivePolicy(app.db, actor.org.id)).includeExperience,
       availableCredits: enabled ? await getLiveCreditAvailable(app.db, { orgId: actor.org.id, userId: actor.user.id }) : 0,
     };
   });
@@ -174,9 +181,10 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
       }
       if (input.data.expectedProvider && input.data.expectedProvider !== provider) throw new EvaluationError(409, 'O provedor mudou. Atualize a página antes de solicitar a avaliação.');
       if (provider === 'openai' && input.data.scenario) throw new EvaluationError(400, 'Cenários simulados não estão disponíveis na avaliação real.');
+      if (provider === 'openai' && input.data.consent?.version !== evaluationNoticeVersion) throw new EvaluationError(428, 'Confirme o envio da gravação à OpenAI para solicitar avaliação.');
       const found = await client.query<Recording>(
         `SELECT id,duration_us,has_audio,has_video,objective,purpose,enrollment_id,version_id,unit_id,scenario
-         FROM recordings WHERE id=$1 AND org_id=$2 AND student_id=$3 FOR SHARE`,
+         FROM recordings WHERE id=$1 AND org_id=$2 AND student_id=$3 AND media_retired_at IS NULL FOR SHARE`,
         [recordingId, actor.org.id, actor.user.id],
       );
       if (!found.rows[0]) throw new EvaluationError(404, 'Gravação não encontrada.');
@@ -197,7 +205,11 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
       if (frequency.rows[0].total >= config.maxEvaluationsPerHour) throw new EvaluationError(429, 'O limite de avaliações por hora foi atingido.');
       const scenario = provider === 'openai' ? 'success' : input.data.scenario ?? config.evaluationScenario;
       const id = randomUUID();
-      const context = await contextFor(client, actor, found.rows[0], id, provider);
+      const includeExperience = provider === 'openai' && input.data.consent?.includeExperience === true;
+      if (includeExperience && !(await readLivePolicy(client, actor.org.id, true)).includeExperience) {
+        throw new EvaluationError(409, 'A política de dados mudou. Atualize antes de solicitar a avaliação.');
+      }
+      const context = await contextFor(client, actor, found.rows[0], id, provider, includeExperience);
       if (provider === 'openai' && !await liveEnabledForStudent(client, actor.org.id, actor.user.id, instance)) {
         throw new EvaluationError(403, 'Esta conta ainda não tem acesso à avaliação real.');
       }
@@ -211,10 +223,14 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [id, actor.org.id, actor.user.id, recordingId, clientKey, scenario, context, reservation.amount, provider],
       );
-      if (provider === 'openai') await admitLiveEvaluation(client, {
-        orgId: actor.org.id, studentId: actor.user.id, requestId: id, minutes: reservation.amount,
-        hasAudio: context.recording.hasAudio, instance,
-      });
+      if (provider === 'openai') {
+        await client.query(`INSERT INTO live_evaluation_consents(request_id,org_id,student_id,recording_id,notice_version,include_experience)
+          VALUES($1,$2,$3,$4,$5,$6)`, [id, actor.org.id, actor.user.id, recordingId, evaluationNoticeVersion, includeExperience]);
+        await admitLiveEvaluation(client, {
+          orgId: actor.org.id, studentId: actor.user.id, requestId: id, minutes: reservation.amount,
+          hasAudio: context.recording.hasAudio, instance,
+        });
+      }
       await client.query('INSERT INTO evaluation_jobs(request_id) VALUES ($1)', [id]);
       await client.query("INSERT INTO evaluation_outbox(request_id,event_type) VALUES ($1,'queued')", [id]);
       return { id, status: 'queued', credits: reservation.amount, simulated: provider === 'mock' };
@@ -249,9 +265,9 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
     const params = requestPath.safeParse(request.params);
     if (!params.success) throw new EvaluationError(400, 'Avaliação inválida.');
     const actor = await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']);
-    return app.db.transaction(async client => {
+    const response = await app.db.transaction(async client => {
       await client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
-      const result = await client.query<{ studentId: string; errorCode: string | null }>(
+      const result = await client.query<{ studentId: string; errorCode: string | null; report: unknown; status: string }>(
         `SELECT ${summary},r.context->'criteria' AS criteria,r.context->'activity' AS activity,
            r.context->>'audienceScenario' AS "audienceScenario",er.report
          ${joined} WHERE r.id=$1 AND r.org_id=$2`,
@@ -261,7 +277,16 @@ export async function registerEvaluations(app: FastifyInstance, provider: 'mock'
       if (!item) throw new EvaluationError(404, 'Avaliação não encontrada.');
       await assertStudentScope(client, actor, item.studentId);
       return { evaluation: { ...item, errorMessage: errorMessage(item.errorCode) } };
+    }).catch(async error => {
+      if (error.statusCode === 403) await recordSensitiveAccess(app.db, actor, 'evaluation_report', params.data.id, 'denied', 'scope_denied');
+      if (error.statusCode === 404) await recordSensitiveAccess(app.db, actor, 'evaluation_report', null, 'denied', 'not_found');
+      throw error;
     });
+    if (response.evaluation.report) await recordSensitiveAccess(app.db, actor, 'evaluation_report', params.data.id, 'allowed');
+    else if (response.evaluation.status === 'completed') {
+      await recordSensitiveAccess(app.db, actor, 'evaluation_report', params.data.id, 'unavailable', 'report_unavailable');
+    }
+    return response;
   });
 
   app.post('/api/evaluations/:id/cancel', async request => {

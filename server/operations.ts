@@ -189,6 +189,7 @@ async function countAndPage(client: PoolClient, sql: string, args: unknown[], pa
 }
 
 const livePolicyInput = z.object({
+  includeExperience: z.boolean().optional(),
   enabled: z.boolean(),
   organization: liveLimitsSchema,
   student: liveLimitsSchema,
@@ -196,6 +197,10 @@ const livePolicyInput = z.object({
 }).strict().refine(input => !input.enabled || [input.organization, input.student].every(liveLimitsEnabled));
 
 export async function registerOperations(app: FastifyInstance, instance: LiveLimits = noLiveLimits) {
+  app.get(`${base}/sensitive-access`, request => withOperator(request, false, async (client, org) => ({
+    events: (await client.query(`SELECT id,actor_id AS "actorId",action,target_id AS "targetId",outcome,reason,occurred_at AS "occurredAt"
+      FROM sensitive_access_events WHERE org_id=$1 ORDER BY occurred_at DESC,id DESC LIMIT 100`, [org.id])).rows,
+  })));
   app.get(`${base}/live-policy`, request => withOperator(request, false, async (client, org) => ({
     policy: await readLivePolicy(client, org.id),
     instance,
@@ -206,10 +211,10 @@ export async function registerOperations(app: FastifyInstance, instance: LiveLim
       const previous = await readLivePolicy(client, org.id);
       if (previous.revision !== input.expectedRevision) throw new OperationsError(409, 'A política mudou. Recarregue antes de salvar.');
       await client.query(
-        `INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision) VALUES($1,$2,$3,$4,1)
+        `INSERT INTO live_evaluation_policies(org_id,enabled,organization_limits,student_limits,revision,include_experience) VALUES($1,$2,$3,$4,1,$5)
          ON CONFLICT(org_id) DO UPDATE SET enabled=EXCLUDED.enabled,organization_limits=EXCLUDED.organization_limits,
-         student_limits=EXCLUDED.student_limits,revision=live_evaluation_policies.revision+1`,
-        [org.id, input.enabled, input.organization, input.student],
+         student_limits=EXCLUDED.student_limits,include_experience=EXCLUDED.include_experience,revision=live_evaluation_policies.revision+1`,
+        [org.id, input.enabled, input.organization, input.student, input.includeExperience ?? previous.includeExperience],
       );
       const policy = await readLivePolicy(client, org.id);
       await audit(client, actor, org.id, 'live_evaluation_policy_changed', { revision: policy.revision });

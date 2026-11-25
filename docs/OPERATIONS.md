@@ -49,6 +49,30 @@ A operação cotidiana, os cenários locais e o fechamento sob demanda estão de
 
 Autorizada em 24/11/2026: `npm run dev:openai`, ou `EVALUATION_PROVIDER=openai` ao iniciar a API. O segredo é lido no servidor, do ambiente ou do Chaves do macOS. `npm run dev` e CI preservam o modo mock. [Operação, modelos e smoke pago](technical/OPENAI.md).
 
+## Retenção e remoção local
+
+| Dados | Prazo do piloto | Tratamento |
+| --- | --- | --- |
+| Gravações brutas | 30 dias da criação | Aposentar, retirar acesso e excluir o objeto após o último pedido ativo |
+| Áudio e quadros derivados | Durante a avaliação | Encerrar o contêiner e seu volume temporário. Manter os derivados em memória durante o uso |
+| Link e arquivo da caixa local | 24 h após a expiração | Remover os arquivos e o token expirado |
+| Relatório, contexto, objetivo, arquivos internos de metadados e conteúdo de mentoria | 365 dias | Remover o conteúdo e conservar as referências pedagógicas e financeiras |
+| Trilha de leituras sensíveis | 90 dias | Excluir registros fora da janela |
+| Cópias operacionais novas | Até 30 dias | Inventariar no ambiente, proteger e expirar por tarefa de backup do operador |
+
+Execute a simulação diária no perfil local com a configuração do banco e do storage correspondente. O comando lê a seleção e exibe contagens e um hash, sem imprimir dados pessoais. O time operacional confirma a seleção antes de aplicar. O comando que altera os dados usa o papel de migração.
+
+```sh
+npm run privacy:retention
+npm run privacy:retention -- --apply <hash-da-simulação>
+```
+
+Para pedido de remoção, use `--org <uuid>` nos dois comandos e acrescente `--student <uuid>` para selecionar um único aluno. A rotina suspende o escopo, encerra os pedidos em aberto, libera as reservas, apaga o conteúdo abrangido e desidentifica as contas. Preserva identificadores contábeis, recibos e movimentos. A remoção abrange os dados desta tabela e o perfil local. A organização inteira exige confirmação da seleção, inclusive quando contém uma única escola.
+
+Se a execução for interrompida, gere uma nova simulação para a mesma seleção. A mídia aposentada fica sem acesso e os objetos que faltam podem ser removidos na retomada. Mantenha cópias locais protegidas e teste a restauração sintética. Um backup anterior pode conter dados já removidos. Restaure-o isoladamente, reaplique as remoções registradas e só então retome acesso. O expurgo da mídia no aplicativo abrange o storage selecionado. Cópias legadas e o tratamento do provedor seguem seu próprio ciclo. [Retenção no provedor](technical/OPENAI.md#uso-custo-e-limitações)
+
+O endpoint de auditoria `GET /api/backoffice/ops/:orgId/sensitive-access` expõe ao operador os 100 eventos recentes do escopo. Registra ação, ator, alvo disponível, motivo fixo, resultado e data. Pedidos repetidos de um mesmo evento compartilham uma janela de dez minutos.
+
 ## Transição do banco local
 
 A instância nova tem volume e porta próprios. Os sandboxes novos usam `.data/sandboxes-v2`. O código preserva a pasta dos sandboxes legados para que a recuperação possa ser validada antes da transferência. A verificação `npm run test:database` prepara dois bancos sintéticos, restaura um backup, reaplica grants, valida os dados com a conexão restrita e ensaia a rotação. Para dados existentes, preserve o ambiente anterior até validar backup, restauração, migração e acesso com o papel novo. Encerre o acesso antigo após conferir a cópia, conforme o uso autorizado do ambiente. Use somente a conexão restrita durante avaliações reais. O faturamento consulta transações pendentes da API e do worker no mesmo papel. Para rotacionar a credencial de runtime do ambiente principal, encerre seus processos, use `npm run db:start -- --rotate-runtime` e inicie novamente. O comando grava a nova senha no banco e no arquivo privado e retoma a rotação se for interrompido.

@@ -55,6 +55,19 @@ describe('OpenAI sem rede nos testes', () => {
     expect(transport.mock.calls[0][1]?.redirect).toBe('error');
   });
 
+  it('reduz o contexto a campos pedagógicos previstos no aviso', async () => {
+    const { provider, transport } = setup();
+    await provider.evaluate({
+      ...context,
+      learner: { profession: 'profissao-sintetica', goals: ['meta-sintetica'], experience: 'intermediate' },
+      recentResults: [{ rubricVersion: 'rubrica-historica-sintetica', score: 3 }],
+    }, options);
+    const requests = transport.mock.calls.map(([, init]) => String(init?.body)).join('\n');
+    expect(requests).toContain('intermediate');
+    expect(requests).toContain('recentLevels');
+    expect(requests).not.toMatch(/profissao-sintetica|meta-sintetica|rubrica-historica-sintetica/u);
+  });
+
   it('recusa evidência inventada, nota visual sem vídeo e metadados fornecidos pelo modelo', async () => {
     for (const invalid of [
       { ...body, observations: [{ ...body.observations[0], evidence: [{ startUs: 1, endUs: 3, label: 'Inventada' }] }, body.observations[1]] },

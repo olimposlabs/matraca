@@ -5,6 +5,7 @@ import { requireIdentity, type AuthIdentity } from './auth.js';
 import type { CourseDocument } from './course-model.js';
 import { courseProgress, JourneyError, updateStudy } from './journey-progress.js';
 import { assertStudentScope } from './permissions.js';
+import { recordSensitiveAccess } from './sensitive-access.js';
 
 const profileInput = z.object({
   profession: z.string().trim().min(1).max(200),
@@ -109,7 +110,7 @@ export async function registerJourney(app: FastifyInstance) {
       const result = await client.query<ResultRow>(
         `SELECT r.id,r.status,r.provider,er.report FROM evaluation_requests r
          JOIN recordings m ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
-         LEFT JOIN evaluation_results er ON er.request_id=r.id
+         LEFT JOIN evaluation_results er ON er.request_id=r.id AND er.report_removed_at IS NULL
          WHERE r.org_id=$1 AND r.student_id=$2 AND m.purpose='diagnostic' ORDER BY r.created_at DESC,r.id DESC LIMIT 1`,
         [actor.org.id, actor.user.id],
       );
@@ -201,7 +202,7 @@ export async function registerJourney(app: FastifyInstance) {
     const { studentId } = parse(z.object({ studentId: z.uuid().optional() }).strict(), request.query);
     const actor = await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']);
     const target = studentId ?? actor.user.id;
-    return app.db.transaction(async client => {
+    const response = await app.db.transaction(async client => {
       await client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
       await assertStudentScope(client, actor, target);
       const found = await client.query<ResultRow & {
@@ -209,13 +210,14 @@ export async function registerJourney(app: FastifyInstance) {
         completedAt: Date;
         purpose: string;
         objective: string;
-        criteria: CourseDocument['modules'][number]['units'][number]['activity']['criteria'];
+        criteria: CourseDocument['modules'][number]['units'][number]['activity']['criteria'] | null;
       }>(
         `SELECT r.id,r.status,r.provider,r.recording_id AS "recordingId",r.completed_at AS "completedAt",
             m.purpose,m.objective,r.context->'criteria' AS criteria,er.report
          FROM evaluation_results er JOIN evaluation_requests r ON r.id=er.request_id
          JOIN recordings m ON m.id=r.recording_id AND m.org_id=r.org_id AND m.student_id=r.student_id
-         WHERE r.org_id=$1 AND r.student_id=$2 ORDER BY r.completed_at DESC,r.id DESC LIMIT 50`,
+         WHERE r.org_id=$1 AND r.student_id=$2 AND er.report_removed_at IS NULL
+         ORDER BY r.completed_at DESC,r.id DESC LIMIT 50`,
         [actor.org.id, target],
       );
       const attempts = found.rows.reverse().map(row => ({
@@ -224,11 +226,17 @@ export async function registerJourney(app: FastifyInstance) {
         overallLevel: row.report?.overallLevel,
         scores: row.report?.observations.map(item => ({
           criterionId: item.criterionId,
-          title: row.criteria.find(criterion => criterion.id === item.criterionId)?.title ?? item.criterionId,
+          title: row.criteria?.find(criterion => criterion.id === item.criterionId)?.title ?? item.criterionId,
           level: item.level,
         })),
       }));
       return { attempts };
+    }).catch(async error => {
+      if (error.statusCode === 403) await recordSensitiveAccess(app.db, actor, 'evaluation_history', target, 'denied', 'scope_denied');
+      if (error.statusCode === 404) await recordSensitiveAccess(app.db, actor, 'evaluation_history', null, 'denied', 'not_found');
+      throw error;
     });
+    await recordSensitiveAccess(app.db, actor, 'evaluation_history', target, 'allowed');
+    return response;
   });
 }

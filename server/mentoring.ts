@@ -88,7 +88,7 @@ async function completedEvaluation(client: EducationQuery, actor: AuthIdentity, 
   const row = (await client.query<{ id: string; student_id: string; context: EvaluationContext; duration_us: string }>(`SELECT e.id,e.student_id,e.context,r.duration_us
     FROM evaluation_requests e JOIN evaluation_results result ON result.request_id=e.id AND result.org_id=e.org_id AND result.student_id=e.student_id
     JOIN recordings r ON r.id=e.recording_id AND r.org_id=e.org_id AND r.student_id=e.student_id
-    WHERE e.org_id=$1 AND e.id=$2 AND e.status='completed'`, [actor.org.id, evaluationId])).rows[0];
+    WHERE e.org_id=$1 AND e.id=$2 AND e.status='completed' AND result.report_removed_at IS NULL`, [actor.org.id, evaluationId])).rows[0];
   if (!row || (expectedStudent && row.student_id !== expectedStudent)) throw new MentoringError(404, 'Avaliação concluída deste aluno não encontrada.');
   return row;
 }
@@ -120,7 +120,8 @@ export async function registerMentoring(app: FastifyInstance) {
       `u.id,u.name,u.email,u.status,
       (SELECT max(occurred_at) FROM mentoring_sessions m WHERE m.org_id=u.org_id AND m.student_id=u.id) AS "lastMentoringAt",
       (SELECT count(*)::integer FROM individual_plan_items p WHERE p.org_id=u.org_id AND p.student_id=u.id AND p.status IN ('planned','in_progress')) AS "pendingItems",
-      (SELECT result.report->'overallLevel' FROM evaluation_results result WHERE result.org_id=u.org_id AND result.student_id=u.id ORDER BY result.created_at DESC LIMIT 1) AS "latestLevel"`, 'u.name,u.id');
+      (SELECT result.report->'overallLevel' FROM evaluation_results result WHERE result.org_id=u.org_id AND result.student_id=u.id
+        AND result.report_removed_at IS NULL ORDER BY result.created_at DESC LIMIT 1) AS "latestLevel"`, 'u.name,u.id');
   });
   app.get('/api/mentoring/students/:id', async request => {
     const actor = await requireIdentity(request, ['student', 'teacher', 'school', 'org_admin']), studentId = parameter(request, 'id');
