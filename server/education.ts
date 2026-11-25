@@ -6,7 +6,7 @@ import type { AuthIdentity, IdentityRole } from './auth.js';
 import { localHostname } from './config.js';
 import { enrollAssignedCourses } from './courses.js';
 import { EducationError, educationIdentity, assertSchoolScope, assertStudentScope, isOrgAdmin,
-  managedSchoolIds, PERSON_SCOPE_SQL, STUDENT_SCOPE_SQL, scopeValues, type EducationQuery } from './permissions.js';
+  managedSchoolIds, MANAGED_PERSON_SCOPE_SQL, PERSON_SCOPE_SQL, STUDENT_SCOPE_SQL, scopeValues, type EducationQuery } from './permissions.js';
 export { requireStudentScope } from './permissions.js';
 
 const id = z.uuid();
@@ -142,7 +142,7 @@ export async function registerEducation(app: FastifyInstance): Promise<void> {
   });
   app.patch(`${base}/people/:id`,async(request)=>mutate(app,request,async(client,actor)=>{
     manager(actor);const personId=param(request),data=patch(personPatch,request.body),person=await getPerson(client,actor,personId);
-    await assertPerson(client,actor,person);
+    await assertManagedPerson(client,actor,person.id);
     if(!isOrgAdmin(actor) && (data.roles || (data.status && (person.roles.length!==1||person.roles[0]!=='student')) || person.roles.includes('org_admin'))) throw new EducationError(403,'Somente o administrador altera papéis ou o status de profissionais.');
     const nextRoles=data.roles??person.roles, nextStatus=data.status??person.status;
     await protectLastAdmin(client,actor,person,nextRoles,nextStatus);
@@ -151,7 +151,7 @@ export async function registerEducation(app: FastifyInstance): Promise<void> {
     await audit(client,actor,'person_updated',personId);return {person:await getPerson(client,actor,personId)};
   }));
   app.post(`${base}/people/:id/archive`,async(request)=>mutate(app,request,async(client,actor)=>{
-    manager(actor);const personId=param(request),person=await getPerson(client,actor,personId);await assertPerson(client,actor,person);
+    manager(actor);const personId=param(request),person=await getPerson(client,actor,personId);await assertManagedPerson(client,actor,person.id);
     if(!isOrgAdmin(actor)&&(person.roles.length!==1||person.roles[0]!=='student')) throw new EducationError(403,'A escola só pode arquivar seus alunos.');
     await protectLastAdmin(client,actor,person,person.roles,'suspended');
     await client.query("UPDATE users SET status='suspended',archived_at=COALESCE(archived_at,now()),updated_at=now() WHERE org_id=$1 AND id=$2",[actor.org.id,personId]);
@@ -332,6 +332,13 @@ async function getClass(client:EducationQuery,actor:AuthIdentity,classId:string)
 async function getGroup(client:EducationQuery,actor:AuthIdentity,groupId:string):Promise<EducationGroup> {const row=(await client.query<EducationGroup>(`${groupSelect} WHERE g.org_id=$1 AND g.id=$2`,[actor.org.id,groupId])).rows[0];if(!row)throw new EducationError(404,'Grupo não encontrado.');return row;}
 async function getType(client:EducationQuery,actor:AuthIdentity,typeId:string):Promise<GroupType> {const row=(await client.query<GroupType>('SELECT id,name,position,status FROM group_types WHERE org_id=$1 AND id=$2',[actor.org.id,typeId])).rows[0];if(!row)throw new EducationError(404,'Tipo de grupo não encontrado.');return row;}
 async function assertPerson(client:EducationQuery,actor:AuthIdentity,person:Person):Promise<void> {if(!(await client.query(`SELECT u.id FROM users u WHERE u.org_id=$1 AND u.id=$4 AND ${PERSON_SCOPE_SQL}`,[...scopeValues(actor),person.id])).rowCount)throw new EducationError(403,'Você não tem acesso a esta pessoa.');}
+async function assertManagedPerson(client: EducationQuery, actor: AuthIdentity, personId: string) {
+  const authorized = await client.query(
+    `SELECT u.id FROM users u WHERE u.org_id=$1 AND u.id=$4 AND ${MANAGED_PERSON_SCOPE_SQL}`,
+    [...scopeValues(actor), personId],
+  );
+  if (!authorized.rowCount) throw new EducationError(403, 'Você não administra esta pessoa.');
+}
 async function groupManager(client:EducationQuery,actor:AuthIdentity,group:EducationGroup,active=true):Promise<void> {manager(actor);if(group.schoolId)await assertSchoolScope(client,actor,group.schoolId,active);else admin(actor);if(active&&group.status!=='active')throw new EducationError(409,'O grupo está arquivado.');}
 async function validGroupParent(client:EducationQuery,actor:AuthIdentity,parentId:string|null,schoolId:string|null):Promise<void> {if(!parentId)return;const parent=await getGroup(client,actor,parentId);if(parent.status!=='active')throw new EducationError(409,'O grupo pai está arquivado.');if(parent.schoolId&&parent.schoolId!==schoolId)throw new EducationError(409,'O grupo deve manter o escopo escolar do pai.');}
 async function audit(client:PoolClient,actor:AuthIdentity,event:string,entityId:string):Promise<void> {await client.query('INSERT INTO audit_events(org_id,actor_user_id,event_type,metadata) VALUES($1,$2,$3,$4)',[actor.org.id,actor.user.id,event,{entityId}]);}

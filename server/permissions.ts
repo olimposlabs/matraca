@@ -44,6 +44,24 @@ export const PERSON_SCOPE_SQL = `(
   ))
 )`;
 
+/** Read relationships through teaching never grant school management. */
+export const MANAGED_PERSON_SCOPE_SQL = `(
+  'org_admin'=ANY($3::text[]) OR (
+    'school'=ANY($3::text[]) AND NOT(u.roles && ARRAY['org_admin','operator']::text[]) AND EXISTS (
+      SELECT 1 FROM school_staff manager JOIN schools sc ON sc.id=manager.school_id AND sc.org_id=manager.org_id
+      WHERE manager.org_id=$1 AND manager.user_id=$2 AND manager.role='school'
+        AND manager.ended_at IS NULL AND sc.status='active'
+        AND (
+          ('student'=ANY(u.roles) AND EXISTS (SELECT 1 FROM student_schools ss
+            WHERE ss.org_id=$1 AND ss.school_id=sc.id AND ss.student_id=u.id AND ss.ended_at IS NULL))
+          OR (NOT('student'=ANY(u.roles)) AND EXISTS (SELECT 1 FROM school_staff staff
+            WHERE staff.org_id=$1 AND staff.school_id=sc.id AND staff.user_id=u.id
+              AND staff.role=ANY(u.roles) AND staff.ended_at IS NULL))
+        )
+    )
+  )
+)`;
+
 export async function educationIdentity(request: FastifyRequest): Promise<AuthIdentity> {
   return requireIdentity(request, ['org_admin', 'school', 'teacher', 'student']);
 }

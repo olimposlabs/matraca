@@ -8,11 +8,17 @@ import { courseDocumentSchema,emptyCourse,validatePublication,type CourseDocumen
 import { assertStudentScope,managedSchoolIds } from './permissions.js';
 
 export class CourseError extends Error {constructor(public readonly statusCode:400|401|403|404|409,message:string){super(message);}}
-const uuid=z.uuid();
+const uuid=z.uuid().transform(value => value.toLowerCase());
 function parse<T>(schema:z.ZodType<T>,value:unknown):T{const result=schema.safeParse(value);if(!result.success)throw new CourseError(400,'Confira os campos e os limites do curso.');return result.data;}
 interface CourseRow {id:string;org_id:string;title:string;status:string;draft_revision:number;draft:CourseDocument}
 interface VersionRow {id:string;course_id:string;org_id:string;version:number;document:CourseDocument}
 const revision=z.object({expectedRevision:z.number().int().min(0)}).strict();
+const shareInput = z.object({ versionId: uuid.nullable(), expectedVersionId: uuid.nullable() }).strict();
+const sharedBase = `FROM course_base_shares s JOIN course_versions v
+  ON (v.id,v.course_id,v.org_id)=(s.version_id,s.course_id,s.org_id)
+  JOIN courses c ON c.id=s.course_id AND c.org_id=s.org_id
+  JOIN orgs o ON o.id=c.org_id
+  WHERE o.kind='matraca' AND o.status='active' AND c.status='published'`;
 async function revalidate(client:PoolClient,request:FastifyRequest,actor:AuthIdentity,role:IdentityRole=actor.org.kind==='backoffice'?'operator':'org_admin'){
  const current=await client.query<{roles:string[]}>(`SELECT u.roles FROM sessions s JOIN users u ON u.id=s.user_id AND u.org_id=s.org_id JOIN orgs o ON o.id=s.org_id JOIN domains d ON d.hostname=s.hostname AND d.org_id=s.org_id WHERE s.token_hash=$1 AND s.hostname=$2 AND s.org_id=$3 AND s.user_id=$4 AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp() AND u.status='active' AND u.archived_at IS NULL AND o.status='active' FOR SHARE OF u,o`,[createHash('sha256').update(request.cookies.matraca_session??'').digest('hex'),localHostname(request.headers.host),actor.org.id,actor.user.id]);
  if(!current.rows[0])throw new CourseError(401,'Seu acesso foi encerrado.');
@@ -124,15 +130,34 @@ export async function registerCourses(app:FastifyInstance){
   const base=central?'/api/backoffice/courses/:orgId':'/api/courses/manage';
   app.get(base,async request=>{const {orgId}=await target(request,central);const result=await app.db.query('SELECT c.id,c.title,c.status,c.draft_revision AS revision,(SELECT max(version) FROM course_versions v WHERE v.course_id=c.id) AS "publishedVersion" FROM courses c WHERE c.org_id=$1 ORDER BY c.updated_at DESC',[orgId]);return {courses:result.rows};});
   app.post(base,async(request,reply)=>{
-   const input=parse(z.object({title:z.string().trim().min(1).max(160),copyBaseCourseId:uuid.optional()}).strict(),request.body);
+   const input = parse(z.object({
+    title: z.string().trim().min(1).max(160),
+    copyBaseCourseId: uuid.optional(), copyBaseVersionId: uuid.optional(),
+   }).strict().refine(value => !value.copyBaseVersionId || Boolean(value.copyBaseCourseId)), request.body);
    const copiedKeys:string[]=[];
    try{const result=await mutation(request,central,async(client,orgId,actor)=>{
-    let document=emptyCourse(input.title);let sourceId:string|null=null;
-    if(input.copyBaseCourseId){const source=(await client.query<VersionRow>("SELECT v.* FROM course_versions v JOIN courses c ON c.id=v.course_id JOIN orgs o ON o.id=c.org_id WHERE c.id=$1 AND o.kind='matraca' AND c.status='published' ORDER BY v.version DESC LIMIT 1",[input.copyBaseCourseId])).rows[0];if(!source)throw new CourseError(404,'Curso base publicado não encontrado.');document={...source.document,title:input.title,catalogVisible:false};sourceId=source.course_id;}
-    const created=(await client.query<CourseRow>('INSERT INTO courses(org_id,title,draft,source_course_id,created_by) VALUES($1,$2,$3,$4,$5) RETURNING *',[orgId,input.title,document,sourceId,actor.user.id])).rows[0];
-    if(sourceId){
+    let document=emptyCourse(input.title);
+    let source: VersionRow | undefined;
+    if (input.copyBaseCourseId) {
+      const candidate = (await client.query<{ org_id: string }>(
+        `SELECT c.org_id ${sharedBase} AND c.id=$1 FOR SHARE OF o`, [input.copyBaseCourseId],
+      )).rows[0];
+      if (!candidate) throw new CourseError(404, 'Curso base compartilhado não encontrado.');
+      // Lock the course before the share, in the same order used to change sharing.
+      await client.query('SELECT id FROM courses WHERE id=$1 AND org_id=$2 FOR SHARE', [input.copyBaseCourseId, candidate.org_id]);
+      source = (await client.query<VersionRow>(
+        `SELECT v.* ${sharedBase} AND c.id=$1 AND c.org_id=$2 FOR SHARE OF s`, [input.copyBaseCourseId, candidate.org_id],
+      )).rows[0];
+      if (!source) throw new CourseError(404, 'Curso base compartilhado não encontrado.');
+      if (input.copyBaseVersionId && input.copyBaseVersionId !== source.id) {
+        throw new CourseError(409, 'A versão compartilhada mudou. Escolha novamente o curso base.');
+      }
+      document={...source.document,title:input.title,catalogVisible:false};
+    }
+    const created=(await client.query<CourseRow>('INSERT INTO courses(org_id,title,draft,source_course_id,created_by) VALUES($1,$2,$3,$4,$5) RETURNING *',[orgId,input.title,document,source?.course_id??null,actor.user.id])).rows[0];
+    if(source){
      const assetIds=[...new Set(document.modules.flatMap(module=>module.units.flatMap(unit=>unit.assetIds)))];
-     const assets=await client.query<{id:string;object_key:string;filename:string;mime_type:string;byte_length:string}>('SELECT id,object_key,filename,mime_type,byte_length FROM course_assets WHERE course_id=$1 AND id=ANY($2::uuid[])',[sourceId,assetIds]);
+     const assets=await client.query<{id:string;object_key:string;filename:string;mime_type:string;byte_length:string}>('SELECT id,object_key,filename,mime_type,byte_length FROM course_assets WHERE course_id=$1 AND org_id=$2 AND id=ANY($3::uuid[])',[source.course_id,source.org_id,assetIds]);
      if(assets.rows.length!==assetIds.length)throw new CourseError(409,'Um anexo da base não está disponível.');
      const mapping=new Map<string,string>();
      for(const asset of assets.rows){const id=randomUUID();const key=`course-assets/${orgId}/${id}`;copiedKeys.push(key);await app.storage.put(key,app.storage.read(asset.object_key));await client.query('INSERT INTO course_assets(id,org_id,course_id,object_key,filename,mime_type,byte_length,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[id,orgId,created.id,key,asset.filename,asset.mime_type,asset.byte_length,actor.user.id]);mapping.set(asset.id,id);}
@@ -142,7 +167,7 @@ export async function registerCourses(app:FastifyInstance){
     return {course:created};
    });return reply.code(201).send(result);}catch(error){await Promise.all(copiedKeys.map(key=>app.storage.remove(key).catch(()=>{})));throw error;}
   });
-  app.get(`${base}/:id`,async request=>{const {orgId}=await target(request,central);const found=(await app.db.query<CourseRow>('SELECT * FROM courses WHERE id=$1 AND org_id=$2',[courseId(request),orgId])).rows[0];if(!found)throw new CourseError(404,'Curso não encontrado.');const versions=await app.db.query('SELECT id,version,published_at FROM course_versions WHERE course_id=$1 AND org_id=$2 ORDER BY version DESC',[found.id,orgId]);return {course:found,versions:versions.rows};});
+  app.get(`${base}/:id`,async request=>{const {orgId}=await target(request,central);const found=(await app.db.query<CourseRow>('SELECT * FROM courses WHERE id=$1 AND org_id=$2',[courseId(request),orgId])).rows[0];if(!found)throw new CourseError(404,'Curso não encontrado.');const versions=await app.db.query('SELECT id,version,published_at FROM course_versions WHERE course_id=$1 AND org_id=$2 ORDER BY version DESC',[found.id,orgId]);const share=await app.db.query<{version_id:string}>('SELECT version_id FROM course_base_shares WHERE course_id=$1 AND org_id=$2',[found.id,orgId]);return {course:found,versions:versions.rows,shareVersionId:share.rows[0]?.version_id??null};});
   app.put(`${base}/:id`,async request=>{
    const input=parse(z.object({expectedRevision:z.number().int().min(0),document:courseDocumentSchema}).strict(),request.body);
    return mutation(request,central,async(client,orgId)=>{const item=await course(client,orgId,courseId(request));if(item.draft_revision!==input.expectedRevision)throw new CourseError(409,'Outra edição foi salva. Recarregue antes de continuar.');const updated=await client.query<CourseRow>('UPDATE courses SET title=$2,draft=$3,draft_revision=draft_revision+1,updated_at=now() WHERE id=$1 RETURNING *',[item.id,input.document.title,input.document]);return {course:updated.rows[0]};});
@@ -182,7 +207,38 @@ export async function registerCourses(app:FastifyInstance){
     return assignCourse(client, orgId, actor.user.id, courseId(request), input, schoolIds);
   });
  });
- app.get('/api/courses/base',async request=>{await requireIdentity(request,['org_admin','operator']);return {courses:(await app.db.query("SELECT c.id,c.title FROM courses c JOIN orgs o ON o.id=c.org_id WHERE o.kind='matraca' AND c.status='published' ORDER BY c.title")).rows};});
+ app.put('/api/backoffice/courses/:orgId/:id/base-share', async request => {
+  const input = parse(shareInput, request.body);
+  return mutation(request, true, async (client, orgId, actor) => {
+    await requireIdentity(request, ['operator'], client);
+    const item = await course(client, orgId, courseId(request));
+    const root = await client.query("SELECT id FROM orgs WHERE id=$1 AND kind='matraca'", [orgId]);
+    if (!root.rowCount) throw new CourseError(404, 'Curso Matraca não encontrado.');
+    const previous = await client.query<{ version_id: string }>(
+      'SELECT version_id FROM course_base_shares WHERE course_id=$1', [item.id],
+    );
+    if ((previous.rows[0]?.version_id ?? null) !== input.expectedVersionId) {
+      throw new CourseError(409, 'O compartilhamento mudou. Recarregue antes de continuar.');
+    }
+    if (input.versionId) {
+      const version = await client.query('SELECT id FROM course_versions WHERE (id,course_id,org_id)=($1,$2,$3)',
+        [input.versionId, item.id, orgId]);
+      if (!version.rowCount || item.status !== 'published') throw new CourseError(404, 'Versão publicada não encontrada.');
+      await client.query(
+        `INSERT INTO course_base_shares(course_id,org_id,version_id) VALUES($1,$2,$3)
+         ON CONFLICT(course_id) DO UPDATE SET version_id=EXCLUDED.version_id`, [item.id, orgId, input.versionId],
+      );
+    } else await client.query('DELETE FROM course_base_shares WHERE course_id=$1', [item.id]);
+    await client.query('INSERT INTO audit_events(org_id,actor_user_id,event_type,metadata) VALUES($1,$2,$3,$4)',
+      [actor.org.id, actor.user.id, 'course_base_sharing_changed', { targetOrgId: orgId, courseId: item.id, versionId: input.versionId }]);
+    return { versionId: input.versionId };
+  });
+ });
+ app.get('/api/courses/base', async request => {
+  await requireIdentity(request, ['org_admin', 'operator']);
+  const result = await app.db.query(`SELECT c.id,v.document->>'title' AS title,v.id AS "versionId",v.version ${sharedBase} ORDER BY title,c.id`);
+  return { courses: result.rows };
+ });
  app.get('/api/courses',async request=>{
   const actor=await requireIdentity(request,['student']);if(actor.org.settings.coursesEnabled===false)return {enabled:false,courses:[]};
   const rows=await app.db.query('SELECT e.id AS "enrollmentId",e.course_id AS id,e.status,v.version,v.document->>\'title\' AS title,v.document->>\'description\' AS description FROM course_enrollments e JOIN course_versions v ON v.id=e.version_id AND v.org_id=e.org_id WHERE e.org_id=$1 AND e.student_id=$2 AND e.status<>\'cancelled\' ORDER BY e.created_at',[actor.org.id,actor.user.id]);return {enabled:true,courses:rows.rows};
