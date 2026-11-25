@@ -23,7 +23,12 @@ function postgresUtility(name: string, databaseUrl: string, args: string[], inpu
 }
 try {
   const primary = await provisionLocalDatabase(profiles[0]);
-  const migrationTarget = await provisionLocalDatabase(profiles[1]);
+  const originalTarget = await provisionLocalDatabase(profiles[1]);
+  const targetNames = localDatabaseNames(profiles[1]);
+  await bootstrap.query(`DROP DATABASE ${targetNames.name}`);
+  await bootstrap.query(`DROP ROLE ${targetNames.runtime}`);
+  const migrationTarget = await provisionLocalDatabase(profiles[1], { rotateRuntime: true });
+  assert.ok(migrationTarget.runtimeUrl !== originalTarget.runtimeUrl, 'A rotação vale mesmo após recriar o papel.');
   for (const task of ['db:migrate', 'db:seed']) execFileSync('npm', ['run', task], {
     env: { ...process.env, DATABASE_URL: primary.runtimeUrl, MATRACA_MIGRATION_DATABASE_URL: primary.migrationUrl },
     stdio: 'inherit', timeout: 30000,

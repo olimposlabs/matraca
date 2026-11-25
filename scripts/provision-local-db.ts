@@ -6,14 +6,14 @@ async function ensureRole(client: PoolClient, profile: string, kind: 'migration'
   // Profile role names and passwords come from hex strings generated locally.
   const attributes = 'LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS';
   const exists = await client.query('SELECT 1 FROM pg_roles WHERE rolname=$1', [role]);
+  const rotation = pendingRoleRotation(kind, profile, rotate);
   if (exists.rowCount) {
-    const rotation = pendingRoleRotation(kind, profile, rotate);
     await client.query(`ALTER ROLE ${role} ${attributes}${rotation ? ` PASSWORD '${rotation.password}'` : ''}`);
-    rotation?.commit();
   } else {
-    const { password } = new URL(localDatabaseConnection(kind, profile, true));
+    const password = rotation?.password ?? new URL(localDatabaseConnection(kind, profile)).password;
     await client.query(`CREATE ROLE ${role} ${attributes} PASSWORD '${password}'`);
   }
+  rotation?.commit();
   return localDatabaseConnection(kind, profile);
 }
 
