@@ -55,6 +55,7 @@ export async function runMediaDecoder(executor: MediaExecutor, path: string, arg
     if (!data.isFile() || data.size < 1 || data.size > 200 * 1024 * 1024) throw new Error('Invalid media input');
     const name = `matraca-media-${randomUUID()}`;
     const env = dockerEnv();
+    const started = performance.now();
     const result = execute('docker', [host, ...run, '--interactive', '--name', name, image, ...args], {
       env, signal, timeout: 60_000, maxBuffer: 17 * 1024 * 1024, encoding: 'buffer', killSignal: 'SIGKILL',
     });
@@ -63,7 +64,9 @@ export async function runMediaDecoder(executor: MediaExecutor, path: string, arg
       const [finished, sent] = await Promise.allSettled([result, pipeline(source, result.child.stdin!, { signal })]);
       if (finished.status === 'rejected') {
         const error = finished.reason as { code?: string | number; killed?: boolean };
-        if (signal.aborted || error.killed || error.code === 124 || error.code === 137) throw new MediaExecutorError('timeout');
+        // A fast SIGKILL can be the container memory limit, unlike the 55-second watchdog.
+        const watchdogElapsed = error.code === 137 && performance.now() - started >= 55_000;
+        if (signal.aborted || error.killed || error.code === 124 || watchdogElapsed) throw new MediaExecutorError('timeout');
         if (error.code === 125 || error.code === 126 || error.code === 127 || error.code === 'ENOENT') throw new MediaExecutorError('temporary');
         const available = await execute('docker', [host, 'info', '--format={{.ServerVersion}}'], {
           env, signal, timeout: 2500, maxBuffer: 4096,
