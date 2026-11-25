@@ -19,7 +19,7 @@ Os logs desta rodada ficam em `.data/reviews/s08-suite-final.log` e `.data/revie
 
 **Estado em 16/11/2026: pendente de execução no E2E final pelo fundador.** As 14 fases do piloto local foram implementadas e integradas. Por orientação do fundador, suas validações manuais ficam concentradas em uma única rodada final, sem bloqueios intermediários de desenvolvimento por falta de teste manual.
 
-Na rodada final, percorrer J01–J20 no mesmo build, com os perfis de aluno avulso, aluno parceiro, professor, gestor escolar, administrador da organização e operador do backoffice. Incluir captura e reprodução em câmera e celular físicos. Registrar o SHA, ambiente, navegador, dispositivo, resultado de cada jornada e eventuais correções, repetindo os casos afetados antes do aceite.
+Na rodada final, percorrer J01–J20 no mesmo build, com os perfis de aluno avulso, aluno parceiro, professor, gestor escolar, administrador da organização e operador do backoffice. Incluir captura e reprodução na câmera física do computador. Registrar o SHA, ambiente, navegador, dispositivo, resultado de cada jornada e eventuais correções, repetindo os casos afetados antes do aceite. O caso de celular físico tem um pré-requisito de ambiente descrito no roteiro abaixo.
 
 As evidências técnicas abaixo permanecem históricas e não representam a homologação manual do fundador. IA, e-mail e pagamentos seguem simulados no escopo local. Validação de provedores reais, custo de IA e infraestrutura AWS pertence à etapa futura registrada em [dívida técnica](../TECH_DEBT.md).
 
@@ -30,14 +30,15 @@ As evidências técnicas abaixo permanecem históricas e não representam a homo
 | Etapa | Conferência na interface |
 | --- | --- |
 | Portal direto | Crie uma conta, confirme o link no navegador que o solicitou, preencha o perfil, escolha diagnóstico ou trilha e simule a compra. Confira matrícula e saldo. |
-| Câmera, microfone e relatório | Em dispositivo físico, conceda e negue permissões, grave com áudio e vídeo, faça uma prática de 30 s e uma revisão de 5 min. Confira prévia, reprodução, navegação aos trechos, débito e histórico. |
+| Câmera, microfone e relatório | No computador do sandbox, conceda e negue permissões, grave com áudio e vídeo, faça uma prática de 30 s e uma revisão de 5 min. Confira prévia, reprodução, navegação aos trechos, débito e histórico. |
+| Celular físico | **Bloqueado neste sandbox.** O servidor escuta apenas no loopback do computador e usa domínios `.localhost`. Para verificar a câmera no aparelho, é preciso uma origem HTTPS confiável acessível nele e que preserve o roteamento dos três portais. |
 | Domínios e revogação | Entre em duas abas com o mesmo e-mail nos portais direto e parceiro. Compare progresso, arquivos e carteira. Encerre uma sessão e confirme que a outra permanece ativa. Suspenda uma conta sintética e verifique que ela precisa voltar à tela de acesso. |
 | Escola e curso | Confira marca, nomenclatura, cópia da versão publicada, escola, professor certificado e aluno em duas turmas. Transfira um aluno sintético e confira o acesso da escola de destino e o histórico de turma encerrada. |
 | Professor e aluno | Abra uma evidência autorizada, registre a mentoria, responda a uma ação e compare a nova tentativa no portal do aluno. |
 | Créditos e operação | Confira concessão da escola, entrega do pacote simulado, ranking, prêmios e demonstrativo. Compare a competência encerrada com as licenças do mês seguinte. Veja os estados de falha e retomada. |
 | Consolidação | Percorra as jornadas J01–J20 e registre o SHA, resultado, dispositivo e evidências da rodada. Repita as jornadas afetadas por cada correção. |
 
-O sandbox usa a interface compilada, a API local e os simuladores de avaliação, e-mail e pagamento. A captura em celular físico exige um ambiente acessível no dispositivo. A validação de qualidade da IA real e a configuração de retenção junto ao provedor têm evidências próprias.
+O sandbox usa a interface compilada, a API local e os simuladores de avaliação, e-mail e pagamento. A validação de qualidade da IA real e a configuração de retenção junto ao provedor têm evidências próprias.
 
 Para retomar o ambiente de aceite no mesmo checkout, use o nome e a porta desta rodada. O terminal imprime as três origens.
 
